@@ -10,6 +10,9 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
+# Install sharp for image optimization
+RUN npm install sharp
+
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
@@ -25,6 +28,9 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
+# Install sharp dependencies for image optimization
+RUN apk add --no-cache libc6-compat
+
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
@@ -32,6 +38,15 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+
+# Copy sharp from node_modules for image optimization
+COPY --from=deps /app/node_modules/sharp ./node_modules/sharp
+
+# Create cache directory with proper permissions
+RUN mkdir -p .next/cache && chown -R nextjs:nodejs .next/cache
+
+# Set ownership of the app directory
+RUN chown -R nextjs:nodejs /app
 
 USER nextjs
 
