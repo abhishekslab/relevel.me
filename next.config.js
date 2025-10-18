@@ -1,1 +1,4 @@
-module.exports = { reactStrictMode: true, experimental: { appDir: true } };
+module.exports = {
+  reactStrictMode: true,
+  output: 'standalone', // Required for Docker deployment
+};

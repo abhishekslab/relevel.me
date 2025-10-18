@@ -7,8 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { Canvas } from '@react-three/fiber'
+import { Canvas, useThree } from '@react-three/fiber'
 import { Stars, Float, useGLTF } from '@react-three/drei'
+import * as THREE from 'three'
 
 type UUID = string
 type Biome = 'meadow'|'forest'|'desert'|'mist'|'tech'|'peaks'
@@ -52,6 +53,27 @@ const ARTIFACTS: Artifact[] = [
 ]
 function addMinsISO(m:number){ const d = new Date(Date.now()+m*60000); return d.toISOString() }
 
+function Scene() {
+  const { scene } = useThree()
+  React.useEffect(() => {
+    scene.background = new THREE.Color('#0b0f17')
+    scene.fog = new THREE.Fog('#0b0f17', 10, 40)
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6)
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8)
+    directionalLight.position.set(5, 5, 5)
+
+    scene.add(ambientLight)
+    scene.add(directionalLight)
+
+    return () => {
+      scene.remove(ambientLight)
+      scene.remove(directionalLight)
+    }
+  }, [scene])
+  return null
+}
+
 export default function DashboardPage() {
   const WORLD_W = 2800, WORLD_H = 1600
   const [zoom, setZoom] = useState(1)
@@ -91,14 +113,11 @@ export default function DashboardPage() {
     <div ref={rootRef} className="relative min-h-screen w-full overflow-hidden">
       <div className="absolute inset-0 -z-10">
         <Canvas camera={{ position: [0, 0, 10], fov: 55 }}>
-          <color attach="background" args={['#0b0f17']} />
-          <fog attach="fog" args={['#0b0f17', 10, 40]} />
+          <Scene />
           <Stars radius={80} depth={50} count={2500} factor={2} fade />
           <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.2}>
-            <ambientLight intensity={0.6} />
-            <directionalLight position={[5,5,5]} intensity={0.8} />
+            <Avatar />
           </Float>
-          <Avatar />
         </Canvas>
       </div>
 
@@ -111,15 +130,23 @@ export default function DashboardPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="absolute inset-0"
-            style={{ translateX: camX, translateY: camY, scale: zoom, transformOrigin: '0 0' }}
-            drag dragElastic={0} dragMomentum={false}
+            style={{
+              translateX: camX,
+              translateY: camY,
+              scale: zoom,
+              transformOrigin: '0 0'
+            } as any}
+            drag
+            dragElastic={0}
+            dragMomentum={false}
             onDrag={(_, info) => { camX.set(camX.get() + info.delta.x); camY.set(camY.get() + info.delta.y) }}
           >
-            <WorldDecor width={WORLD_W} height={WORLD_H} />
-            <BiomeRegions width={WORLD_W} height={WORLD_H} />
-            <FogOfWar width={WORLD_W} height={WORLD_H} revealedSkillIds={discovered} />
-            <Shrines />
+            <div className="absolute inset-0">
+              <WorldDecor width={WORLD_W} height={WORLD_H} />
+              <BiomeRegions width={WORLD_W} height={WORLD_H} />
+              <FogOfWar width={WORLD_W} height={WORLD_H} revealedSkillIds={discovered} />
+              <Shrines />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -132,15 +159,19 @@ export default function DashboardPage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
-              onClick={() => { setIsDockOpen(false); setIsWorldboardVisible(false); }}
-            />
+              style={{ position: 'fixed', inset: 0, zIndex: 40 } as any}
+            >
+              <div
+                className="absolute inset-0 bg-black/40 backdrop-blur-sm cursor-pointer"
+                onClick={() => { setIsDockOpen(false); setIsWorldboardVisible(false); }}
+              />
+            </motion.div>
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className="fixed right-4 top-20 bottom-4 z-50 w-[340px]"
+              style={{ position: 'fixed', right: '1rem', top: '5rem', bottom: '1rem', zIndex: 50, width: '340px' } as any}
             >
               <Dock onClose={() => { setIsDockOpen(false); setIsWorldboardVisible(false); }} />
             </motion.div>
@@ -304,9 +335,10 @@ function xpToNextPct(level:number, xp:number){
 
 function Avatar(){
   const { scene } = useGLTF('https://models.readyplayer.me/68f39e2ac955f67d168fc54c.glb')
+  const PrimitiveComponent = 'primitive' as any
   return (
     <Float speed={1} rotationIntensity={0.1} floatIntensity={0.2}>
-      <primitive
+      <PrimitiveComponent
         object={scene}
         scale={1.8}
         position={[0, -1.5, 5]}
@@ -466,7 +498,7 @@ function MiniMap({ worldW, worldH, camX, camY, zoom }:{ worldW:number; worldH:nu
         <div className="text-xs mb-1 flex items-center gap-1 opacity-80"><Compass className="size-3"/> Minimap</div>
         <div className="relative h-[120px] w-[200px] rounded-lg overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(88,140,240,0.15), rgba(90,180,150,0.15))' }}>
           <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 30% 60%, rgba(255,255,255,0.1) 0, transparent 40%), radial-gradient(circle at 80% 30%, rgba(255,255,255,0.1) 0, transparent 40%)' }}/>
-          <motion.div className="absolute border border-white/70" style={{ left: vx, top: vy, width: viewW as any, height: viewH as any }} />
+          <motion.div style={{ position: 'absolute', left: vx, top: vy, width: viewW as any, height: viewH as any, border: '1px solid rgba(255,255,255,0.7)' } as any} />
         </div>
       </div>
     </div>
