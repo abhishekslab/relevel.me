@@ -56,6 +56,7 @@ export default function DashboardPage() {
   const WORLD_W = 2800, WORLD_H = 1600
   const [zoom, setZoom] = useState(1)
   const [isDockOpen, setIsDockOpen] = useState(false)
+  const [isWorldboardVisible, setIsWorldboardVisible] = useState(false)
   const camX = useMotionValue(-(WORLD_W/2 - 600))
   const camY = useMotionValue(-(WORLD_H/2 - 350))
 
@@ -101,19 +102,27 @@ export default function DashboardPage() {
         </Canvas>
       </div>
 
-      <HUD zoom={zoom} setZoom={setZoom} isDockOpen={isDockOpen} setIsDockOpen={setIsDockOpen} />
+      <HUD zoom={zoom} setZoom={setZoom} isDockOpen={isDockOpen} setIsDockOpen={setIsDockOpen} isWorldboardVisible={isWorldboardVisible} setIsWorldboardVisible={setIsWorldboardVisible} />
 
-      <motion.div
-        className="absolute inset-0"
-        style={{ translateX: camX, translateY: camY, scale: zoom, transformOrigin: '0 0' }}
-        drag dragElastic={0} dragMomentum={false}
-        onDrag={(_, info) => { camX.set(camX.get() + info.delta.x); camY.set(camY.get() + info.delta.y) }}
-      >
-        <WorldDecor width={WORLD_W} height={WORLD_H} />
-        <BiomeRegions width={WORLD_W} height={WORLD_H} />
-        <FogOfWar width={WORLD_W} height={WORLD_H} revealedSkillIds={discovered} />
-        <Shrines />
-      </motion.div>
+      <AnimatePresence>
+        {isWorldboardVisible && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="absolute inset-0"
+            style={{ translateX: camX, translateY: camY, scale: zoom, transformOrigin: '0 0' }}
+            drag dragElastic={0} dragMomentum={false}
+            onDrag={(_, info) => { camX.set(camX.get() + info.delta.x); camY.set(camY.get() + info.delta.y) }}
+          >
+            <WorldDecor width={WORLD_W} height={WORLD_H} />
+            <BiomeRegions width={WORLD_W} height={WORLD_H} />
+            <FogOfWar width={WORLD_W} height={WORLD_H} revealedSkillIds={discovered} />
+            <Shrines />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {isDockOpen && (
@@ -124,7 +133,7 @@ export default function DashboardPage() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
-              onClick={() => setIsDockOpen(false)}
+              onClick={() => { setIsDockOpen(false); setIsWorldboardVisible(false); }}
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -133,7 +142,7 @@ export default function DashboardPage() {
               transition={{ duration: 0.2 }}
               className="fixed right-4 top-20 bottom-4 z-50 w-[340px]"
             >
-              <Dock onClose={() => setIsDockOpen(false)} />
+              <Dock onClose={() => { setIsDockOpen(false); setIsWorldboardVisible(false); }} />
             </motion.div>
           </>
         )}
@@ -143,8 +152,14 @@ export default function DashboardPage() {
   )
 }
 
-function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen }: { zoom: number; setZoom: (z:number)=>void; isDockOpen: boolean; setIsDockOpen: (open:boolean)=>void }){
+function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, setIsWorldboardVisible }: { zoom: number; setZoom: (z:number)=>void; isDockOpen: boolean; setIsDockOpen: (open:boolean)=>void; isWorldboardVisible: boolean; setIsWorldboardVisible: (visible:boolean)=>void }){
   const wrs = 72, streak = 5, points = 4
+
+  const handleToggle = () => {
+    setIsDockOpen(!isDockOpen)
+    setIsWorldboardVisible(!isWorldboardVisible)
+  }
+
   return (
     <div className="pointer-events-none fixed top-0 left-0 right-0 z-40">
       <div className="mx-auto max-w-7xl px-4 py-3 flex items-center gap-3">
@@ -162,7 +177,7 @@ function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen }: { zoom: number; setZo
             <ZoomIn className="size-4 opacity-70"/>
           </div>
           <button
-            onClick={() => setIsDockOpen(!isDockOpen)}
+            onClick={handleToggle}
             className="rounded-xl bg-violet-500/20 border border-violet-400/40 px-3 py-2 hover:bg-violet-500/30 transition"
           >
             <Sparkles className="size-5 text-fuchsia-300"/>
