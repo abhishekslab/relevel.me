@@ -166,7 +166,7 @@ export default function DashboardPage() {
               style={{ position: 'fixed', inset: 0, zIndex: 40 } as any}
             >
               <div
-                className="absolute inset-0 bg-black/15 backdrop-blur-sm cursor-pointer"
+                className="absolute inset-0 bg-black/20 cursor-pointer"
                 onClick={() => { setIsDockOpen(false); setIsWorldboardVisible(false); }}
               />
             </motion.div>
