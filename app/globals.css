@@ -1,0 +1,8 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+:root { color-scheme: dark; }
+html, body { height: 100%; }
+body { @apply bg-[#0b0f17] text-slate-100; }
+* { box-sizing: border-box; }
