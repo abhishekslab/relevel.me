@@ -30,12 +30,12 @@ const SKILLS: Skill[] = [
   { id: 's6', code: 'ALGORITHMS', name: 'Algorithms', category: 'Programming' },
 ]
 const SHRINES: Record<UUID, { x: number; y: number; biome: Biome }> = {
-  s1: { x: 500, y: 420, biome: 'meadow' },
-  s2: { x: 980, y: 820, biome: 'desert' },
-  s3: { x: 1550, y: 620, biome: 'tech' },
-  s4: { x: 780, y: 240, biome: 'forest' },
-  s5: { x: 1800, y: 980, biome: 'mist' },
-  s6: { x: 2200, y: 400, biome: 'peaks' },
+  s1: { x: 300, y: 250, biome: 'meadow' },
+  s2: { x: 600, y: 400, biome: 'desert' },
+  s3: { x: 900, y: 250, biome: 'tech' },
+  s4: { x: 300, y: 550, biome: 'forest' },
+  s5: { x: 600, y: 700, biome: 'mist' },
+  s6: { x: 900, y: 550, biome: 'peaks' },
 }
 const USER_SKILLS: UserSkill[] = [
   { user_id: 'u1', skill_id: 's1', level: 4, xp: 360, discovered: true,  due_at: addMinsISO(120) },
@@ -77,7 +77,7 @@ function Scene() {
 }
 
 export default function DashboardPage() {
-  const WORLD_W = 2800, WORLD_H = 1600
+  const WORLD_W = 1200, WORLD_H = 900
   const [zoom, setZoom] = useState(1)
   const [isDockOpen, setIsDockOpen] = useState(false)
   const [isWorldboardVisible, setIsWorldboardVisible] = useState(false)
@@ -125,33 +125,35 @@ export default function DashboardPage() {
 
       <HUD zoom={zoom} setZoom={setZoom} isDockOpen={isDockOpen} setIsDockOpen={setIsDockOpen} isWorldboardVisible={isWorldboardVisible} setIsWorldboardVisible={setIsWorldboardVisible} />
 
-      <AnimatePresence>
-        {isWorldboardVisible && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            style={{
-              translateX: camX,
-              translateY: camY,
-              scale: zoom,
-              transformOrigin: '0 0'
-            } as any}
-            drag
-            dragElastic={0}
-            dragMomentum={false}
-            onDrag={(_, info) => { camX.set(camX.get() + info.delta.x); camY.set(camY.get() + info.delta.y) }}
-          >
-            <div className="absolute inset-0">
-              <WorldDecor width={WORLD_W} height={WORLD_H} />
-              <BiomeRegions width={WORLD_W} height={WORLD_H} />
-              <FogOfWar width={WORLD_W} height={WORLD_H} revealedSkillIds={discovered} />
-              <Shrines />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <div className="fixed inset-0 z-10">
+        <AnimatePresence>
+          {isWorldboardVisible && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              style={{
+                translateX: camX,
+                translateY: camY,
+                scale: zoom,
+                transformOrigin: '0 0'
+              } as any}
+              drag
+              dragElastic={0}
+              dragMomentum={false}
+              onDrag={(_, info) => { camX.set(camX.get() + info.delta.x); camY.set(camY.get() + info.delta.y) }}
+            >
+              <div className="absolute inset-0">
+                <WorldDecor width={WORLD_W} height={WORLD_H} />
+                <BiomeRegions width={WORLD_W} height={WORLD_H} />
+                <FogOfWar width={WORLD_W} height={WORLD_H} revealedSkillIds={discovered} />
+                <Shrines />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       <AnimatePresence>
         {isDockOpen && (
@@ -164,7 +166,7 @@ export default function DashboardPage() {
               style={{ position: 'fixed', inset: 0, zIndex: 40 } as any}
             >
               <div
-                className="absolute inset-0 bg-black/40 backdrop-blur-sm cursor-pointer"
+                className="absolute inset-0 bg-black/15 backdrop-blur-sm cursor-pointer"
                 onClick={() => { setIsDockOpen(false); setIsWorldboardVisible(false); }}
               />
             </motion.div>
@@ -198,16 +200,13 @@ function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, se
   return (
     <div className="pointer-events-none fixed top-0 left-0 right-0 z-40">
       <div className="mx-auto max-w-7xl px-2 md:px-4 py-2 md:py-3 flex items-center gap-2 md:gap-3">
-        <div className="pointer-events-auto flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-2 md:px-3 py-1.5 md:py-2 backdrop-blur">
-          <Image
-            src="/logo.png"
-            alt="Relevel.me"
-            width={32}
-            height={32}
-            className="size-6 md:size-8 drop-shadow-[0_0_8px_rgba(143,123,255,0.5)]"
-          />
-          <div className="hidden sm:block font-semibold tracking-wide text-sm md:text-base">relevel.me</div>
-        </div>
+        <Image
+          src="/logo.png"
+          alt="Relevel.me"
+          width={48}
+          height={48}
+          className="pointer-events-auto size-10 md:size-12 drop-shadow-[0_0_12px_rgba(143,123,255,0.6)]"
+        />
         <div className="pointer-events-auto ml-auto flex items-center gap-1.5 md:gap-2 flex-wrap justify-end">
           <Badge className="bg-emerald-500/15 text-emerald-200 border-emerald-500/30 text-xs md:text-sm">WRS {wrs}</Badge>
           <Badge className="bg-orange-500/15 text-orange-200 border-orange-500/30 text-xs md:text-sm"><Flame className="size-3 md:size-4 mr-0.5 md:mr-1"/> {streak}d</Badge>
@@ -237,12 +236,12 @@ function WorldDecor({ width, height }:{ width:number; height:number }){
 
 function BiomeRegions({ width, height }:{ width:number; height:number }){
   const regions = [
-    { x: 200,  y: 200,  w: 700, h: 450, biome: 'meadow' },
-    { x: 980,  y: 480,  w: 520, h: 380, biome: 'tech' },
-    { x: 680,  y: 780,  w: 820, h: 480, biome: 'desert' },
-    { x: 1600, y: 200,  w: 700, h: 400, biome: 'peaks' },
-    { x: 1800, y: 760,  w: 700, h: 520, biome: 'mist' },
-    { x: 400,  y: 80,   w: 480, h: 240, biome: 'forest' },
+    { x: 150,  y: 150,  w: 350, h: 250, biome: 'meadow' },
+    { x: 750,  y: 150,  w: 350, h: 250, biome: 'tech' },
+    { x: 450,  y: 300,  w: 350, h: 250, biome: 'desert' },
+    { x: 750,  y: 450,  w: 350, h: 300, biome: 'peaks' },
+    { x: 450,  y: 600,  w: 350, h: 200, biome: 'mist' },
+    { x: 150,  y: 450,  w: 350, h: 250, biome: 'forest' },
   ] as const
   return (
     <svg width={width} height={height} className="absolute top-0 left-0">
@@ -272,15 +271,15 @@ function biomeFill(b: Biome){
 function FogOfWar({ width, height, revealedSkillIds }:{ width:number; height:number; revealedSkillIds:UUID[] }){
   const mask = useMemo(() => {
     const circles = revealedSkillIds.map((id) => {
-      const p = SHRINES[id]; const r = 160
+      const p = SHRINES[id]; const r = 140
       return `radial-gradient( circle ${r}px at ${p.x}px ${p.y}px, transparent 0, transparent ${r}px, black ${r+1}px )`
     })
-    circles.push(`radial-gradient( circle 180px at 600px 520px, transparent 0, transparent 180px, black 181px )`)
+    circles.push(`radial-gradient( circle 160px at 600px 450px, transparent 0, transparent 160px, black 161px )`)
     return circles.join(', ')
   }, [revealedSkillIds])
   return (
     <div className="absolute top-0 left-0"
-      style={{ width, height, WebkitMaskImage: mask, maskImage: mask, background: 'radial-gradient(circle at 50% 40%, rgba(0,0,0,0.55), rgba(0,0,0,0.85))' }} />
+      style={{ width, height, WebkitMaskImage: mask, maskImage: mask, background: 'radial-gradient(circle at 50% 40%, rgba(0,0,0,0.2), rgba(0,0,0,0.35))' }} />
   )
 }
 
@@ -293,17 +292,17 @@ function Shrines(){
         const us = userSkillById.get(s.id)
         const discovered = !!us?.discovered
         return (
-          <div key={s.id} className="absolute" style={{ transform: `translate(${pos.x - 30}px, ${pos.y - 30}px)` }}>
+          <div key={s.id} className="absolute" style={{ transform: `translate(${pos.x - 44}px, ${pos.y - 44}px)` }}>
             <button
               onClick={() => playClickSound()}
-              className={`group relative w-[72px] h-[72px] rounded-full border backdrop-blur transition active:scale-95 ${discovered ? 'bg-violet-500/15 border-violet-300/30' : 'bg-slate-900/70 border-white/10'}`}
+              className={`group relative w-[88px] h-[88px] md:w-[96px] md:h-[96px] rounded-full border-2 backdrop-blur transition active:scale-95 ${discovered ? 'bg-violet-500/25 border-violet-300/50' : 'bg-slate-900/80 border-white/20'}`}
             >
-              {discovered && <div className="absolute inset-0 rounded-full shadow-[0_0_24px_8px_rgba(168,85,247,0.35)]"/>}
-              <div className="absolute inset-0 rounded-full bg-[conic-gradient(from_0deg,rgba(255,255,255,0.12),transparent_60%)] group-hover:rotate-45 transition"/>
+              {discovered && <div className="absolute inset-0 rounded-full shadow-[0_0_32px_12px_rgba(168,85,247,0.6)]"/>}
+              <div className="absolute inset-0 rounded-full bg-[conic-gradient(from_0deg,rgba(255,255,255,0.2),transparent_60%)] group-hover:rotate-45 transition"/>
               <div className="relative z-10 flex h-full w-full flex-col items-center justify-center text-center px-1">
-                {discovered ? <Sparkles className="size-4 text-fuchsia-300"/> : <LockGlyph/>}
-                <div className="mt-0.5 text-[10px] leading-tight font-semibold line-clamp-2">{s.name}</div>
-                {discovered && us && (<div className="mt-0.5 text-[10px] text-slate-300">Lv {us.level}</div>)}
+                {discovered ? <Sparkles className="size-5 text-fuchsia-300"/> : <LockGlyph/>}
+                <div className="mt-1 text-[11px] md:text-xs leading-tight font-semibold line-clamp-2">{s.name}</div>
+                {discovered && us && (<div className="mt-0.5 text-[10px] md:text-[11px] text-slate-300">Lv {us.level}</div>)}
               </div>
             </button>
             <div className="pointer-events-none absolute left-20 top-1 hidden w-60 rounded-xl border border-white/10 bg-black/70 p-2 text-xs text-slate-200 shadow-lg group-hover:block">
