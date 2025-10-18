@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  relevel-me:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: relevel-me:latest
+    container_name: relevel-me
+    restart: unless-stopped
+    ports:
+      - "3001:3000"  # Map container port 3000 to host port 3001
+    environment:
+      - NODE_ENV=production
+    # Uncomment if you need env file
+    # env_file:
+    #   - .env.local
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
