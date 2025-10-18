@@ -1,8 +1,9 @@
 
 'use client'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { motion, useMotionValue, useTransform, AnimatePresence } from 'framer-motion'
-import { Compass, Flame, Star, Map as MapIcon, Sparkles, Target, Clock, ZoomIn, ZoomOut, X } from 'lucide-react'
+import Image from 'next/image'
+import { motion, useMotionValue, AnimatePresence } from 'framer-motion'
+import { Flame, Star, Sparkles, Target, Clock, X } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -10,6 +11,7 @@ import { Progress } from '@/components/ui/progress'
 import { Canvas, useThree } from '@react-three/fiber'
 import { Stars, Float, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
+import { playClickSound } from '@/lib/sound'
 
 type UUID = string
 type Biome = 'meadow'|'forest'|'desert'|'mist'|'tech'|'peaks'
@@ -110,7 +112,7 @@ export default function DashboardPage() {
   const discovered = USER_SKILLS.filter(u => u.discovered).map(u => u.skill_id)
 
   return (
-    <div ref={rootRef} className="relative min-h-screen w-full overflow-hidden">
+    <div ref={rootRef} className="relative min-h-screen w-full overflow-hidden touch-none">
       <div className="absolute inset-0 -z-10">
         <Canvas camera={{ position: [0, 0, 10], fov: 55 }}>
           <Scene />
@@ -166,19 +168,20 @@ export default function DashboardPage() {
                 onClick={() => { setIsDockOpen(false); setIsWorldboardVisible(false); }}
               />
             </motion.div>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              style={{ position: 'fixed', right: '1rem', top: '5rem', bottom: '1rem', zIndex: 50, width: '340px' } as any}
-            >
-              <Dock onClose={() => { setIsDockOpen(false); setIsWorldboardVisible(false); }} />
-            </motion.div>
+            <div className="fixed inset-x-0 bottom-0 md:inset-auto md:right-4 md:top-20 md:bottom-4 z-50 md:w-[300px] max-h-[85vh] md:max-h-none">
+              <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 20, scale: 0.98 }}
+                transition={{ duration: 0.25, ease: 'easeOut' }}
+                style={{ height: '100%' } as any}
+              >
+                <Dock onClose={() => { setIsDockOpen(false); setIsWorldboardVisible(false); }} />
+              </motion.div>
+            </div>
           </>
         )}
       </AnimatePresence>
-      <MiniMap worldW={WORLD_W} worldH={WORLD_H} camX={camX} camY={camY} zoom={zoom} />
     </div>
   )
 }
@@ -187,31 +190,33 @@ function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, se
   const wrs = 72, streak = 5, points = 4
 
   const handleToggle = () => {
+    playClickSound()
     setIsDockOpen(!isDockOpen)
     setIsWorldboardVisible(!isWorldboardVisible)
   }
 
   return (
     <div className="pointer-events-none fixed top-0 left-0 right-0 z-40">
-      <div className="mx-auto max-w-7xl px-4 py-3 flex items-center gap-3">
-        <div className="pointer-events-auto flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-3 py-2 backdrop-blur">
-          <MapIcon className="size-4"/>
-          <div className="font-semibold tracking-wide">Artha · Worldboard</div>
+      <div className="mx-auto max-w-7xl px-2 md:px-4 py-2 md:py-3 flex items-center gap-2 md:gap-3">
+        <div className="pointer-events-auto flex items-center gap-2 rounded-xl bg-white/5 border border-white/10 px-2 md:px-3 py-1.5 md:py-2 backdrop-blur">
+          <Image
+            src="/logo.png"
+            alt="Relevel.me"
+            width={32}
+            height={32}
+            className="size-6 md:size-8 drop-shadow-[0_0_8px_rgba(143,123,255,0.5)]"
+          />
+          <div className="hidden sm:block font-semibold tracking-wide text-sm md:text-base">relevel.me</div>
         </div>
-        <div className="pointer-events-auto ml-auto flex items-center gap-2">
-          <Badge className="bg-emerald-500/15 text-emerald-200 border-emerald-500/30">WRS {wrs}</Badge>
-          <Badge className="bg-orange-500/15 text-orange-200 border-orange-500/30"><Flame className="size-4 mr-1"/> {streak}d</Badge>
-          <Badge className="bg-amber-500/15 text-amber-200 border-amber-500/30"><Star className="size-4 mr-1"/> {points}</Badge>
-          <div className="hidden md:flex items-center gap-1 rounded-xl bg-white/5 border border-white/10 px-2 py-1">
-            <ZoomOut className="size-4 opacity-70"/>
-            <input type="range" min={0.6} max={2.2} step={0.01} value={zoom} onChange={e => setZoom(parseFloat(e.target.value))} className="w-32 accent-violet-400"/>
-            <ZoomIn className="size-4 opacity-70"/>
-          </div>
+        <div className="pointer-events-auto ml-auto flex items-center gap-1.5 md:gap-2 flex-wrap justify-end">
+          <Badge className="bg-emerald-500/15 text-emerald-200 border-emerald-500/30 text-xs md:text-sm">WRS {wrs}</Badge>
+          <Badge className="bg-orange-500/15 text-orange-200 border-orange-500/30 text-xs md:text-sm"><Flame className="size-3 md:size-4 mr-0.5 md:mr-1"/> {streak}d</Badge>
+          <Badge className="bg-amber-500/15 text-amber-200 border-amber-500/30 text-xs md:text-sm"><Star className="size-3 md:size-4 mr-0.5 md:mr-1"/> {points}</Badge>
           <button
             onClick={handleToggle}
-            className="rounded-xl bg-violet-500/20 border border-violet-400/40 px-3 py-2 hover:bg-violet-500/30 transition"
+            className="rounded-xl bg-violet-500/20 border border-violet-400/40 px-2 md:px-3 py-1.5 md:py-2 hover:bg-violet-500/30 transition active:scale-95"
           >
-            <Sparkles className="size-5 text-fuchsia-300"/>
+            <Sparkles className="size-4 md:size-5 text-fuchsia-300"/>
           </button>
         </div>
       </div>
@@ -289,7 +294,10 @@ function Shrines(){
         const discovered = !!us?.discovered
         return (
           <div key={s.id} className="absolute" style={{ transform: `translate(${pos.x - 30}px, ${pos.y - 30}px)` }}>
-            <button className={`group relative w-[72px] h-[72px] rounded-full border backdrop-blur transition ${discovered ? 'bg-violet-500/15 border-violet-300/30' : 'bg-slate-900/70 border-white/10'}`}>
+            <button
+              onClick={() => playClickSound()}
+              className={`group relative w-[72px] h-[72px] rounded-full border backdrop-blur transition active:scale-95 ${discovered ? 'bg-violet-500/15 border-violet-300/30' : 'bg-slate-900/70 border-white/10'}`}
+            >
               {discovered && <div className="absolute inset-0 rounded-full shadow-[0_0_24px_8px_rgba(168,85,247,0.35)]"/>}
               <div className="absolute inset-0 rounded-full bg-[conic-gradient(from_0deg,rgba(255,255,255,0.12),transparent_60%)] group-hover:rotate-45 transition"/>
               <div className="relative z-10 flex h-full w-full flex-col items-center justify-center text-center px-1">
@@ -361,36 +369,47 @@ function Dock({ onClose }: { onClose: () => void }){
   const due = CHECKPOINTS.filter(c => c.status === 'pending')
   const skillById = new Map(SKILLS.map(s => [s.id, s]))
   return (
-    <div className="relative h-full space-y-3">
+    <div className="relative h-full bg-black/90 md:bg-transparent backdrop-blur-xl md:backdrop-blur-none rounded-t-2xl md:rounded-none overflow-hidden">
+      {/* Mobile handle bar */}
+      <div className="md:hidden w-12 h-1 bg-white/20 rounded-full mx-auto my-3" />
+
+      {/* Close button - desktop only */}
       <button
         onClick={onClose}
-        className="absolute -left-12 top-0 rounded-xl bg-white/5 border border-white/10 p-2 hover:bg-white/10 transition backdrop-blur"
+        className="hidden md:block absolute -left-12 top-0 rounded-xl bg-white/5 border border-white/10 p-2 hover:bg-white/10 transition backdrop-blur"
       >
         <X className="size-5" />
       </button>
-      <Card className="bg-white/5 border-white/10">
-        <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2"><Target className="size-5"/> Quest Log</CardTitle></CardHeader>
-        <CardContent>
-          {due.length === 0 ? (
-            <div className="text-sm text-slate-300">No checkpoints due. Explore the map or prepare for tonight’s call.</div>
-          ) : (
-            <div className="space-y-2">
-              {due.map(q => (
-                <div key={q.id} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-3 py-2">
-                  <div>
-                    <div className="text-sm font-medium">{skillById.get(q.skill_id)?.name}</div>
-                    <div className="text-xs text-slate-300">{new Date(q.due_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · {q.items_count ?? 3} items</div>
+
+      {/* Scrollable content area */}
+      <div className="h-full overflow-y-auto px-4 md:px-0 pb-6 md:pb-0 space-y-2.5">
+        <Card className="bg-white/5 border-white/10">
+          <CardHeader className="pb-2 px-3 pt-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Target className="size-4"/> Quest Log
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-3 pb-3">
+            {due.length === 0 ? (
+              <div className="text-xs md:text-sm text-slate-300">No checkpoints due. Explore the map or prepare for tonight's call.</div>
+            ) : (
+              <div className="space-y-2">
+                {due.map(q => (
+                  <div key={q.id} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-2.5 py-2">
+                    <div className="flex-1 min-w-0 mr-2">
+                      <div className="text-sm font-medium truncate">{skillById.get(q.skill_id)?.name}</div>
+                      <div className="text-xs text-slate-300">{new Date(q.due_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · {q.items_count ?? 3} items</div>
+                    </div>
+                    <Button size="sm" className="bg-violet-600 hover:bg-violet-500 shrink-0">Start</Button>
                   </div>
-                  <Button className="bg-violet-600 hover:bg-violet-500">Start</Button>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-      <CallCard />
-      <ArtifactsCard />
-      <AllocatePointsCard />
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        <CallCard />
+        <ArtifactsCard />
+      </div>
     </div>
   )
 }
@@ -426,11 +445,16 @@ function CallCard(){
 
   return (
     <Card className="bg-white/5 border-white/10">
-      <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2"><Clock className="size-5"/> Evening Call</CardTitle></CardHeader>
-      <CardContent>
-        <div className="text-sm text-slate-300">Next call at {new Date(next).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+      <CardHeader className="pb-2 px-3 pt-3">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Clock className="size-4"/> Evening Call
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="px-3 pb-3">
+        <div className="text-xs md:text-sm text-slate-300">Next call at {new Date(next).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
         <div className="mt-2 flex gap-2">
           <Button
+            size="sm"
             onClick={handleCallNow}
             disabled={isLoading}
             className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -450,57 +474,16 @@ function CallCard(){
 function ArtifactsCard(){
   return (
     <Card className="bg-white/5 border-white/10">
-      <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2"><Sparkles className="size-5"/> Artifacts</CardTitle></CardHeader>
-      <CardContent className="flex flex-wrap gap-2">
+      <CardHeader className="pb-2 px-3 pt-3">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Sparkles className="size-4"/> Artifacts
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="px-3 pb-3 flex flex-wrap gap-1.5">
         {ARTIFACTS.map(a => (
-          <Badge key={a.id} className="bg-fuchsia-600/20 border-fuchsia-400/30 text-fuchsia-200">{a.name}</Badge>
+          <Badge key={a.id} className="bg-fuchsia-600/20 border-fuchsia-400/30 text-fuchsia-200 text-xs">{a.name}</Badge>
         ))}
       </CardContent>
     </Card>
-  )
-}
-function AllocatePointsCard(){
-  const [pool, setPool] = useState(4)
-  const discovered = USER_SKILLS.filter(u => u.discovered)
-  return (
-    <Card className="bg-gradient-to-br from-amber-600/20 to-amber-400/10 border-amber-200/20">
-      <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2"><Star className="size-5"/> Allocate Points</CardTitle></CardHeader>
-      <CardContent className="space-y-2">
-        <div className="text-sm text-amber-100/90">Pool: {pool}</div>
-        <div className="space-y-2 max-h-52 overflow-auto pr-1">
-          {discovered.map(u => (
-            <div key={u.skill_id} className="rounded-xl border border-white/10 bg-white/5 p-2">
-              <div className="flex items-center justify-between text-sm">
-                <span>{SKILLS.find(s => s.id === u.skill_id)?.name}</span>
-                <span>Lv {u.level} · XP {u.xp}</span>
-              </div>
-              <div className="mt-1 flex items-center gap-2">
-                <Button variant="outline" onClick={() => setPool(p => Math.min(4, p + 1))}>+1</Button>
-                <Button onClick={() => setPool(p => Math.max(0, p - 1))} className="bg-amber-600 hover:bg-amber-500">Assign</Button>
-              </div>
-            </div>
-          ))}
-        </div>
-        <Button disabled={pool===4} className="w-full bg-amber-600 hover:bg-amber-500">Confirm</Button>
-      </CardContent>
-    </Card>
-  )
-}
-
-function MiniMap({ worldW, worldH, camX, camY, zoom }:{ worldW:number; worldH:number; camX:any; camY:any; zoom:number }){
-  const viewW = 260 / zoom
-  const viewH = 150 / zoom
-  const vx = useTransform(camX, x => (-x / (worldW)) * 200)
-  const vy = useTransform(camY, y => (-y / (worldH)) * 120)
-  return (
-    <div className="fixed left-4 bottom-4 z-30">
-      <div className="rounded-xl border border-white/10 bg-black/50 backdrop-blur p-2">
-        <div className="text-xs mb-1 flex items-center gap-1 opacity-80"><Compass className="size-3"/> Minimap</div>
-        <div className="relative h-[120px] w-[200px] rounded-lg overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(88,140,240,0.15), rgba(90,180,150,0.15))' }}>
-          <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 30% 60%, rgba(255,255,255,0.1) 0, transparent 40%), radial-gradient(circle at 80% 30%, rgba(255,255,255,0.1) 0, transparent 40%)' }}/>
-          <motion.div style={{ position: 'absolute', left: vx, top: vy, width: viewW as any, height: viewH as any, border: '1px solid rgba(255,255,255,0.7)' } as any} />
-        </div>
-      </div>
-    </div>
   )
 }
