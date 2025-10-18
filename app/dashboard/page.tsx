@@ -364,14 +364,53 @@ function Dock({ onClose }: { onClose: () => void }){
 }
 function CallCard(){
   const next = addMinsISO(120)
+  const [isLoading, setIsLoading] = useState(false)
+  const [message, setMessage] = useState('')
+
+  const handleCallNow = async () => {
+    setIsLoading(true)
+    setMessage('')
+
+    try {
+      const response = await fetch('/api/calls/initiate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setMessage(`✓ ${data.message || 'Call initiated successfully!'}`)
+      } else {
+        setMessage(`✗ ${data.error || 'Failed to initiate call'}`)
+      }
+    } catch (error) {
+      setMessage('✗ Network error. Please try again.')
+      console.error('Call initiation error:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <Card className="bg-white/5 border-white/10">
       <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2"><Clock className="size-5"/> Evening Call</CardTitle></CardHeader>
       <CardContent>
         <div className="text-sm text-slate-300">Next call at {new Date(next).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
         <div className="mt-2 flex gap-2">
-          <Button className="bg-emerald-600 hover:bg-emerald-500">Call now</Button>
+          <Button
+            onClick={handleCallNow}
+            disabled={isLoading}
+            className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? 'Calling...' : 'Call now'}
+          </Button>
         </div>
+        {message && (
+          <div className={`mt-2 text-xs ${message.startsWith('✓') ? 'text-emerald-300' : 'text-red-300'}`}>
+            {message}
+          </div>
+        )}
       </CardContent>
     </Card>
   )

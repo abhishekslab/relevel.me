@@ -30,3 +30,10 @@ yarn-error.log*
 # OS
 .DS_Store
 Thumbs.db
+
+# ideation and rough work
+temp
+
+# Supabase
+supabase/.temp/
+supabase/.branches/
