@@ -1,0 +1,33 @@
+{
+  "name": "Relevel.me — Re-level Your Real Life",
+  "short_name": "Relevel.me",
+  "description": "Voice-first journaling platform guided by your AI companion Artha. Reflect daily, earn XP, unlock new skills, and track your growth like an RPG for real life.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0E0A1E",
+  "theme_color": "#8F7BFF",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["productivity", "lifestyle", "education"],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Open your skill worldboard",
+      "url": "/dashboard",
+      "icons": [{ "src": "/logo.png", "sizes": "96x96" }]
+    }
+  ]
+}

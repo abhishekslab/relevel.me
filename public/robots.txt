@@ -1,0 +1,7 @@
+# robots.txt for relevel.me
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://relevel.me/sitemap.xml
