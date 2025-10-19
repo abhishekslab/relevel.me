@@ -2,8 +2,9 @@
 'use client'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 import { motion, useMotionValue, AnimatePresence } from 'framer-motion'
-import { Flame, Sparkles, Target, Clock, X, Volume2, VolumeX } from 'lucide-react'
+import { Flame, Sparkles, Target, Clock, X, Volume2, VolumeX, User, LogOut } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -12,6 +13,7 @@ import { Canvas, useThree } from '@react-three/fiber'
 import { Stars, Float, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { playClickSound, toggleMusicMute, getMusicMutedState, playBackgroundMusic, isMusicActuallyPlaying } from '@/lib/sound'
+import { useAuth } from '@/lib/auth-context'
 
 type UUID = string
 type Biome = 'meadow'|'forest'|'desert'|'mist'|'tech'|'peaks'
@@ -201,6 +203,9 @@ function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, se
   const streak = 5
   const [isMusicMuted, setIsMusicMuted] = useState(false)
   const [isMusicPlaying, setIsMusicPlaying] = useState(false)
+  const [showUserMenu, setShowUserMenu] = useState(false)
+  const { user, subscription, signOut } = useAuth()
+  const router = useRouter()
 
   // Initialize mute state from localStorage
   useEffect(() => {
@@ -244,6 +249,12 @@ function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, se
     setTimeout(() => setIsMusicPlaying(isMusicActuallyPlaying()), 100)
   }
 
+  const handleSignOut = async () => {
+    playClickSound()
+    await signOut()
+    router.push('/')
+  }
+
   return (
     <div className="pointer-events-none fixed top-0 left-0 right-0 z-40">
       <div className="mx-auto max-w-7xl px-2 md:px-4 py-2 md:py-3 flex items-center gap-2 md:gap-3">
@@ -270,6 +281,35 @@ function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, se
               <Volume2 className="size-5 text-cyan-300"/>
             )}
           </button>
+          <div className="relative">
+            <button
+              onClick={() => { playClickSound(); setShowUserMenu(!showUserMenu) }}
+              className="rounded-xl bg-emerald-500/20 border border-emerald-400/40 p-2 hover:bg-emerald-500/30 transition active:scale-95"
+              title="Account"
+            >
+              <User className="size-5 text-emerald-300"/>
+            </button>
+            {showUserMenu && (
+              <div className="absolute right-0 mt-2 w-64 rounded-xl bg-[#0b0f17] border border-white/10 shadow-xl overflow-hidden">
+                <div className="p-3 border-b border-white/10">
+                  <p className="text-xs text-white/40">Signed in as</p>
+                  <p className="text-sm font-medium truncate">{user?.email}</p>
+                  {subscription && (
+                    <Badge className="mt-1 bg-violet-500/20 text-violet-400 border-violet-500/30 text-xs">
+                      {subscription.tier.toUpperCase()} Tier
+                    </Badge>
+                  )}
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="w-full p-3 flex items-center gap-2 hover:bg-white/5 transition text-left text-sm"
+                >
+                  <LogOut className="size-4" />
+                  Sign Out
+                </button>
+              </div>
+            )}
+          </div>
           <button
             onClick={handleToggle}
             className="rounded-xl bg-violet-500/20 border border-violet-400/40 p-2 hover:bg-violet-500/30 transition active:scale-95"
