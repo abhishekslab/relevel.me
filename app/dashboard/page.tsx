@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import { motion, useMotionValue, AnimatePresence } from 'framer-motion'
-import { Flame, Star, Sparkles, Target, Clock, X } from 'lucide-react'
+import { Flame, Sparkles, Target, Clock, X, Volume2, VolumeX } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -11,7 +11,7 @@ import { Progress } from '@/components/ui/progress'
 import { Canvas, useThree } from '@react-three/fiber'
 import { Stars, Float, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
-import { playClickSound } from '@/lib/sound'
+import { playClickSound, toggleMusicMute, getMusicMutedState, playBackgroundMusic } from '@/lib/sound'
 
 type UUID = string
 type Biome = 'meadow'|'forest'|'desert'|'mist'|'tech'|'peaks'
@@ -83,6 +83,11 @@ export default function DashboardPage() {
   const [isWorldboardVisible, setIsWorldboardVisible] = useState(false)
   const camX = useMotionValue(-(WORLD_W/2 - 600))
   const camY = useMotionValue(-(WORLD_H/2 - 350))
+
+  // Start background music when dashboard loads
+  useEffect(() => {
+    playBackgroundMusic()
+  }, [])
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -189,12 +194,28 @@ export default function DashboardPage() {
 }
 
 function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, setIsWorldboardVisible }: { zoom: number; setZoom: (z:number)=>void; isDockOpen: boolean; setIsDockOpen: (open:boolean)=>void; isWorldboardVisible: boolean; setIsWorldboardVisible: (visible:boolean)=>void }){
-  const wrs = 72, streak = 5, points = 4
+  const streak = 5
+  const [isMusicMuted, setIsMusicMuted] = useState(false)
+
+  // Initialize mute state from localStorage
+  useEffect(() => {
+    setIsMusicMuted(getMusicMutedState())
+  }, [])
 
   const handleToggle = () => {
+    // Ensure music is playing (in case autoplay was blocked on refresh)
+    playBackgroundMusic()
     playClickSound()
     setIsDockOpen(!isDockOpen)
     setIsWorldboardVisible(!isWorldboardVisible)
+  }
+
+  const handleMusicToggle = () => {
+    // Ensure music is playing first (in case autoplay was blocked)
+    playBackgroundMusic()
+    const newMutedState = toggleMusicMute()
+    setIsMusicMuted(newMutedState)
+    playClickSound()
   }
 
   return (
@@ -203,19 +224,31 @@ function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, se
         <Image
           src="/logo.png"
           alt="Relevel.me"
-          width={48}
-          height={48}
-          className="pointer-events-auto size-10 md:size-12 drop-shadow-[0_0_12px_rgba(143,123,255,0.6)]"
+          width={56}
+          height={56}
+          className="pointer-events-auto size-14 drop-shadow-[0_0_16px_rgba(143,123,255,0.7)]"
         />
-        <div className="pointer-events-auto ml-auto flex items-center gap-1.5 md:gap-2 flex-wrap justify-end">
-          <Badge className="bg-emerald-500/15 text-emerald-200 border-emerald-500/30 text-xs md:text-sm">WRS {wrs}</Badge>
-          <Badge className="bg-orange-500/15 text-orange-200 border-orange-500/30 text-xs md:text-sm"><Flame className="size-3 md:size-4 mr-0.5 md:mr-1"/> {streak}d</Badge>
-          <Badge className="bg-amber-500/15 text-amber-200 border-amber-500/30 text-xs md:text-sm"><Star className="size-3 md:size-4 mr-0.5 md:mr-1"/> {points}</Badge>
+        <div className="pointer-events-auto ml-auto flex items-center gap-2 flex-wrap justify-end">
+          <div className="flex items-center gap-1.5 rounded-xl bg-orange-500/15 border border-orange-500/30 px-3 py-2 text-orange-200">
+            <Flame className="size-5"/>
+            <span className="text-sm font-semibold">{streak}d</span>
+          </div>
+          <button
+            onClick={handleMusicToggle}
+            className="rounded-xl bg-cyan-500/20 border border-cyan-400/40 p-2 hover:bg-cyan-500/30 transition active:scale-95"
+            title={isMusicMuted ? 'Unmute music' : 'Mute music'}
+          >
+            {isMusicMuted ? (
+              <VolumeX className="size-5 text-cyan-300"/>
+            ) : (
+              <Volume2 className="size-5 text-cyan-300"/>
+            )}
+          </button>
           <button
             onClick={handleToggle}
-            className="rounded-xl bg-violet-500/20 border border-violet-400/40 px-2 md:px-3 py-1.5 md:py-2 hover:bg-violet-500/30 transition active:scale-95"
+            className="rounded-xl bg-violet-500/20 border border-violet-400/40 p-2 hover:bg-violet-500/30 transition active:scale-95"
           >
-            <Sparkles className="size-4 md:size-5 text-fuchsia-300"/>
+            <Sparkles className="size-5 text-fuchsia-300"/>
           </button>
         </div>
       </div>
