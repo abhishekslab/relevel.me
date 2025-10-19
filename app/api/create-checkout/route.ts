@@ -64,43 +64,66 @@ export async function POST(request: Request) {
       )
     }
 
-    // Create checkout session with DodoPayments
-    // Documentation: https://docs.dodopayments.com/
-    const checkoutResponse = await fetch('https://api.dodopayments.com/v1/checkout/sessions', {
+    // Get product ID from environment (must be created in DodoPayments dashboard first)
+    const productId = process.env.DODOPAYMENTS_PRO_PRODUCT_ID
+
+    if (!productId) {
+      console.error('DodoPayments product ID not configured')
+      return NextResponse.json(
+        { error: 'Product not configured. Please create a product in DodoPayments dashboard and add DODOPAYMENTS_PRO_PRODUCT_ID to .env.local' },
+        { status: 500 }
+      )
+    }
+
+    // Create subscription with DodoPayments
+    // Documentation: https://docs.dodopayments.com/api-reference/subscriptions/post-subscriptions
+    const subscriptionResponse = await fetch('https://api.dodopayments.com/subscriptions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${dodoSecretKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        product_name: 'Relevel.me Pro',
-        price: 2900, // $29.00 in cents
-        currency: 'USD',
-        billing_period: 'monthly',
-        customer_email: email,
-        success_url: `${process.env.PUBLIC_URL || 'http://localhost:3000'}/dashboard?checkout=success`,
-        cancel_url: `${process.env.PUBLIC_URL || 'http://localhost:3000'}/pricing?checkout=cancelled`,
+        product_id: productId,
+        quantity: 1,
+        payment_link: true, // This generates a hosted checkout page
+        return_url: `${process.env.PUBLIC_URL || 'http://localhost:3000'}/dashboard?checkout=success`,
+        customer: {
+          email: email,
+          name: email.split('@')[0], // Use email prefix as name or get from user profile
+        },
+        billing: {
+          // These can be collected or use placeholder values
+          // DodoPayments will collect billing address during checkout
+          street: '',
+          city: '',
+          state: '',
+          country: 'US',
+          zipcode: 0
+        },
         metadata: {
           user_id: userRecord.id, // Use public.users.id, not auth.users.id
           tier: tier,
+          auth_user_id: userId, // Also store auth.users.id for reference
         },
       }),
     })
 
-    if (!checkoutResponse.ok) {
-      const error = await checkoutResponse.text()
+    if (!subscriptionResponse.ok) {
+      const error = await subscriptionResponse.text()
       console.error('DodoPayments error:', error)
       return NextResponse.json(
-        { error: 'Failed to create checkout session' },
+        { error: 'Failed to create subscription' },
         { status: 500 }
       )
     }
 
-    const checkoutData = await checkoutResponse.json()
+    const subscriptionData = await subscriptionResponse.json()
 
+    // DodoPayments returns a payment_link when payment_link: true is set
     return NextResponse.json({
-      checkoutUrl: checkoutData.checkout_url,
-      sessionId: checkoutData.id,
+      checkoutUrl: subscriptionData.payment_link,
+      subscriptionId: subscriptionData.subscription_id,
     })
   } catch (error) {
     console.error('Checkout error:', error)

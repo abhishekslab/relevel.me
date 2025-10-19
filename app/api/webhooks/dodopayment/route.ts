@@ -41,90 +41,132 @@ export async function POST(request: Request) {
     console.log('DodoPayment webhook event:', event.type)
 
     switch (event.type) {
-      case 'checkout.session.completed':
-        // Handle successful checkout
-        const { metadata, customer_id, subscription_id } = event.data
-        const { user_id, tier } = metadata
+      case 'subscription.active':
+        // Handle successful subscription activation (after payment)
+        // This event is sent when a subscription becomes active
+        const activeData = event.data
+        const activeMetadata = activeData.metadata || {}
+        const activeUserId = activeMetadata.user_id
+
+        if (!activeUserId) {
+          console.error('No user_id in metadata')
+          return NextResponse.json({ error: 'Missing user_id in metadata' }, { status: 400 })
+        }
 
         // Create or update subscription
-        const { error: subError } = await supabase.from('subscriptions').upsert({
-          user_id,
-          tier,
+        const { error: activeError } = await supabase.from('subscriptions').upsert({
+          user_id: activeUserId,
+          tier: activeMetadata.tier || 'pro',
           status: 'active',
-          dodo_customer_id: customer_id,
-          dodo_subscription_id: subscription_id,
-          current_period_start: new Date().toISOString(),
-          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+          dodo_customer_id: activeData.customer_id,
+          dodo_subscription_id: activeData.subscription_id || activeData.id,
+          current_period_start: activeData.current_period_start || new Date().toISOString(),
+          current_period_end: activeData.current_period_end || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
           cancel_at_period_end: false,
         })
 
-        if (subError) {
-          console.error('Error creating subscription:', subError)
+        if (activeError) {
+          console.error('Error creating subscription:', activeError)
           return NextResponse.json({ error: 'Database error' }, { status: 500 })
         }
 
-        console.log(`Subscription created for user ${user_id}`)
+        console.log(`Subscription activated for user ${activeUserId}`)
         break
 
-      case 'subscription.updated':
-        // Handle subscription updates (e.g., renewal)
-        const { subscription } = event.data
+      case 'subscription.renewed':
+        // Handle subscription renewal
+        const renewedData = event.data
+        const renewedSubId = renewedData.subscription_id || renewedData.id
 
-        const { error: updateError } = await supabase
+        const { error: renewError } = await supabase
           .from('subscriptions')
           .update({
-            status: subscription.status,
-            current_period_start: subscription.current_period_start,
-            current_period_end: subscription.current_period_end,
-            cancel_at_period_end: subscription.cancel_at_period_end,
+            status: 'active',
+            current_period_start: renewedData.current_period_start,
+            current_period_end: renewedData.current_period_end,
+            updated_at: new Date().toISOString(),
           })
-          .eq('dodo_subscription_id', subscription.id)
+          .eq('dodo_subscription_id', renewedSubId)
 
-        if (updateError) {
-          console.error('Error updating subscription:', updateError)
+        if (renewError) {
+          console.error('Error renewing subscription:', renewError)
           return NextResponse.json({ error: 'Database error' }, { status: 500 })
         }
 
-        console.log(`Subscription updated: ${subscription.id}`)
+        console.log(`Subscription renewed: ${renewedSubId}`)
+        break
+
+      case 'subscription.on_hold':
+        // Handle subscription put on hold (e.g., payment issues)
+        const onHoldData = event.data
+        const onHoldSubId = onHoldData.subscription_id || onHoldData.id
+
+        const { error: holdError } = await supabase
+          .from('subscriptions')
+          .update({
+            status: 'past_due',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('dodo_subscription_id', onHoldSubId)
+
+        if (holdError) {
+          console.error('Error marking subscription on hold:', holdError)
+          return NextResponse.json({ error: 'Database error' }, { status: 500 })
+        }
+
+        console.log(`Subscription on hold: ${onHoldSubId}`)
         break
 
       case 'subscription.cancelled':
-        // Handle subscription cancellation
-        const { subscription: cancelledSub } = event.data
+      case 'subscription.canceled':
+        // Handle subscription cancellation (support both spellings)
+        const cancelledData = event.data
+        const cancelledSubId = cancelledData.subscription_id || cancelledData.id
 
         const { error: cancelError } = await supabase
           .from('subscriptions')
           .update({
             status: 'canceled',
             cancel_at_period_end: true,
+            updated_at: new Date().toISOString(),
           })
-          .eq('dodo_subscription_id', cancelledSub.id)
+          .eq('dodo_subscription_id', cancelledSubId)
 
         if (cancelError) {
           console.error('Error cancelling subscription:', cancelError)
           return NextResponse.json({ error: 'Database error' }, { status: 500 })
         }
 
-        console.log(`Subscription cancelled: ${cancelledSub.id}`)
+        console.log(`Subscription cancelled: ${cancelledSubId}`)
         break
 
-      case 'payment.failed':
-        // Handle failed payment
-        const { subscription: failedSub } = event.data
+      case 'subscription.failed':
+        // Handle subscription failure
+        const failedData = event.data
+        const failedSubId = failedData.subscription_id || failedData.id
 
         const { error: failError } = await supabase
           .from('subscriptions')
           .update({
             status: 'past_due',
+            updated_at: new Date().toISOString(),
           })
-          .eq('dodo_subscription_id', failedSub.id)
+          .eq('dodo_subscription_id', failedSubId)
 
         if (failError) {
-          console.error('Error marking subscription past due:', failError)
+          console.error('Error marking subscription failed:', failError)
           return NextResponse.json({ error: 'Database error' }, { status: 500 })
         }
 
-        console.log(`Payment failed for subscription: ${failedSub.id}`)
+        console.log(`Subscription failed: ${failedSubId}`)
+        break
+
+      case 'payment.succeeded':
+        // Handle successful payment (could be initial or renewal)
+        const paymentData = event.data
+        console.log(`Payment succeeded for subscription: ${paymentData.subscription_id || 'N/A'}`)
+        // Most subscription status updates are handled by subscription events
+        // This is logged for reference
         break
 
       default:
