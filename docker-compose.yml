@@ -5,16 +5,20 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      # Pass build args from .env.local for Next.js build
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
     image: relevel-me:latest
     container_name: relevel-me
     restart: unless-stopped
     ports:
       - "3001:3000"  # Map container port 3000 to host port 3001
+    # Load runtime env vars from .env.local
+    env_file:
+      - .env.local
     environment:
       - NODE_ENV=production
-    # Uncomment if you need env file
-    # env_file:
-    #   - .env.local
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
       interval: 30s
