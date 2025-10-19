@@ -1,6 +1,9 @@
 'use client'
 
 import { Suspense, useEffect, useState } from 'react'
+
+// Force dynamic rendering - don't pre-render during build
+export const dynamic = 'force-dynamic'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
