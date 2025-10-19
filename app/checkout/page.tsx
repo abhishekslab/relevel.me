@@ -1,11 +1,7 @@
 'use client'
 
 import { Suspense, useEffect, useState } from 'react'
-
-// Force dynamic rendering - don't pre-render during build
-export const dynamic = 'force-dynamic'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -14,44 +10,11 @@ import Link from 'next/link'
 import { Sparkles, CreditCard, Lock, Shield, ArrowLeft } from 'lucide-react'
 
 function CheckoutContent() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const tier = searchParams.get('tier') || 'pro'
 
-  const [user, setUser] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
-
-  useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const supabase = createClient()
-        const { data: { user }, error } = await supabase.auth.getUser()
-
-        if (error) {
-          console.error('Auth error:', error)
-          alert(`Authentication error: ${error.message}`)
-          setLoading(false)
-          return
-        }
-
-        if (!user) {
-          router.push('/signup')
-          return
-        }
-
-        setUser(user)
-        setLoading(false)
-      } catch (error) {
-        console.error('Checkout page error:', error)
-        alert(`Error loading page: ${error instanceof Error ? error.message : 'Unknown error'}`)
-        setLoading(false)
-      }
-    }
-
-    checkUser()
-  }, [router])
 
   const handleCheckout = async () => {
     if (!agreedToTerms) {
@@ -66,11 +29,7 @@ function CheckoutContent() {
       const response = await fetch('/api/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tier,
-          userId: user.id,
-          email: user.email,
-        }),
+        body: JSON.stringify({ tier }),
       })
 
       const data = await response.json()
@@ -87,14 +46,6 @@ function CheckoutContent() {
       alert('An error occurred. Please try again.')
       setProcessing(false)
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#0b0f17] flex items-center justify-center">
-        <div className="text-white/60">Loading...</div>
-      </div>
-    )
   }
 
   const tierInfo = {
@@ -124,7 +75,7 @@ function CheckoutContent() {
           </div>
           <h2 className="text-2xl font-semibold">Complete Your Purchase</h2>
           <p className="text-white/60">
-            You're subscribing as <span className="text-violet-400">{user?.email}</span>
+            Complete your checkout to access the dashboard
           </p>
         </div>
 

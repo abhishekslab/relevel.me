@@ -4,7 +4,7 @@ import { useState } from 'react'
 
 // Force dynamic rendering - don't pre-render during build
 export const dynamic = 'force-dynamic'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/auth/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'

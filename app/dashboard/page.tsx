@@ -13,7 +13,7 @@ import { Canvas, useThree } from '@react-three/fiber'
 import { Stars, Float, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { playClickSound, toggleMusicMute, getMusicMutedState, playBackgroundMusic, isMusicActuallyPlaying } from '@/lib/sound'
-import { useAuth } from '@/lib/auth-context'
+import { signOut as serverSignOut } from './actions'
 
 type UUID = string
 type Biome = 'meadow'|'forest'|'desert'|'mist'|'tech'|'peaks'
@@ -204,7 +204,6 @@ function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, se
   const [isMusicMuted, setIsMusicMuted] = useState(false)
   const [isMusicPlaying, setIsMusicPlaying] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const { user, subscription, signOut } = useAuth()
   const router = useRouter()
 
   // Initialize mute state from localStorage
@@ -251,8 +250,7 @@ function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, se
 
   const handleSignOut = async () => {
     playClickSound()
-    await signOut()
-    router.push('/')
+    await serverSignOut()
   }
 
   return (
@@ -290,16 +288,7 @@ function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, se
               <User className="size-5 text-emerald-300"/>
             </button>
             {showUserMenu && (
-              <div className="absolute right-0 mt-2 w-64 rounded-xl bg-[#0b0f17] border border-white/10 shadow-xl overflow-hidden">
-                <div className="p-3 border-b border-white/10">
-                  <p className="text-xs text-white/40">Signed in as</p>
-                  <p className="text-sm font-medium truncate">{user?.email}</p>
-                  {subscription && (
-                    <Badge className="mt-1 bg-violet-500/20 text-violet-400 border-violet-500/30 text-xs">
-                      {subscription.tier.toUpperCase()} Tier
-                    </Badge>
-                  )}
-                </div>
+              <div className="absolute right-0 mt-2 w-48 rounded-xl bg-[#0b0f17] border border-white/10 shadow-xl overflow-hidden">
                 <button
                   onClick={handleSignOut}
                   className="w-full p-3 flex items-center gap-2 hover:bg-white/5 transition text-left text-sm"

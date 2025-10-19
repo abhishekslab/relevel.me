@@ -1,12 +1,15 @@
 import { NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase/server'
+import { requireAuth, createServerClient } from '@/lib/auth/server'
 
 export async function POST(request: Request) {
   try {
-    const { tier, userId, email } = await request.json()
+    // Require authentication
+    const session = await requireAuth()
+
+    const { tier } = await request.json()
 
     // Validate inputs
-    if (!tier || !userId || !email) {
+    if (!tier) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -27,7 +30,7 @@ export async function POST(request: Request) {
     const { data: userRecord } = await supabase
       .from('users')
       .select('id')
-      .eq('auth_user_id', userId)
+      .eq('auth_user_id', session.user.id)
       .single()
 
     if (!userRecord) {
@@ -76,37 +79,50 @@ export async function POST(request: Request) {
 
     // Create subscription with DodoPayments
     // Documentation: https://docs.dodopayments.com/api-reference/subscriptions/post-subscriptions
-    const subscriptionResponse = await fetch('https://api.dodopayments.com/subscriptions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${dodoSecretKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        product_id: productId,
-        quantity: 1,
-        payment_link: true, // This generates a hosted checkout page
-        return_url: `${process.env.PUBLIC_URL || 'http://localhost:3000'}/dashboard?checkout=success`,
-        customer: {
-          email: email,
-          name: email.split('@')[0], // Use email prefix as name or get from user profile
+    let subscriptionResponse
+    try {
+      subscriptionResponse = await fetch('https://api.dodopayments.com/subscriptions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${dodoSecretKey}`,
+          'Content-Type': 'application/json',
         },
-        billing: {
-          // These can be collected or use placeholder values
-          // DodoPayments will collect billing address during checkout
-          street: '',
-          city: '',
-          state: '',
-          country: 'US',
-          zipcode: 0
-        },
-        metadata: {
-          user_id: userRecord.id, // Use public.users.id, not auth.users.id
-          tier: tier,
-          auth_user_id: userId, // Also store auth.users.id for reference
-        },
-      }),
-    })
+        body: JSON.stringify({
+          product_id: productId,
+          quantity: 1,
+          payment_link: true, // This generates a hosted checkout page
+          return_url: `${process.env.PUBLIC_URL || 'http://localhost:3000'}/dashboard?checkout=success`,
+          customer: {
+            email: session.user.email || '',
+            name: session.user.email?.split('@')[0] || 'User',
+          },
+          billing: {
+            // These can be collected or use placeholder values
+            // DodoPayments will collect billing address during checkout
+            street: '',
+            city: '',
+            state: '',
+            country: 'US',
+            zipcode: 0
+          },
+          metadata: {
+            user_id: userRecord.id, // Use public.users.id, not auth.users.id
+            tier: tier,
+            auth_user_id: session.user.id, // Also store auth.users.id for reference
+          },
+        }),
+      })
+    } catch (fetchError: any) {
+      console.error('DodoPayments API connection failed:', fetchError.message)
+      console.error('This usually means:')
+      console.error('1. DodoPayments API is unreachable')
+      console.error('2. Network connectivity issues')
+      console.error('3. DNS resolution failure')
+      return NextResponse.json(
+        { error: 'Unable to connect to payment provider. Please try again later or contact support.' },
+        { status: 503 }
+      )
+    }
 
     if (!subscriptionResponse.ok) {
       const error = await subscriptionResponse.text()

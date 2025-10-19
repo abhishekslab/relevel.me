@@ -1,6 +1,10 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+/**
+ * Simplified middleware - only checks for valid session
+ * Individual pages handle subscription checks using requireSubscription()
+ */
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
     request: {
@@ -62,76 +66,25 @@ export async function middleware(request: NextRequest) {
     }
   )
 
+  // Use getUser() instead of getSession() for security
+  // getUser() validates the JWT by contacting the auth server
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protect /dashboard route
-  if (request.nextUrl.pathname.startsWith('/dashboard')) {
-    // Check if user is authenticated
+  // Protect authenticated routes - just check for user
+  if (request.nextUrl.pathname.startsWith('/dashboard') ||
+      request.nextUrl.pathname.startsWith('/checkout') ||
+      request.nextUrl.pathname.startsWith('/settings')) {
     if (!user) {
-      const redirectUrl = new URL('/signup', request.url)
-      return NextResponse.redirect(redirectUrl)
-    }
-
-    // Get user record from public.users table
-    const { data: userRecord } = await supabase
-      .from('users')
-      .select('id')
-      .eq('auth_user_id', user.id)
-      .single()
-
-    if (!userRecord) {
-      const redirectUrl = new URL('/pricing', request.url)
-      return NextResponse.redirect(redirectUrl)
-    }
-
-    // Check if user has an active subscription
-    const { data: subscription } = await supabase
-      .from('subscriptions')
-      .select('*')
-      .eq('user_id', userRecord.id)
-      .eq('status', 'active')
-      .single()
-
-    if (!subscription) {
-      const redirectUrl = new URL('/pricing', request.url)
-      return NextResponse.redirect(redirectUrl)
-    }
-  }
-
-  // Protect /checkout route - require authentication
-  if (request.nextUrl.pathname.startsWith('/checkout')) {
-    if (!user) {
-      // Not authenticated, redirect to signup
       const redirectUrl = new URL('/signup', request.url)
       return NextResponse.redirect(redirectUrl)
     }
   }
 
-  // Redirect authenticated users from signup to pricing (if no subscription) or dashboard (if active subscription)
+  // Redirect authenticated users away from signup
   if (request.nextUrl.pathname === '/signup' && user) {
-    const { data: userRecord } = await supabase
-      .from('users')
-      .select('id')
-      .eq('auth_user_id', user.id)
-      .single()
-
-    if (userRecord) {
-      const { data: subscription } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('user_id', userRecord.id)
-        .eq('status', 'active')
-        .single()
-
-      if (subscription) {
-        const redirectUrl = new URL('/dashboard', request.url)
-        return NextResponse.redirect(redirectUrl)
-      }
-    }
-
-    const redirectUrl = new URL('/pricing', request.url)
+    const redirectUrl = new URL('/dashboard', request.url)
     return NextResponse.redirect(redirectUrl)
   }
 
@@ -139,5 +92,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/signup', '/checkout'],
+  matcher: ['/dashboard/:path*', '/signup', '/checkout', '/settings'],
 }

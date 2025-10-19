@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase/server'
+import { createServerClient } from '@/lib/auth/server'
 import crypto from 'crypto'
 
 // Verify webhook signature from DodoPayments
