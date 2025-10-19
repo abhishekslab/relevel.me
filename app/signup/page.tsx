@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Sparkles, Mail, CheckCircle2 } from 'lucide-react'
 
 export default function SignupPage() {
@@ -27,7 +28,7 @@ export default function SignupPage() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth/callback`,
       },
     })
 
@@ -69,7 +70,13 @@ export default function SignupPage() {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center space-y-2">
           <div className="inline-flex items-center gap-2 mb-4">
-            <Sparkles className="w-8 h-8 text-violet-400" />
+            <Image
+              src="/logo.png"
+              alt="Relevel.me"
+              width={32}
+              height={32}
+              className="drop-shadow-[0_0_16px_rgba(143,123,255,0.4)]"
+            />
             <h1 className="text-3xl font-bold">relevel.me</h1>
           </div>
           <p className="text-white/60">Enter your email to receive a magic link</p>

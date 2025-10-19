@@ -91,7 +91,7 @@ export async function POST(request: Request) {
         product_id: productId,
         quantity: 1,
         payment_link: true, // This generates a hosted checkout page
-        return_url: `${process.env.PUBLIC_URL || 'http://localhost:3000'}/dashboard?checkout=success`,
+        return_url: `${process.env.NEXT_PUBLIC_APP_URL || process.env.PUBLIC_URL || 'http://localhost:3000'}/dashboard?checkout=success`,
         customer: {
           email: session.user.email || '',
           name: session.user.email?.split('@')[0] || 'User',

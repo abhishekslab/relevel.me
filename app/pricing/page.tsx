@@ -11,6 +11,7 @@ import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import {
   Sparkles,
@@ -92,7 +93,13 @@ export default function PricingPage() {
         {/* Header */}
         <div className="text-center space-y-4">
           <div className="inline-flex items-center gap-2 mb-2">
-            <Sparkles className="w-8 h-8 text-violet-400" />
+            <Image
+              src="/logo.png"
+              alt="Relevel.me"
+              width={32}
+              height={32}
+              className="drop-shadow-[0_0_16px_rgba(143,123,255,0.4)]"
+            />
             <h1 className="text-3xl font-bold">relevel.me</h1>
           </div>
           <h2 className="text-4xl font-bold">Choose Your Path</h2>

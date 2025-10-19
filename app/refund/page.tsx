@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { Sparkles, DollarSign, AlertCircle, CheckCircle2, XCircle, Mail } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 
@@ -9,7 +10,13 @@ export default function RefundPolicyPage() {
         {/* Header */}
         <div className="text-center space-y-4">
           <Link href="/" className="inline-flex items-center gap-2 mb-2 hover:opacity-80 transition">
-            <Sparkles className="w-8 h-8 text-violet-400" />
+            <Image
+              src="/logo.png"
+              alt="Relevel.me"
+              width={32}
+              height={32}
+              className="drop-shadow-[0_0_16px_rgba(143,123,255,0.4)]"
+            />
             <h1 className="text-3xl font-bold">relevel.me</h1>
           </Link>
           <h2 className="text-4xl font-bold">Refund Policy</h2>
