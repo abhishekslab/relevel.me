@@ -53,11 +53,10 @@ export async function POST(request: Request) {
     }
 
     // DodoPayments API integration
-    const dodoPublicKey = process.env.NEXT_PUBLIC_DODOPAYMENTS_PUBLIC_KEY
     const dodoSecretKey = process.env.DODOPAYMENTS_SECRET_KEY
 
-    if (!dodoPublicKey || !dodoSecretKey) {
-      console.error('DodoPayments keys not configured')
+    if (!dodoSecretKey) {
+      console.error('DodoPayments API key not configured')
       return NextResponse.json(
         { error: 'Payment system not configured' },
         { status: 500 }
