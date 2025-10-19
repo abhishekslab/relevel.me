@@ -39,16 +39,21 @@ export default function PricingPage() {
     setLoading(true)
     setNotifyTier(tier)
 
-    const supabase = createClient()
-    const { error } = await supabase.from('waitlist').insert({
-      email: notifyEmail,
-      tier: tier,
-    })
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.from('waitlist').insert({
+        email: notifyEmail,
+        tier: tier,
+      })
 
-    if (error) {
-      alert('Failed to join waitlist. You may have already signed up.')
-    } else {
-      setNotifySuccess(true)
+      if (error) {
+        alert('Failed to join waitlist. You may have already signed up.')
+      } else {
+        setNotifySuccess(true)
+      }
+    } catch (error) {
+      console.error('Waitlist error:', error)
+      alert('An error occurred. Please try again.')
     }
 
     setLoading(false)

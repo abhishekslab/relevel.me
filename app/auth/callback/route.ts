@@ -1,6 +1,7 @@
-import { createServerClient } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import { type NextRequest } from 'next/server'
+import { cookies } from 'next/headers'
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
@@ -8,8 +9,31 @@ export async function GET(request: NextRequest) {
   const origin = requestUrl.origin
 
   if (code) {
-    const supabase = createServerClient()
-    const { data } = await supabase.auth.exchangeCodeForSession(code)
+    const cookieStore = cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value
+          },
+          set(name: string, value: string, options: any) {
+            cookieStore.set({ name, value, ...options })
+          },
+          remove(name: string, options: any) {
+            cookieStore.set({ name, value: '', ...options })
+          },
+        },
+      }
+    )
+
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+
+    if (error) {
+      console.error('Auth callback error:', error)
+      return NextResponse.redirect(`${origin}/signup?error=auth_failed`)
+    }
 
     if (data.user) {
       // Check if user has an active subscription
@@ -32,9 +56,12 @@ export async function GET(request: NextRequest) {
           return NextResponse.redirect(`${origin}/dashboard`)
         }
       }
+
+      // No subscription, redirect to pricing
+      return NextResponse.redirect(`${origin}/pricing`)
     }
   }
 
-  // No subscription, redirect to pricing
+  // No code or no user, redirect to pricing
   return NextResponse.redirect(`${origin}/pricing`)
 }

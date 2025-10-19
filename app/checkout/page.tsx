@@ -25,16 +25,29 @@ function CheckoutContent() {
 
   useEffect(() => {
     const checkUser = async () => {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
+      try {
+        const supabase = createClient()
+        const { data: { user }, error } = await supabase.auth.getUser()
 
-      if (!user) {
-        router.push('/signup')
-        return
+        if (error) {
+          console.error('Auth error:', error)
+          alert(`Authentication error: ${error.message}`)
+          setLoading(false)
+          return
+        }
+
+        if (!user) {
+          router.push('/signup')
+          return
+        }
+
+        setUser(user)
+        setLoading(false)
+      } catch (error) {
+        console.error('Checkout page error:', error)
+        alert(`Error loading page: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        setLoading(false)
       }
-
-      setUser(user)
-      setLoading(false)
     }
 
     checkUser()
