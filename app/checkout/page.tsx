@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -10,7 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import Link from 'next/link'
 import { Sparkles, CreditCard, Lock, Shield, ArrowLeft } from 'lucide-react'
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const tier = searchParams.get('tier') || 'pro'
@@ -216,5 +216,17 @@ export default function CheckoutPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#0b0f17] flex items-center justify-center">
+        <div className="text-white/60">Loading...</div>
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
   )
 }
