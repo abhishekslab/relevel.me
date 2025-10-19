@@ -4,7 +4,7 @@
 
 Your DodoPayments subscription workflow had several issues that prevented it from working in production. Here's what was corrected:
 
-### 1. API Endpoint Correction ✅
+### 1. SDK Integration ✅
 
 **Before:**
 ```javascript
@@ -13,10 +13,16 @@ fetch('https://api.dodopayments.com/v1/checkout/sessions', { ... })
 
 **After:**
 ```javascript
-fetch('https://api.dodopayments.com/subscriptions', { ... })
+import DodoPayments from 'dodopayments'
+
+const dodoClient = new DodoPayments({
+  bearerToken: process.env.DODOPAYMENTS_SECRET_KEY,
+})
+
+const subscription = await dodoClient.subscriptions.create({ ... })
 ```
 
-**Why**: DodoPayments uses `/subscriptions` endpoint for creating subscriptions, not a checkout sessions endpoint.
+**Why**: DodoPayments provides an official SDK that should be used instead of raw fetch calls. This provides better type safety, error handling, and maintainability.
 
 ### 2. Request Body Structure ✅
 

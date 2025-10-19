@@ -7,8 +7,7 @@ This guide will help you complete the setup of the authentication and subscripti
 ### Pages Created
 - `/signup` - Magic link email authentication
 - `/auth/callback` - Auth callback handler
-- `/pricing` - Subscription tier pricing page
-- `/checkout` - Payment checkout page with DodoPayment integration
+- `/pricing` - Subscription tier pricing page (redirects directly to DodoPayments)
 - `/privacy` - Privacy policy (full content)
 - `/terms` - Terms and conditions (full content)
 - `/refund` - Refund policy (full content)
@@ -20,7 +19,7 @@ This guide will help you complete the setup of the authentication and subscripti
 - ✅ Auth context provider
 - ✅ User menu with sign out in dashboard
 - ✅ Database schema for users & subscriptions
-- ✅ DodoPayment checkout integration
+- ✅ DodoPayments SDK integration (direct checkout redirect)
 - ✅ Webhook handler for subscription events
 - ✅ UI components (input, label, form, checkbox, textarea)
 
@@ -123,8 +122,7 @@ PUBLIC_URL=https://yourdomain.com  # Change from http://localhost:3000
 
 3. **Test checkout (in sandbox mode):**
    - Click "Get Started" on Pro tier
-   - Agree to terms
-   - Click "Subscribe" (will redirect to DodoPayments checkout)
+   - Will immediately redirect to DodoPayments hosted checkout
    - Use test card: `4242 4242 4242 4242`
    - Complete checkout
    - Should redirect to `/dashboard?checkout=success`
@@ -243,19 +241,21 @@ Before deploying to production:
 
 ## 🔄 API Changes Summary (January 2025)
 
-The DodoPayments integration has been updated with the correct API implementation:
+The DodoPayments integration has been updated with the official SDK:
 
 **What Changed:**
-- ✅ API endpoint: Now using `/subscriptions` instead of `/v1/checkout/sessions`
+- ✅ SDK Integration: Now using `dodopayments` npm package instead of raw fetch calls
+- ✅ Direct Checkout: Removed intermediate checkout page - users redirect directly to DodoPayments
 - ✅ Request structure: Proper format with `product_id`, `billing`, `customer`, `payment_link: true`
 - ✅ Webhook events: Updated to match DodoPayments actual events (`subscription.active`, `subscription.renewed`, etc.)
 - ✅ Product configuration: Now requires creating products in DodoPayments dashboard first
 
 **Required Actions:**
-1. Create a subscription product in your DodoPayments dashboard
-2. Add the product ID to `.env.local` as `DODOPAYMENTS_PRO_PRODUCT_ID`
-3. Update webhook event subscriptions to include the correct event types
-4. Test the flow end-to-end before deploying to production
+1. Install DodoPayments SDK: `npm install dodopayments`
+2. Create a subscription product in your DodoPayments dashboard
+3. Add the product ID to `.env.local` as `DODOPAYMENTS_PRO_PRODUCT_ID`
+4. Update webhook event subscriptions to include the correct event types
+5. Test the flow end-to-end before deploying to production
 
 ## 🆘 Troubleshooting
 

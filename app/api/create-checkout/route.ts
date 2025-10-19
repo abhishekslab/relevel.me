@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { requireAuth, createServerClient } from '@/lib/auth/server'
+import DodoPayments from 'dodopayments'
 
 export async function POST(request: Request) {
   try {
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
       )
     }
 
-    // DodoPayments API integration
+    // DodoPayments API integration using official SDK
     const dodoSecretKey = process.env.DODOPAYMENTS_SECRET_KEY
 
     if (!dodoSecretKey) {
@@ -77,68 +78,51 @@ export async function POST(request: Request) {
       )
     }
 
-    // Create subscription with DodoPayments
+    // Initialize DodoPayments SDK client
+    const dodoClient = new DodoPayments({
+      bearerToken: dodoSecretKey,
+    })
+
+    // Create subscription with DodoPayments SDK
     // Documentation: https://docs.dodopayments.com/api-reference/subscriptions/post-subscriptions
-    let subscriptionResponse
+    let subscription
     try {
-      subscriptionResponse = await fetch('https://api.dodopayments.com/subscriptions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${dodoSecretKey}`,
-          'Content-Type': 'application/json',
+      subscription = await dodoClient.subscriptions.create({
+        product_id: productId,
+        quantity: 1,
+        payment_link: true, // This generates a hosted checkout page
+        return_url: `${process.env.PUBLIC_URL || 'http://localhost:3000'}/dashboard?checkout=success`,
+        customer: {
+          email: session.user.email || '',
+          name: session.user.email?.split('@')[0] || 'User',
         },
-        body: JSON.stringify({
-          product_id: productId,
-          quantity: 1,
-          payment_link: true, // This generates a hosted checkout page
-          return_url: `${process.env.PUBLIC_URL || 'http://localhost:3000'}/dashboard?checkout=success`,
-          customer: {
-            email: session.user.email || '',
-            name: session.user.email?.split('@')[0] || 'User',
-          },
-          billing: {
-            // These can be collected or use placeholder values
-            // DodoPayments will collect billing address during checkout
-            street: '',
-            city: '',
-            state: '',
-            country: 'US',
-            zipcode: 0
-          },
-          metadata: {
-            user_id: userRecord.id, // Use public.users.id, not auth.users.id
-            tier: tier,
-            auth_user_id: session.user.id, // Also store auth.users.id for reference
-          },
-        }),
+        billing: {
+          // DodoPayments will collect billing address during checkout
+          street: '',
+          city: '',
+          state: '',
+          country: 'US',
+          zipcode: ''
+        },
+        metadata: {
+          user_id: userRecord.id, // Use public.users.id, not auth.users.id
+          tier: tier,
+          auth_user_id: session.user.id, // Also store auth.users.id for reference
+        },
       })
-    } catch (fetchError: any) {
-      console.error('DodoPayments API connection failed:', fetchError.message)
-      console.error('This usually means:')
-      console.error('1. DodoPayments API is unreachable')
-      console.error('2. Network connectivity issues')
-      console.error('3. DNS resolution failure')
+    } catch (sdkError: any) {
+      console.error('DodoPayments SDK error:', sdkError)
+      console.error('Error details:', sdkError.message)
       return NextResponse.json(
-        { error: 'Unable to connect to payment provider. Please try again later or contact support.' },
+        { error: 'Unable to create subscription. Please try again later or contact support.' },
         { status: 503 }
       )
     }
 
-    if (!subscriptionResponse.ok) {
-      const error = await subscriptionResponse.text()
-      console.error('DodoPayments error:', error)
-      return NextResponse.json(
-        { error: 'Failed to create subscription' },
-        { status: 500 }
-      )
-    }
-
-    const subscriptionData = await subscriptionResponse.json()
-
     // DodoPayments returns a payment_link when payment_link: true is set
     return NextResponse.json({
-      checkoutUrl: subscriptionData.payment_link,
-      subscriptionId: subscriptionData.subscription_id,
+      checkoutUrl: subscription.payment_link,
+      subscriptionId: subscription.subscription_id,
     })
   } catch (error) {
     console.error('Checkout error:', error)

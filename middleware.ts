@@ -74,7 +74,6 @@ export async function middleware(request: NextRequest) {
 
   // Protect authenticated routes - just check for user
   if (request.nextUrl.pathname.startsWith('/dashboard') ||
-      request.nextUrl.pathname.startsWith('/checkout') ||
       request.nextUrl.pathname.startsWith('/settings')) {
     if (!user) {
       const redirectUrl = new URL('/signup', request.url)
@@ -92,5 +91,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/signup', '/checkout', '/settings'],
+  matcher: ['/dashboard/:path*', '/signup', '/settings'],
 }

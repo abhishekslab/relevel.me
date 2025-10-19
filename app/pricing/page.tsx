@@ -59,8 +59,31 @@ export default function PricingPage() {
     setLoading(false)
   }
 
-  const handleSubscribe = () => {
-    router.push('/checkout?tier=pro')
+  const handleSubscribe = async () => {
+    setLoading(true)
+
+    try {
+      // Call API to create DodoPayment subscription and get checkout URL
+      const response = await fetch('/api/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tier: 'pro' }),
+      })
+
+      const data = await response.json()
+
+      if (data.checkoutUrl) {
+        // Redirect directly to DodoPayments hosted checkout
+        window.location.href = data.checkoutUrl
+      } else {
+        alert(data.error || 'Failed to create checkout session')
+        setLoading(false)
+      }
+    } catch (error) {
+      console.error('Checkout error:', error)
+      alert('An error occurred. Please try again.')
+      setLoading(false)
+    }
   }
 
   return (
@@ -125,8 +148,12 @@ export default function PricingPage() {
               </div>
             </div>
 
-            <Button onClick={handleSubscribe} className="w-full">
-              Get Started <ArrowRight className="w-4 h-4 ml-2" />
+            <Button onClick={handleSubscribe} className="w-full" disabled={loading}>
+              {loading ? 'Processing...' : (
+                <>
+                  Get Started <ArrowRight className="w-4 h-4 ml-2" />
+                </>
+              )}
             </Button>
           </Card>
 
