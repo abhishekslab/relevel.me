@@ -1,8 +1,9 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { User } from '@supabase/supabase-js'
 import { createClient } from './supabase/client'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 type AuthContextType = {
   user: User | null
@@ -30,9 +31,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [subscription, setSubscription] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
+  // Defer Supabase client creation to avoid build-time evaluation
+  const supabaseRef = useRef<SupabaseClient | null>(null)
 
   useEffect(() => {
+    // Initialize Supabase client on mount (client-side only)
+    if (!supabaseRef.current) {
+      supabaseRef.current = createClient()
+    }
+    const supabase = supabaseRef.current
+
     // Get initial session
     const getInitialSession = async () => {
       const {
@@ -102,10 +110,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       authListener.unsubscribe()
     }
-  }, [supabase])
+  }, [])
 
   const signOut = async () => {
-    await supabase.auth.signOut()
+    if (supabaseRef.current) {
+      await supabaseRef.current.auth.signOut()
+    }
     setUser(null)
     setSubscription(null)
   }
