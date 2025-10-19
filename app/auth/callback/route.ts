@@ -1,28 +1,58 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import { type NextRequest } from 'next/server'
-import { cookies } from 'next/headers'
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
   const origin = requestUrl.origin
 
+  // Create response object first
+  let response = NextResponse.redirect(`${origin}/pricing`)
+
   if (code) {
-    const cookieStore = cookies()
+    // Create Supabase client with cookie handlers that set cookies on the response
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
           get(name: string) {
-            return cookieStore.get(name)?.value
+            return request.cookies.get(name)?.value
           },
           set(name: string, value: string, options: any) {
-            cookieStore.set({ name, value, ...options })
+            // Set cookie on the request for reading in this handler
+            request.cookies.set({
+              name,
+              value,
+              ...options,
+            })
+            // Set cookie on the response to send to browser
+            response = NextResponse.redirect(requestUrl, {
+              headers: request.headers,
+            })
+            response.cookies.set({
+              name,
+              value,
+              ...options,
+            })
           },
           remove(name: string, options: any) {
-            cookieStore.set({ name, value: '', ...options })
+            // Remove cookie from request
+            request.cookies.set({
+              name,
+              value: '',
+              ...options,
+            })
+            // Remove cookie from response
+            response = NextResponse.redirect(requestUrl, {
+              headers: request.headers,
+            })
+            response.cookies.set({
+              name,
+              value: '',
+              ...options,
+            })
           },
         },
       }
@@ -32,7 +62,8 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Auth callback error:', error)
-      return NextResponse.redirect(`${origin}/signup?error=auth_failed`)
+      response = NextResponse.redirect(`${origin}/signup?error=auth_failed`)
+      return response
     }
 
     if (data.user) {
@@ -53,15 +84,17 @@ export async function GET(request: NextRequest) {
 
         if (subscription) {
           // Has subscription, go to dashboard
-          return NextResponse.redirect(`${origin}/dashboard`)
+          response = NextResponse.redirect(`${origin}/dashboard`)
+          return response
         }
       }
 
       // No subscription, redirect to pricing
-      return NextResponse.redirect(`${origin}/pricing`)
+      response = NextResponse.redirect(`${origin}/pricing`)
+      return response
     }
   }
 
   // No code or no user, redirect to pricing
-  return NextResponse.redirect(`${origin}/pricing`)
+  return response
 }
