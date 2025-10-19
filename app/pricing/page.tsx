@@ -92,16 +92,15 @@ export default function PricingPage() {
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center gap-2 mb-2">
+          <Link href="/" className="inline-block hover:opacity-80 transition mb-4">
             <Image
               src="/logo.png"
-              alt="Relevel.me"
-              width={32}
-              height={32}
-              className="drop-shadow-[0_0_16px_rgba(143,123,255,0.4)]"
+              alt="Relevel.me Logo"
+              width={120}
+              height={120}
+              className="drop-shadow-[0_0_24px_rgba(143,123,255,0.4)]"
             />
-            <h1 className="text-3xl font-bold">relevel.me</h1>
-          </div>
+          </Link>
           <h2 className="text-4xl font-bold">Choose Your Path</h2>
           <p className="text-white/60 text-lg max-w-2xl mx-auto">
             Select the perfect plan to enhance your skill development journey

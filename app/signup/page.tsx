@@ -69,16 +69,15 @@ export default function SignupPage() {
     <div className="min-h-screen bg-[#0b0f17] flex items-center justify-center p-4">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center gap-2 mb-4">
+          <Link href="/" className="inline-block hover:opacity-80 transition mb-4">
             <Image
               src="/logo.png"
-              alt="Relevel.me"
-              width={32}
-              height={32}
-              className="drop-shadow-[0_0_16px_rgba(143,123,255,0.4)]"
+              alt="Relevel.me Logo"
+              width={120}
+              height={120}
+              className="drop-shadow-[0_0_24px_rgba(143,123,255,0.4)]"
             />
-            <h1 className="text-3xl font-bold">relevel.me</h1>
-          </div>
+          </Link>
           <p className="text-white/60">Enter your email to receive a magic link</p>
         </div>
 

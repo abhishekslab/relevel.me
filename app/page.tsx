@@ -30,9 +30,9 @@ export default function Home() {
         <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#8F7BFF] to-[#C6B5FF] bg-clip-text text-transparent">
           relevel.me
         </h1>
-        <p className="text-xl md:text-2xl font-semibold text-[#C6B5FF]">
+        {/* <p className="text-xl md:text-2xl font-semibold text-[#C6B5FF]">
           Re-level your real life.
-        </p>
+        </p> */}
         <p className="text-base md:text-lg opacity-90 text-[#EDEDF8] leading-relaxed">
           Voice-first journaling platform guided by Artha. Reflect daily, earn XP, unlock new skills, and track your growth.
         </p>

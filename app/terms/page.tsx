@@ -9,15 +9,14 @@ export default function TermsPage() {
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
-          <Link href="/" className="inline-flex items-center gap-2 mb-2 hover:opacity-80 transition">
+          <Link href="/" className="inline-block hover:opacity-80 transition mb-4">
             <Image
               src="/logo.png"
-              alt="Relevel.me"
-              width={32}
-              height={32}
-              className="drop-shadow-[0_0_16px_rgba(143,123,255,0.4)]"
+              alt="Relevel.me Logo"
+              width={120}
+              height={120}
+              className="drop-shadow-[0_0_24px_rgba(143,123,255,0.4)]"
             />
-            <h1 className="text-3xl font-bold">relevel.me</h1>
           </Link>
           <h2 className="text-4xl font-bold">Terms & Conditions</h2>
           <p className="text-white/60">Last updated: January 2025</p>
