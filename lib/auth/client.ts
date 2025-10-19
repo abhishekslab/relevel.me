@@ -6,6 +6,7 @@ let client: SupabaseClient | null = null
 /**
  * Creates a Supabase browser client for Client Components
  * Singleton pattern to ensure only one client instance
+ * Configured to use OAuth code flow for better SSR compatibility
  */
 export function createClient() {
   if (client) {
@@ -19,7 +20,14 @@ export function createClient() {
     throw new Error('Missing Supabase environment variables')
   }
 
-  client = createBrowserClient(supabaseUrl, supabaseAnonKey)
+  client = createBrowserClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      flowType: 'pkce',
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      persistSession: true,
+    },
+  })
 
   return client
 }

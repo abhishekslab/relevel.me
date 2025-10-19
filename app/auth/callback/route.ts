@@ -5,19 +5,19 @@ import { cookies } from 'next/headers'
 
 /**
  * Auth callback handler for magic link authentication
- * 1. Exchanges the code for a session
+ * Supports both PKCE flow (session via cookies) and OAuth code flow
+ * 1. Checks for existing session (PKCE) or exchanges code for session (OAuth)
  * 2. Provisions user record if it doesn't exist
  * 3. Redirects to dashboard (subscription check happens on dashboard page)
  */
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url)
+  const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
+  const token_hash = searchParams.get('token_hash')
+  const type = searchParams.get('type')
 
-  // Missing code parameter
-  if (!code) {
-    console.error('Auth callback: Missing code parameter')
-    return NextResponse.redirect(`${origin}/signup?error=missing_code`)
-  }
+  // Use NEXT_PUBLIC_APP_URL instead of origin to avoid 0.0.0.0 issues
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://relevel.me'
 
   const cookieStore = cookies()
   const supabase = createServerClient(
@@ -47,22 +47,48 @@ export async function GET(request: NextRequest) {
     }
   )
 
-  // Exchange code for session
-  const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+  let user = null
 
-  if (error) {
-    console.error('Auth callback error:', error.message)
-    return NextResponse.redirect(`${origin}/signup?error=auth_failed`)
+  // Handle OAuth code flow (newer)
+  if (code) {
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+    if (error) {
+      console.error('Auth callback error (code flow):', error.message)
+      return NextResponse.redirect(`${baseUrl}/signup?error=auth_failed`)
+    }
+    user = data.user
+  }
+  // Handle PKCE token_hash flow or check existing session
+  else if (token_hash && type) {
+    const { data, error } = await supabase.auth.verifyOtp({
+      token_hash,
+      type: type as any,
+    })
+    if (error) {
+      console.error('Auth callback error (token flow):', error.message)
+      return NextResponse.redirect(`${baseUrl}/signup?error=auth_failed`)
+    }
+    user = data.user
+  }
+  // Check if session already exists (PKCE flow sets cookies directly)
+  else {
+    const { data: { user: existingUser }, error } = await supabase.auth.getUser()
+    if (!error && existingUser) {
+      user = existingUser
+    } else {
+      console.error('Auth callback: No code, token, or existing session')
+      return NextResponse.redirect(`${baseUrl}/signup?error=missing_params`)
+    }
   }
 
-  if (!data.user) {
+  if (!user) {
     console.error('Auth callback: No user in session')
-    return NextResponse.redirect(`${origin}/signup?error=no_user`)
+    return NextResponse.redirect(`${baseUrl}/signup?error=no_user`)
   }
 
   // Provision user record (creates if doesn't exist)
   try {
-    const provisionResponse = await fetch(`${origin}/api/auth/provision`, {
+    const provisionResponse = await fetch(`${baseUrl}/api/auth/provision`, {
       method: 'POST',
       headers: {
         'Cookie': request.headers.get('cookie') || '',
@@ -80,5 +106,5 @@ export async function GET(request: NextRequest) {
 
   // Always redirect to dashboard
   // Dashboard page will handle subscription checks using requireSubscription()
-  return NextResponse.redirect(`${origin}/dashboard`)
+  return NextResponse.redirect(`${baseUrl}/dashboard`)
 }
