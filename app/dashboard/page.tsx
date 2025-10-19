@@ -11,7 +11,7 @@ import { Progress } from '@/components/ui/progress'
 import { Canvas, useThree } from '@react-three/fiber'
 import { Stars, Float, useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
-import { playClickSound, toggleMusicMute, getMusicMutedState, playBackgroundMusic } from '@/lib/sound'
+import { playClickSound, toggleMusicMute, getMusicMutedState, playBackgroundMusic, isMusicActuallyPlaying } from '@/lib/sound'
 
 type UUID = string
 type Biome = 'meadow'|'forest'|'desert'|'mist'|'tech'|'peaks'
@@ -86,7 +86,11 @@ export default function DashboardPage() {
 
   // Start background music when dashboard loads
   useEffect(() => {
-    playBackgroundMusic()
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      playBackgroundMusic()
+    }, 100)
+    return () => clearTimeout(timer)
   }, [])
 
   useEffect(() => {
@@ -196,10 +200,26 @@ export default function DashboardPage() {
 function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, setIsWorldboardVisible }: { zoom: number; setZoom: (z:number)=>void; isDockOpen: boolean; setIsDockOpen: (open:boolean)=>void; isWorldboardVisible: boolean; setIsWorldboardVisible: (visible:boolean)=>void }){
   const streak = 5
   const [isMusicMuted, setIsMusicMuted] = useState(false)
+  const [isMusicPlaying, setIsMusicPlaying] = useState(false)
 
   // Initialize mute state from localStorage
   useEffect(() => {
     setIsMusicMuted(getMusicMutedState())
+  }, [])
+
+  // Check music playback state periodically
+  useEffect(() => {
+    const checkPlaybackState = () => {
+      setIsMusicPlaying(isMusicActuallyPlaying())
+    }
+
+    // Check immediately
+    checkPlaybackState()
+
+    // Check every 500ms to keep UI in sync
+    const interval = setInterval(checkPlaybackState, 500)
+
+    return () => clearInterval(interval)
   }, [])
 
   const handleToggle = () => {
@@ -208,6 +228,9 @@ function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, se
     playClickSound()
     setIsDockOpen(!isDockOpen)
     setIsWorldboardVisible(!isWorldboardVisible)
+
+    // Update playing state immediately after interaction
+    setTimeout(() => setIsMusicPlaying(isMusicActuallyPlaying()), 100)
   }
 
   const handleMusicToggle = () => {
@@ -216,6 +239,9 @@ function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, se
     const newMutedState = toggleMusicMute()
     setIsMusicMuted(newMutedState)
     playClickSound()
+
+    // Update playing state immediately after interaction
+    setTimeout(() => setIsMusicPlaying(isMusicActuallyPlaying()), 100)
   }
 
   return (
@@ -236,9 +262,9 @@ function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, se
           <button
             onClick={handleMusicToggle}
             className="rounded-xl bg-cyan-500/20 border border-cyan-400/40 p-2 hover:bg-cyan-500/30 transition active:scale-95"
-            title={isMusicMuted ? 'Unmute music' : 'Mute music'}
+            title={!isMusicPlaying ? 'Music paused - click to start' : isMusicMuted ? 'Unmute music' : 'Mute music'}
           >
-            {isMusicMuted ? (
+            {!isMusicPlaying || isMusicMuted ? (
               <VolumeX className="size-5 text-cyan-300"/>
             ) : (
               <Volume2 className="size-5 text-cyan-300"/>
@@ -327,7 +353,7 @@ function Shrines(){
         return (
           <div key={s.id} className="absolute" style={{ transform: `translate(${pos.x - 44}px, ${pos.y - 44}px)` }}>
             <button
-              onClick={() => playClickSound()}
+              onClick={() => { playBackgroundMusic(); playClickSound(); }}
               className={`group relative w-[88px] h-[88px] md:w-[96px] md:h-[96px] rounded-full border-2 backdrop-blur transition active:scale-95 ${discovered ? 'bg-violet-500/25 border-violet-300/50' : 'bg-slate-900/80 border-white/20'}`}
             >
               {discovered && <div className="absolute inset-0 rounded-full shadow-[0_0_32px_12px_rgba(168,85,247,0.6)]"/>}

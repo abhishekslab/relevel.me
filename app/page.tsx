@@ -1,9 +1,20 @@
 
 'use client'
+import { useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { playBackgroundMusic, playClickSound } from '@/lib/sound'
 
 export default function Home() {
+  // Auto-play background music on mount
+  useEffect(() => {
+    playBackgroundMusic()
+  }, [])
+
+  const handleEnterWorld = () => {
+    playClickSound()
+  }
+
   return (
     <main className="min-h-screen grid place-items-center bg-gradient-to-b from-[#0b0f17] to-[#0E0A1E]">
       <div className="text-center space-y-6 px-4 max-w-2xl">
@@ -27,6 +38,7 @@ export default function Home() {
         </p>
         <Link
           href="/dashboard"
+          onClick={handleEnterWorld}
           className="inline-block mt-4 rounded-xl bg-gradient-to-r from-[#8F7BFF] to-[#C6B5FF] px-6 py-3 font-semibold text-white shadow-lg shadow-[#8F7BFF]/50 hover:shadow-xl hover:shadow-[#8F7BFF]/70 transition-all duration-300 hover:scale-105"
         >
           Enter World
