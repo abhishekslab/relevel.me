@@ -324,7 +324,7 @@ interface HUDProps {
 }
 
 function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, setIsWorldboardVisible, armatureType, setArmatureType, currentDanceIndex, setCurrentDanceIndex, isAnimating, setIsAnimating, avatarUrl, setAvatarUrl }: HUDProps){
-  const streak = 5
+  const [streak, setStreak] = useState(0)
   const [isMusicMuted, setIsMusicMuted] = useState(false)
   const [isMusicPlaying, setIsMusicPlaying] = useState(false)
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
@@ -342,6 +342,33 @@ function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, se
       setAvatarUrl(data.avatarUrl)
     }
   }, [armatureType, setArmatureType, setCurrentDanceIndex, setAvatarUrl])
+
+  // Load user's call streak
+  useEffect(() => {
+    const loadStreak = async () => {
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+
+        if (!user) return
+
+        const { data, error } = await supabase.rpc('get_user_call_streak', {
+          p_user_id: user.id
+        })
+
+        if (error) {
+          console.error('Error loading streak:', error)
+          return
+        }
+
+        setStreak(data || 0)
+      } catch (err) {
+        console.error('Error loading streak:', err)
+      }
+    }
+
+    loadStreak()
+  }, [])
 
   // Initialize mute state from localStorage
   useEffect(() => {
