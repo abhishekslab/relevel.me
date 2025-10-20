@@ -8,10 +8,10 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 # Install sharp for image optimization
-RUN npm install sharp
+RUN npm install sharp --legacy-peer-deps
 
 # Rebuild the source code only when needed
 FROM base AS builder
