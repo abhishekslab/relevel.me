@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { motion, useMotionValue, AnimatePresence } from 'framer-motion'
-import { Flame, Sparkles, Target, Clock, X, Volume2, VolumeX, User, LogOut, Music2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Flame, Sparkles, Target, Clock, X, Volume2, VolumeX, Settings, LogOut, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -58,8 +58,14 @@ const ARTIFACTS: Artifact[] = [
 ]
 function addMinsISO(m:number){ const d = new Date(Date.now()+m*60000); return d.toISOString() }
 
-// Dance animation configuration
+// Animation configuration
 type ArmatureType = 'feminine' | 'masculine'
+
+const IDLE_ANIMATIONS = {
+  feminine: '/animation/feminine/fbx/idle/F_Standing_Idle_001.fbx',
+  masculine: '/animation/masculine/fbx/idle/F_Standing_Idle_001.fbx',
+}
+
 const DANCE_ANIMATIONS = {
   feminine: [
     '/animation/feminine/fbx/dance/F_Dances_001.fbx',
@@ -267,7 +273,7 @@ function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, se
   const streak = 5
   const [isMusicMuted, setIsMusicMuted] = useState(false)
   const [isMusicPlaying, setIsMusicPlaying] = useState(false)
-  const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false)
   const router = useRouter()
 
   // Initialize mute state from localStorage
@@ -344,68 +350,66 @@ function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, se
             )}
           </button>
 
-          {/* Dance Animation Controls */}
-          <div className="flex items-center gap-1 rounded-xl bg-purple-500/20 border border-purple-400/40 p-1">
-            <button
-              onClick={() => {
-                playClickSound()
-                setIsAnimating(!isAnimating)
-              }}
-              className={`rounded-lg p-1.5 transition ${isAnimating ? 'bg-purple-500/40 text-purple-200' : 'text-purple-300 hover:bg-purple-500/20'}`}
-              title={isAnimating ? 'Stop dancing' : 'Start dancing'}
-            >
-              <Music2 className="size-4" />
-            </button>
-            <button
-              onClick={() => {
-                playClickSound()
-                const dances = DANCE_ANIMATIONS[armatureType]
-                setCurrentDanceIndex((currentDanceIndex - 1 + dances.length) % dances.length)
-              }}
-              disabled={!isAnimating}
-              className="rounded-lg p-1.5 transition text-purple-300 hover:bg-purple-500/20 disabled:opacity-30 disabled:cursor-not-allowed"
-              title="Previous dance"
-            >
-              <ChevronLeft className="size-4" />
-            </button>
-            <span className="text-xs text-purple-300 font-medium px-1">
-              {currentDanceIndex + 1}/{DANCE_ANIMATIONS[armatureType].length}
-            </span>
-            <button
-              onClick={() => {
-                playClickSound()
-                const dances = DANCE_ANIMATIONS[armatureType]
-                setCurrentDanceIndex((currentDanceIndex + 1) % dances.length)
-              }}
-              disabled={!isAnimating}
-              className="rounded-lg p-1.5 transition text-purple-300 hover:bg-purple-500/20 disabled:opacity-30 disabled:cursor-not-allowed"
-              title="Next dance"
-            >
-              <ChevronRight className="size-4" />
-            </button>
-            <button
-              onClick={() => {
-                playClickSound()
-                setArmatureType(armatureType === 'feminine' ? 'masculine' : 'feminine')
-                setCurrentDanceIndex(0)
-              }}
-              className="ml-1 rounded-lg px-2 py-1.5 transition text-purple-300 hover:bg-purple-500/20 text-xs font-medium"
-              title="Switch armature type"
-            >
-              {armatureType === 'feminine' ? 'F' : 'M'}
-            </button>
-          </div>
-
           <div className="relative">
             <button
-              onClick={() => { playClickSound(); setShowUserMenu(!showUserMenu) }}
+              onClick={() => { playClickSound(); setShowSettingsMenu(!showSettingsMenu) }}
               className="rounded-xl bg-emerald-500/20 border border-emerald-400/40 p-2 hover:bg-emerald-500/30 transition active:scale-95"
-              title="Account"
+              title="Settings"
             >
-              <User className="size-5 text-emerald-300"/>
+              <Settings className="size-5 text-emerald-300"/>
             </button>
-            {showUserMenu && (
-              <div className="absolute right-0 mt-2 w-48 rounded-xl bg-[#0b0f17] border border-white/10 shadow-xl overflow-hidden">
+            {showSettingsMenu && (
+              <div className="absolute right-0 mt-2 w-64 rounded-xl bg-[#0b0f17] border border-white/10 shadow-xl overflow-hidden">
+                {/* Avatar Animation Section */}
+                <div className="p-3 border-b border-white/10">
+                  <div className="text-xs font-medium text-purple-300 mb-2">Avatar Animation</div>
+                  <div className="flex items-center gap-1 rounded-lg bg-purple-500/20 border border-purple-400/40 p-1">
+                    <button
+                      onClick={() => {
+                        playClickSound()
+                        const dances = DANCE_ANIMATIONS[armatureType]
+                        setCurrentDanceIndex((currentDanceIndex - 1 + dances.length) % dances.length)
+                        if (!isAnimating) setIsAnimating(true)
+                      }}
+                      className="rounded-lg p-1.5 transition text-purple-300 hover:bg-purple-500/20"
+                      title="Previous dance"
+                    >
+                      <ChevronLeft className="size-4" />
+                    </button>
+                    <span className="text-xs text-purple-300 font-medium px-2 flex-1 text-center">
+                      {isAnimating ? `${currentDanceIndex + 1}/${DANCE_ANIMATIONS[armatureType].length}` : 'Idle'}
+                    </span>
+                    <button
+                      onClick={() => {
+                        playClickSound()
+                        const dances = DANCE_ANIMATIONS[armatureType]
+                        setCurrentDanceIndex((currentDanceIndex + 1) % dances.length)
+                        if (!isAnimating) setIsAnimating(true)
+                      }}
+                      className="rounded-lg p-1.5 transition text-purple-300 hover:bg-purple-500/20"
+                      title="Next dance"
+                    >
+                      <ChevronRight className="size-4" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        playClickSound()
+                        if (isAnimating) {
+                          setIsAnimating(false)
+                        } else {
+                          setArmatureType(armatureType === 'feminine' ? 'masculine' : 'feminine')
+                          setCurrentDanceIndex(0)
+                        }
+                      }}
+                      className="ml-1 rounded-lg px-2 py-1.5 transition text-purple-300 hover:bg-purple-500/20 text-xs font-medium"
+                      title={isAnimating ? 'Stop dancing (back to idle)' : 'Switch armature type'}
+                    >
+                      {isAnimating ? '◼' : (armatureType === 'feminine' ? 'F' : 'M')}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Sign Out Section */}
                 <button
                   onClick={handleSignOut}
                   className="w-full p-3 flex items-center gap-2 hover:bg-white/5 transition text-left text-sm"
@@ -553,7 +557,10 @@ interface AvatarProps {
 
 function Avatar({ armatureType, danceIndex, isAnimating }: AvatarProps){
   const avatarUrl = 'https://models.readyplayer.me/68f39e2ac955f67d168fc54c.glb'
-  const animationSrc = isAnimating ? DANCE_ANIMATIONS[armatureType][danceIndex] : undefined
+  // Use dance animation if dancing, otherwise use idle animation
+  const animationSrc = isAnimating
+    ? DANCE_ANIMATIONS[armatureType][danceIndex]
+    : IDLE_ANIMATIONS[armatureType]
 
   return (
     <VisageAvatar
@@ -570,10 +577,10 @@ function Avatar({ armatureType, danceIndex, isAnimating }: AvatarProps){
       shadows={false}
       halfBody={false}
       onLoaded={() => console.log('Avatar loaded')}
-      onLoadedAnimation={animationSrc ? {
+      onLoadedAnimation={{
         src: animationSrc,
         onLoaded: () => console.log('Animation loaded:', animationSrc)
-      } : undefined}
+      }}
     />
   )
 }
