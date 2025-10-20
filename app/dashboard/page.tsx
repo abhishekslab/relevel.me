@@ -325,6 +325,18 @@ function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, se
   const [showProfileModal, setShowProfileModal] = useState(false)
   const router = useRouter()
 
+  const handleProfileUpdate = React.useCallback((data: { firstName: string; phone: string; avatarUrl: string; avatarGender: 'feminine' | 'masculine' }) => {
+    // Update armature type if changed
+    if (data.avatarGender !== armatureType) {
+      setArmatureType(data.avatarGender)
+      setCurrentDanceIndex(0)
+    }
+    // Update avatar URL
+    if (data.avatarUrl) {
+      setAvatarUrl(data.avatarUrl)
+    }
+  }, [armatureType, setArmatureType, setCurrentDanceIndex, setAvatarUrl])
+
   // Initialize mute state from localStorage
   useEffect(() => {
     setIsMusicMuted(getMusicMutedState())
@@ -491,17 +503,7 @@ function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, se
       <ProfileModal
         open={showProfileModal}
         onOpenChange={setShowProfileModal}
-        onProfileUpdate={(data) => {
-          // Update armature type if changed
-          if (data.avatarGender !== armatureType) {
-            setArmatureType(data.avatarGender)
-            setCurrentDanceIndex(0)
-          }
-          // Update avatar URL
-          if (data.avatarUrl) {
-            setAvatarUrl(data.avatarUrl)
-          }
-        }}
+        onProfileUpdate={handleProfileUpdate}
       />
     </div>
   )
@@ -522,13 +524,7 @@ function ProfileModal({ open, onOpenChange, onProfileUpdate }: ProfileModalProps
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    if (open) {
-      loadUserProfile()
-    }
-  }, [open])
-
-  const loadUserProfile = async () => {
+  const loadUserProfile = React.useCallback(async () => {
     setIsLoading(true)
     setError('')
     try {
@@ -560,7 +556,13 @@ function ProfileModal({ open, onOpenChange, onProfileUpdate }: ProfileModalProps
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (open) {
+      loadUserProfile()
+    }
+  }, [open, loadUserProfile])
 
   const handleSave = async () => {
     if (!phone.trim()) {
