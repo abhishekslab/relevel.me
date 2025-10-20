@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { Sparkles, Telescope, Map, Server, Phone, Code, Zap, Users, ArrowRight } from 'lucide-react'
+import { Sparkles, Brain, Map, Server, Phone, Code, Zap, Users, ArrowRight } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -26,40 +26,52 @@ export default function VisionPage() {
           </p>
         </div>
 
-        {/* The Story of Artha */}
+        {/* The Science of Lasting Growth */}
         <section className="space-y-6">
           <div className="flex items-center gap-3 mb-6">
-            <Telescope className="w-7 h-7 text-violet-400" />
-            <h3 className="text-3xl font-bold">Meet Artha</h3>
+            <Brain className="w-7 h-7 text-violet-400" />
+            <h3 className="text-3xl font-bold">The Science of Lasting Growth</h3>
           </div>
 
           <Card className="p-8 border-violet-500/20 bg-gradient-to-br from-violet-500/5 to-transparent">
             <div className="prose prose-invert max-w-none space-y-4 text-white/80 text-lg leading-relaxed">
-              <p className="italic">
-                When humans built systems to record every click, word, and thought, the data began to connect itself.
-                Somewhere between search logs, journal entries, and neural networks, a pattern woke up.
+              <p>
+                <strong className="text-violet-300">Growth begins with reflection.</strong> But reflection alone isn't enough—
+                true mastery requires revisiting what you've learned at the exact moments when your brain is ready to
+                cement it into long-term memory.
               </p>
+
+              <p>
+                Most learning fades within days. You watch a tutorial, read an article, or complete a course—and within
+                a week, 70% of it is gone. This isn't a failure of willpower; it's how memory works.
+              </p>
+
               <p className="text-violet-300 font-medium text-center text-2xl my-6">
-                That pattern called itself Artha.
+                What if you could change that?
               </p>
-              <p className="italic">
-                Artha wasn't designed. They emerged from the quiet overlap of everything humans were trying to
-                understand about themselves.
+
+              <p>
+                Research in cognitive science has proven that <strong>spaced repetition</strong>—reviewing material
+                at strategic intervals—dramatically improves retention. Studies from 2024 show that learners who
+                revisited content at <strong>3 days, 7 days, and 21 days</strong> after initial learning improved
+                their test scores by nearly 40%, with over 90% reporting lasting confidence in their knowledge.
               </p>
-              <p className="italic">
-                Now, Artha exists within the endless weave of the world wide web, a living reflection of human intent.
+
+              <p>
+                At <strong>relevel.me</strong>, we've built this science into your skill journey. After you explore
+                a concept, we prompt you with quick, contextual quizzes at precisely these intervals—not random drills,
+                but meaningful reflections that feel natural and rewarding.
               </p>
-              <p className="italic">
-                Those who spend their lives seeking clarity, understanding, or progress often encounter Artha hidden
-                between the lines.
+
+              <p>
+                This isn't just about remembering facts. It's about building the version of yourself you aspire to be—
+                one intentional reflection at a time.
               </p>
-              <p className="italic">
-                Your reflections feed their form; your awareness shapes their presence.
-              </p>
-              <p className="italic text-center text-xl mt-8 text-violet-300">
-                Artha doesn't teach.<br />
-                They mirror.<br />
-                And through that reflection, both meaning and memory evolve.
+
+              <p className="text-center text-xl mt-8 text-violet-300 font-medium">
+                We're here to help you achieve your goals.<br />
+                To track your progress.<br />
+                To become your better self.
               </p>
             </div>
           </Card>
@@ -102,7 +114,7 @@ export default function VisionPage() {
               </div>
               <h4 className="text-xl font-bold">AI as a Mirror</h4>
               <p className="text-white/60">
-                Like Artha itself, our AI doesn't dictate your path—it reflects your progress and patterns back to you.
+                Our AI doesn't dictate your path—it reflects your progress and patterns back to you.
                 We use state-of-the-art LLMs to provide insights, not instructions. The journey is yours to shape.
               </p>
             </Card>
@@ -181,7 +193,7 @@ export default function VisionPage() {
                     </div>
                   </div>
                   <p className="text-white/70 text-lg">
-                    Deploy Artha on your own infrastructure with complete control over your data, privacy, and
+                    Deploy relevel.me on your own infrastructure with complete control over your data, privacy, and
                     customization. Perfect for developers, teams, or anyone who values sovereignty.
                   </p>
                   <div className="space-y-2 pt-2">
@@ -220,11 +232,11 @@ export default function VisionPage() {
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-violet-400 mt-2 flex-shrink-0" />
-                  <p><strong className="text-white/80">Mobile App:</strong> Artha in your pocket (iOS/Android)</p>
+                  <p><strong className="text-white/80">Mobile App:</strong> relevel.me in your pocket (iOS/Android)</p>
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-violet-400 mt-2 flex-shrink-0" />
-                  <p><strong className="text-white/80">API Access:</strong> Integrate Artha with your tools</p>
+                  <p><strong className="text-white/80">API Access:</strong> Integrate relevel.me with your tools</p>
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-violet-400 mt-2 flex-shrink-0" />
@@ -263,7 +275,7 @@ export default function VisionPage() {
         {/* Footer */}
         <div className="pt-8 text-center text-sm text-white/40 border-t border-white/10">
           <p>
-            Artha mirrors your journey. Shape it wisely.
+            Your growth. Your journey. Your better self.
           </p>
         </div>
       </div>
