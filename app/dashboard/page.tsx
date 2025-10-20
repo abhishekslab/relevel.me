@@ -4,17 +4,20 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { motion, useMotionValue, AnimatePresence } from 'framer-motion'
-import { Flame, Sparkles, Target, Clock, X, Volume2, VolumeX, Settings, LogOut, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Flame, Sparkles, Target, Clock, X, Volume2, VolumeX, Settings, LogOut, ChevronLeft, ChevronRight, User } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
+import { Input } from '@/components/ui/input'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Canvas, useThree } from '@react-three/fiber'
 import { Stars, Float } from '@react-three/drei'
 import { Avatar as VisageAvatar } from '@readyplayerme/visage'
 import * as THREE from 'three'
 import { playClickSound, toggleMusicMute, getMusicMutedState, playBackgroundMusic, isMusicActuallyPlaying } from '@/lib/sound'
 import { signOut as serverSignOut } from './actions'
+import { createClient } from '@/lib/auth/client'
 
 type UUID = string
 type Biome = 'meadow'|'forest'|'desert'|'mist'|'tech'|'peaks'
@@ -118,6 +121,7 @@ export default function DashboardPage() {
   const [armatureType, setArmatureType] = useState<ArmatureType>('feminine')
   const [currentDanceIndex, setCurrentDanceIndex] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState('https://models.readyplayer.me/68f39e2ac955f67d168fc54c.glb')
   const camX = useMotionValue(-(WORLD_W/2 - 600))
   const camY = useMotionValue(-(WORLD_H/2 - 350))
 
@@ -155,6 +159,42 @@ export default function DashboardPage() {
     return () => el.removeEventListener('wheel', onWheel as any)
   }, [])
 
+  // Load user profile settings from database
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+
+        if (!user) return
+
+        const { data, error } = await supabase
+          .from('users')
+          .select('avatar_gender, avatar_url')
+          .eq('id', user.id)
+          .single()
+
+        if (error) {
+          console.error('Error loading user profile:', error)
+          return
+        }
+
+        if (data) {
+          if (data.avatar_gender) {
+            setArmatureType(data.avatar_gender as ArmatureType)
+          }
+          if (data.avatar_url) {
+            setAvatarUrl(data.avatar_url)
+          }
+        }
+      } catch (err) {
+        console.error('Error loading user profile:', err)
+      }
+    }
+
+    loadUserProfile()
+  }, [])
+
   const discovered = USER_SKILLS.filter(u => u.discovered).map(u => u.skill_id)
 
   return (
@@ -173,6 +213,7 @@ export default function DashboardPage() {
           armatureType={armatureType}
           danceIndex={currentDanceIndex}
           isAnimating={isAnimating}
+          avatarUrl={avatarUrl}
         />
       </div>
 
@@ -189,6 +230,8 @@ export default function DashboardPage() {
         setCurrentDanceIndex={setCurrentDanceIndex}
         isAnimating={isAnimating}
         setIsAnimating={setIsAnimating}
+        avatarUrl={avatarUrl}
+        setAvatarUrl={setAvatarUrl}
       />
 
       <div className="fixed inset-0 z-10">
@@ -267,13 +310,16 @@ interface HUDProps {
   setCurrentDanceIndex: (index: number) => void
   isAnimating: boolean
   setIsAnimating: (animating: boolean) => void
+  avatarUrl: string
+  setAvatarUrl: (url: string) => void
 }
 
-function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, setIsWorldboardVisible, armatureType, setArmatureType, currentDanceIndex, setCurrentDanceIndex, isAnimating, setIsAnimating }: HUDProps){
+function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, setIsWorldboardVisible, armatureType, setArmatureType, currentDanceIndex, setCurrentDanceIndex, isAnimating, setIsAnimating, avatarUrl, setAvatarUrl }: HUDProps){
   const streak = 5
   const [isMusicMuted, setIsMusicMuted] = useState(false)
   const [isMusicPlaying, setIsMusicPlaying] = useState(false)
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
+  const [showProfileModal, setShowProfileModal] = useState(false)
   const router = useRouter()
 
   // Initialize mute state from localStorage
@@ -409,6 +455,15 @@ function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, se
                   </div>
                 </div>
 
+                {/* Profile Section */}
+                <button
+                  onClick={() => { playClickSound(); setShowProfileModal(true); setShowSettingsMenu(false) }}
+                  className="w-full p-3 flex items-center gap-2 hover:bg-white/5 transition text-left text-sm border-b border-white/10"
+                >
+                  <User className="size-4" />
+                  Profile
+                </button>
+
                 {/* Sign Out Section */}
                 <button
                   onClick={handleSignOut}
@@ -428,7 +483,265 @@ function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, se
           </button>
         </div>
       </div>
+
+      {/* Profile Modal */}
+      <ProfileModal
+        open={showProfileModal}
+        onOpenChange={setShowProfileModal}
+        onProfileUpdate={(data) => {
+          // Update armature type if changed
+          if (data.avatarGender !== armatureType) {
+            setArmatureType(data.avatarGender)
+            setCurrentDanceIndex(0)
+          }
+          // Update avatar URL
+          if (data.avatarUrl) {
+            setAvatarUrl(data.avatarUrl)
+          }
+        }}
+      />
     </div>
+  )
+}
+
+interface ProfileModalProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onProfileUpdate?: (data: { firstName: string; phone: string; avatarUrl: string; avatarGender: 'feminine' | 'masculine' }) => void
+}
+
+function ProfileModal({ open, onOpenChange, onProfileUpdate }: ProfileModalProps) {
+  const [firstName, setFirstName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState('')
+  const [avatarGender, setAvatarGender] = useState<'feminine' | 'masculine'>('feminine')
+  const [isLoading, setIsLoading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (open) {
+      loadUserProfile()
+    }
+  }, [open])
+
+  const loadUserProfile = async () => {
+    setIsLoading(true)
+    setError('')
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        setError('Not authenticated')
+        return
+      }
+
+      const { data, error: fetchError } = await supabase
+        .from('users')
+        .select('first_name, phone, avatar_url, avatar_gender')
+        .eq('id', user.id)
+        .single()
+
+      if (fetchError) throw fetchError
+
+      if (data) {
+        setFirstName(data.first_name || '')
+        setPhone(data.phone || '')
+        setAvatarUrl(data.avatar_url || 'https://models.readyplayer.me/68f39e2ac955f67d168fc54c.glb')
+        setAvatarGender(data.avatar_gender || 'masculine')
+      }
+    } catch (err) {
+      console.error('Error loading profile:', err)
+      setError('Failed to load profile')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleSave = async () => {
+    if (!phone.trim()) {
+      setError('Phone number is required')
+      return
+    }
+
+    setIsSaving(true)
+    setError('')
+
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        setError('Not authenticated')
+        return
+      }
+
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({
+          first_name: firstName.trim(),
+          phone: phone.trim(),
+          avatar_url: avatarUrl.trim(),
+          avatar_gender: avatarGender,
+        })
+        .eq('id', user.id)
+
+      if (updateError) throw updateError
+
+      playClickSound()
+
+      // Notify parent component of the update
+      if (onProfileUpdate) {
+        onProfileUpdate({
+          firstName: firstName.trim(),
+          phone: phone.trim(),
+          avatarUrl: avatarUrl.trim(),
+          avatarGender,
+        })
+      }
+
+      onOpenChange(false)
+    } catch (err) {
+      console.error('Error saving profile:', err)
+      setError('Failed to save profile')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader onClose={() => onOpenChange(false)}>
+          <DialogTitle>Profile</DialogTitle>
+          <DialogDescription>Manage your account information</DialogDescription>
+        </DialogHeader>
+
+        <div className="p-6 space-y-6">
+          {error && (
+            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
+          {/* Physical Self Section */}
+          <div className="space-y-4">
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <User className="size-5 text-violet-400" />
+                <h3 className="text-lg font-semibold text-violet-300">Physical Self</h3>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-white/80 mb-1.5">
+                    First Name
+                  </label>
+                  <Input
+                    type="text"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="Enter your first name"
+                    disabled={isLoading || isSaving}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-white/80 mb-1.5">
+                    Phone Number <span className="text-red-400">*</span>
+                  </label>
+                  <Input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+1234567890"
+                    disabled={isLoading || isSaving}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Virtual Self Section */}
+          <div className="space-y-4 pt-4 border-t border-white/10">
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="size-5 text-cyan-400" />
+                <h3 className="text-lg font-semibold text-cyan-300">Virtual Self</h3>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-white/80 mb-1.5">
+                    Avatar URL (Ready Player Me)
+                  </label>
+                  <Input
+                    type="url"
+                    value={avatarUrl}
+                    onChange={(e) => setAvatarUrl(e.target.value)}
+                    placeholder="https://models.readyplayer.me/68f39e2ac955f67d168fc54c.glb"
+                    disabled={isLoading || isSaving}
+                  />
+                  <p className="text-xs text-white/40 mt-1">
+                    Paste your Ready Player Me GLB avatar link
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-white/80 mb-2">
+                    Avatar Gender
+                  </label>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => { playClickSound(); setAvatarGender('feminine') }}
+                      disabled={isLoading || isSaving}
+                      className={`flex-1 py-2.5 px-4 rounded-xl border transition ${
+                        avatarGender === 'feminine'
+                          ? 'bg-violet-500/20 border-violet-400/60 text-violet-200'
+                          : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                      }`}
+                    >
+                      Feminine
+                    </button>
+                    <button
+                      onClick={() => { playClickSound(); setAvatarGender('masculine') }}
+                      disabled={isLoading || isSaving}
+                      className={`flex-1 py-2.5 px-4 rounded-xl border transition ${
+                        avatarGender === 'masculine'
+                          ? 'bg-violet-500/20 border-violet-400/60 text-violet-200'
+                          : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                      }`}
+                    >
+                      Masculine
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3 pt-2">
+            <Button
+              onClick={() => onOpenChange(false)}
+              variant="outline"
+              className="flex-1"
+              disabled={isSaving}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSave}
+              className="flex-1 bg-violet-500/20 border-violet-400/40 hover:bg-violet-500/30"
+              disabled={isLoading || isSaving}
+            >
+              {isSaving ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -553,10 +866,10 @@ interface AvatarProps {
   armatureType: ArmatureType
   danceIndex: number
   isAnimating: boolean
+  avatarUrl?: string
 }
 
-function Avatar({ armatureType, danceIndex, isAnimating }: AvatarProps){
-  const avatarUrl = 'https://models.readyplayer.me/68f39e2ac955f67d168fc54c.glb'
+function Avatar({ armatureType, danceIndex, isAnimating, avatarUrl = 'https://models.readyplayer.me/68f39e2ac955f67d168fc54c.glb' }: AvatarProps){
   // Use dance animation if dancing, otherwise use idle animation
   const animationSrc = isAnimating
     ? DANCE_ANIMATIONS[armatureType][danceIndex]
