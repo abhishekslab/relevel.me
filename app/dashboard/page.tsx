@@ -576,11 +576,7 @@ function Avatar({ armatureType, danceIndex, isAnimating }: AvatarProps){
       }}
       shadows={false}
       halfBody={false}
-      onLoaded={() => console.log('Avatar loaded')}
-      onLoadedAnimation={{
-        src: animationSrc,
-        onLoaded: () => console.log('Animation loaded:', animationSrc)
-      }}
+      onLoaded={() => console.log('Avatar loaded with animation:', animationSrc)}
     />
   )
 }
