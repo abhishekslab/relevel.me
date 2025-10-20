@@ -567,7 +567,7 @@ function Avatar({ armatureType, danceIndex, isAnimating }: AvatarProps){
       modelSrc={avatarUrl}
       animationSrc={animationSrc}
       cameraInitialDistance={3.5}
-      cameraTarget={1.2}
+      cameraTarget={0}
       fov={50}
       style={{
         width: '100%',
