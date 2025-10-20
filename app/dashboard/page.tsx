@@ -4,13 +4,14 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { motion, useMotionValue, AnimatePresence } from 'framer-motion'
-import { Flame, Sparkles, Target, Clock, X, Volume2, VolumeX, User, LogOut } from 'lucide-react'
+import { Flame, Sparkles, Target, Clock, X, Volume2, VolumeX, User, LogOut, Music2, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Canvas, useThree } from '@react-three/fiber'
-import { Stars, Float, useGLTF } from '@react-three/drei'
+import { Stars, Float } from '@react-three/drei'
+import { Avatar as VisageAvatar } from '@readyplayerme/visage'
 import * as THREE from 'three'
 import { playClickSound, toggleMusicMute, getMusicMutedState, playBackgroundMusic, isMusicActuallyPlaying } from '@/lib/sound'
 import { signOut as serverSignOut } from './actions'
@@ -57,6 +58,31 @@ const ARTIFACTS: Artifact[] = [
 ]
 function addMinsISO(m:number){ const d = new Date(Date.now()+m*60000); return d.toISOString() }
 
+// Dance animation configuration
+type ArmatureType = 'feminine' | 'masculine'
+const DANCE_ANIMATIONS = {
+  feminine: [
+    '/animation/feminine/fbx/dance/F_Dances_001.fbx',
+    '/animation/feminine/fbx/dance/F_Dances_004.fbx',
+    '/animation/feminine/fbx/dance/F_Dances_005.fbx',
+    '/animation/feminine/fbx/dance/F_Dances_006.fbx',
+    '/animation/feminine/fbx/dance/F_Dances_007.fbx',
+    '/animation/feminine/fbx/dance/M_Dances_001.fbx',
+    '/animation/feminine/fbx/dance/M_Dances_002.fbx',
+    '/animation/feminine/fbx/dance/M_Dances_003.fbx',
+  ],
+  masculine: [
+    '/animation/masculine/fbx/dance/F_Dances_001.fbx',
+    '/animation/masculine/fbx/dance/F_Dances_004.fbx',
+    '/animation/masculine/fbx/dance/F_Dances_005.fbx',
+    '/animation/masculine/fbx/dance/M_Dances_001.fbx',
+    '/animation/masculine/fbx/dance/M_Dances_002.fbx',
+    '/animation/masculine/fbx/dance/M_Dances_003.fbx',
+    '/animation/masculine/fbx/dance/M_Dances_004.fbx',
+    '/animation/masculine/fbx/dance/M_Dances_005.fbx',
+  ]
+}
+
 function Scene() {
   const { scene } = useThree()
   React.useEffect(() => {
@@ -83,6 +109,9 @@ export default function DashboardPage() {
   const [zoom, setZoom] = useState(1)
   const [isDockOpen, setIsDockOpen] = useState(false)
   const [isWorldboardVisible, setIsWorldboardVisible] = useState(false)
+  const [armatureType, setArmatureType] = useState<ArmatureType>('feminine')
+  const [currentDanceIndex, setCurrentDanceIndex] = useState(0)
+  const [isAnimating, setIsAnimating] = useState(false)
   const camX = useMotionValue(-(WORLD_W/2 - 600))
   const camY = useMotionValue(-(WORLD_H/2 - 350))
 
@@ -124,17 +153,37 @@ export default function DashboardPage() {
 
   return (
     <div ref={rootRef} className="relative min-h-screen w-full overflow-hidden touch-none">
+      {/* Starfield background layer */}
       <div className="absolute inset-0 -z-10">
         <Canvas camera={{ position: [0, 0, 10], fov: 55 }}>
           <Scene />
           <Stars radius={80} depth={50} count={2500} factor={2} fade />
-          <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.2}>
-            <Avatar />
-          </Float>
         </Canvas>
       </div>
 
-      <HUD zoom={zoom} setZoom={setZoom} isDockOpen={isDockOpen} setIsDockOpen={setIsDockOpen} isWorldboardVisible={isWorldboardVisible} setIsWorldboardVisible={setIsWorldboardVisible} />
+      {/* Avatar layer (Visage creates its own Canvas) */}
+      <div className="absolute inset-0 pointer-events-none">
+        <Avatar
+          armatureType={armatureType}
+          danceIndex={currentDanceIndex}
+          isAnimating={isAnimating}
+        />
+      </div>
+
+      <HUD
+        zoom={zoom}
+        setZoom={setZoom}
+        isDockOpen={isDockOpen}
+        setIsDockOpen={setIsDockOpen}
+        isWorldboardVisible={isWorldboardVisible}
+        setIsWorldboardVisible={setIsWorldboardVisible}
+        armatureType={armatureType}
+        setArmatureType={setArmatureType}
+        currentDanceIndex={currentDanceIndex}
+        setCurrentDanceIndex={setCurrentDanceIndex}
+        isAnimating={isAnimating}
+        setIsAnimating={setIsAnimating}
+      />
 
       <div className="fixed inset-0 z-10">
         <AnimatePresence>
@@ -199,7 +248,22 @@ export default function DashboardPage() {
   )
 }
 
-function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, setIsWorldboardVisible }: { zoom: number; setZoom: (z:number)=>void; isDockOpen: boolean; setIsDockOpen: (open:boolean)=>void; isWorldboardVisible: boolean; setIsWorldboardVisible: (visible:boolean)=>void }){
+interface HUDProps {
+  zoom: number
+  setZoom: (z: number) => void
+  isDockOpen: boolean
+  setIsDockOpen: (open: boolean) => void
+  isWorldboardVisible: boolean
+  setIsWorldboardVisible: (visible: boolean) => void
+  armatureType: ArmatureType
+  setArmatureType: (type: ArmatureType) => void
+  currentDanceIndex: number
+  setCurrentDanceIndex: (index: number) => void
+  isAnimating: boolean
+  setIsAnimating: (animating: boolean) => void
+}
+
+function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, setIsWorldboardVisible, armatureType, setArmatureType, currentDanceIndex, setCurrentDanceIndex, isAnimating, setIsAnimating }: HUDProps){
   const streak = 5
   const [isMusicMuted, setIsMusicMuted] = useState(false)
   const [isMusicPlaying, setIsMusicPlaying] = useState(false)
@@ -279,6 +343,59 @@ function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, se
               <Volume2 className="size-5 text-cyan-300"/>
             )}
           </button>
+
+          {/* Dance Animation Controls */}
+          <div className="flex items-center gap-1 rounded-xl bg-purple-500/20 border border-purple-400/40 p-1">
+            <button
+              onClick={() => {
+                playClickSound()
+                setIsAnimating(!isAnimating)
+              }}
+              className={`rounded-lg p-1.5 transition ${isAnimating ? 'bg-purple-500/40 text-purple-200' : 'text-purple-300 hover:bg-purple-500/20'}`}
+              title={isAnimating ? 'Stop dancing' : 'Start dancing'}
+            >
+              <Music2 className="size-4" />
+            </button>
+            <button
+              onClick={() => {
+                playClickSound()
+                const dances = DANCE_ANIMATIONS[armatureType]
+                setCurrentDanceIndex((currentDanceIndex - 1 + dances.length) % dances.length)
+              }}
+              disabled={!isAnimating}
+              className="rounded-lg p-1.5 transition text-purple-300 hover:bg-purple-500/20 disabled:opacity-30 disabled:cursor-not-allowed"
+              title="Previous dance"
+            >
+              <ChevronLeft className="size-4" />
+            </button>
+            <span className="text-xs text-purple-300 font-medium px-1">
+              {currentDanceIndex + 1}/{DANCE_ANIMATIONS[armatureType].length}
+            </span>
+            <button
+              onClick={() => {
+                playClickSound()
+                const dances = DANCE_ANIMATIONS[armatureType]
+                setCurrentDanceIndex((currentDanceIndex + 1) % dances.length)
+              }}
+              disabled={!isAnimating}
+              className="rounded-lg p-1.5 transition text-purple-300 hover:bg-purple-500/20 disabled:opacity-30 disabled:cursor-not-allowed"
+              title="Next dance"
+            >
+              <ChevronRight className="size-4" />
+            </button>
+            <button
+              onClick={() => {
+                playClickSound()
+                setArmatureType(armatureType === 'feminine' ? 'masculine' : 'feminine')
+                setCurrentDanceIndex(0)
+              }}
+              className="ml-1 rounded-lg px-2 py-1.5 transition text-purple-300 hover:bg-purple-500/20 text-xs font-medium"
+              title="Switch armature type"
+            >
+              {armatureType === 'feminine' ? 'F' : 'M'}
+            </button>
+          </div>
+
           <div className="relative">
             <button
               onClick={() => { playClickSound(); setShowUserMenu(!showUserMenu) }}
@@ -428,18 +545,36 @@ function xpToNextPct(level:number, xp:number){
   return Math.max(0, Math.min(100, Math.round(pct)))
 }
 
-function Avatar(){
-  const { scene } = useGLTF('https://models.readyplayer.me/68f39e2ac955f67d168fc54c.glb')
-  const PrimitiveComponent = 'primitive' as any
+interface AvatarProps {
+  armatureType: ArmatureType
+  danceIndex: number
+  isAnimating: boolean
+}
+
+function Avatar({ armatureType, danceIndex, isAnimating }: AvatarProps){
+  const avatarUrl = 'https://models.readyplayer.me/68f39e2ac955f67d168fc54c.glb'
+  const animationSrc = isAnimating ? DANCE_ANIMATIONS[armatureType][danceIndex] : undefined
+
   return (
-    <Float speed={1} rotationIntensity={0.1} floatIntensity={0.2}>
-      <PrimitiveComponent
-        object={scene}
-        scale={1.8}
-        position={[0, -1.5, 5]}
-        rotation={[0, 0, 0]}
-      />
-    </Float>
+    <VisageAvatar
+      modelSrc={avatarUrl}
+      animationSrc={animationSrc}
+      cameraInitialDistance={3.5}
+      cameraTarget={1.2}
+      fov={50}
+      style={{
+        width: '100%',
+        height: '100%',
+        background: 'transparent'
+      }}
+      shadows={false}
+      halfBody={false}
+      onLoaded={() => console.log('Avatar loaded')}
+      onLoadedAnimation={animationSrc ? {
+        src: animationSrc,
+        onLoaded: () => console.log('Animation loaded:', animationSrc)
+      } : undefined}
+    />
   )
 }
 function PlayerMarker({ x, y }:{ x:number; y:number }){

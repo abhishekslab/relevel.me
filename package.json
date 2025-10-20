@@ -8,9 +8,12 @@
     "start": "next start"
   },
   "dependencies": {
+    "@amplitude/analytics-browser": "^2.27.0",
     "@hookform/resolvers": "^5.2.2",
     "@react-three/drei": "9.109.0",
     "@react-three/fiber": "8.15.16",
+    "@react-three/postprocessing": "^3.0.4",
+    "@readyplayerme/visage": "^6.16.0",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.75.1",
     "autoprefixer": "10.4.20",
