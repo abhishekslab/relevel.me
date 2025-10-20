@@ -113,15 +113,18 @@ function Scene() {
   return null
 }
 
+const DEFAULT_AVATAR_URL = process.env.NEXT_PUBLIC_DEFAULT_AVATAR_URL!
+const DEFAULT_AVATAR_GENDER = process.env.NEXT_PUBLIC_DEFAULT_AVATAR_GENDER! as ArmatureType
+
 export default function DashboardPage() {
   const WORLD_W = 1200, WORLD_H = 900
   const [zoom, setZoom] = useState(1)
   const [isDockOpen, setIsDockOpen] = useState(false)
   const [isWorldboardVisible, setIsWorldboardVisible] = useState(false)
-  const [armatureType, setArmatureType] = useState<ArmatureType>('feminine')
+  const [armatureType, setArmatureType] = useState<ArmatureType>(DEFAULT_AVATAR_GENDER)
   const [currentDanceIndex, setCurrentDanceIndex] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
-  const [avatarUrl, setAvatarUrl] = useState('https://models.readyplayer.me/68f39e2ac955f67d168fc54c.glb')
+  const [avatarUrl, setAvatarUrl] = useState(DEFAULT_AVATAR_URL)
   const camX = useMotionValue(-(WORLD_W/2 - 600))
   const camY = useMotionValue(-(WORLD_H/2 - 350))
 
@@ -513,8 +516,8 @@ interface ProfileModalProps {
 function ProfileModal({ open, onOpenChange, onProfileUpdate }: ProfileModalProps) {
   const [firstName, setFirstName] = useState('')
   const [phone, setPhone] = useState('')
-  const [avatarUrl, setAvatarUrl] = useState('')
-  const [avatarGender, setAvatarGender] = useState<'feminine' | 'masculine'>('feminine')
+  const [avatarUrl, setAvatarUrl] = useState(DEFAULT_AVATAR_URL)
+  const [avatarGender, setAvatarGender] = useState<'feminine' | 'masculine'>(DEFAULT_AVATAR_GENDER)
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
@@ -548,8 +551,8 @@ function ProfileModal({ open, onOpenChange, onProfileUpdate }: ProfileModalProps
       if (data) {
         setFirstName(data.first_name || '')
         setPhone(data.phone || '')
-        setAvatarUrl(data.avatar_url || 'https://models.readyplayer.me/68f39e2ac955f67d168fc54c.glb')
-        setAvatarGender(data.avatar_gender || 'masculine')
+        setAvatarUrl(data.avatar_url || DEFAULT_AVATAR_URL)
+        setAvatarGender(data.avatar_gender || DEFAULT_AVATAR_GENDER)
       }
     } catch (err) {
       console.error('Error loading profile:', err)
@@ -680,7 +683,7 @@ function ProfileModal({ open, onOpenChange, onProfileUpdate }: ProfileModalProps
                     type="url"
                     value={avatarUrl}
                     onChange={(e) => setAvatarUrl(e.target.value)}
-                    placeholder="https://models.readyplayer.me/68f39e2ac955f67d168fc54c.glb"
+                    placeholder={DEFAULT_AVATAR_URL}
                     disabled={isLoading || isSaving}
                   />
                   <p className="text-xs text-white/40 mt-1">
@@ -869,7 +872,7 @@ interface AvatarProps {
   avatarUrl?: string
 }
 
-function Avatar({ armatureType, danceIndex, isAnimating, avatarUrl = 'https://models.readyplayer.me/68f39e2ac955f67d168fc54c.glb' }: AvatarProps){
+function Avatar({ armatureType, danceIndex, isAnimating, avatarUrl = DEFAULT_AVATAR_URL }: AvatarProps){
   // Use dance animation if dancing, otherwise use idle animation
   const animationSrc = isAnimating
     ? DANCE_ANIMATIONS[armatureType][danceIndex]
