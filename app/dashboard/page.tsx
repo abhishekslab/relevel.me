@@ -139,6 +139,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
+      // Don't intercept keys if user is typing in an input/textarea
+      const target = e.target as HTMLElement
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return
+      }
+
       const step = 40 / zoom
       if (['w','a','s','d','ArrowUp','ArrowLeft','ArrowDown','ArrowRight'].includes(e.key)) e.preventDefault()
       if (e.key === 'w' || e.key === 'ArrowUp') camY.set(camY.get() + step)
