@@ -5,10 +5,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      # Pass build args from .env.local for Next.js build
+      # Pass build args from .env for Next.js build
       args:
         NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        NEXT_PUBLIC_SELF_HOSTED: "true"
     image: relevel-me:latest
     container_name: relevel-me
     restart: unless-stopped
@@ -19,6 +20,7 @@ services:
       - .env
     environment:
       - NODE_ENV=production
+      - NEXT_PUBLIC_SELF_HOSTED=true
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000"]
       interval: 30s
