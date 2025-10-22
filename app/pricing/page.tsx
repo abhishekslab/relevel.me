@@ -28,6 +28,7 @@ export default function PricingPage() {
   const [notifyEmail, setNotifyEmail] = useState('')
   const [notifyTier, setNotifyTier] = useState<'self_host' | 'max' | null>(null)
   const [loading, setLoading] = useState(false)
+  const isSelfHosted = process.env.NEXT_PUBLIC_SELF_HOSTED === 'true'
   const [notifySuccess, setNotifySuccess] = useState(false)
   const router = useRouter()
 
@@ -87,6 +88,86 @@ export default function PricingPage() {
     }
   }
 
+  // Self-hosted instance view
+  if (isSelfHosted) {
+    return (
+      <div className="min-h-screen bg-[#0b0f17] flex items-center justify-center p-4">
+        <div className="max-w-2xl w-full">
+          <Card className="border-violet-500/30 bg-gradient-to-br from-violet-500/5 to-transparent p-8">
+            <div className="text-center space-y-6">
+              <Link href="/" className="inline-block hover:opacity-80 transition">
+                <Image
+                  src="/logo.png"
+                  alt="Relevel.me Logo"
+                  width={100}
+                  height={100}
+                  className="drop-shadow-[0_0_24px_rgba(143,123,255,0.4)] mx-auto"
+                />
+              </Link>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-center gap-2">
+                  <Server className="w-6 h-6 text-cyan-400" />
+                  <h1 className="text-3xl font-bold">Self-Hosted Instance</h1>
+                </div>
+                <p className="text-white/60 text-lg">
+                  You're running relevel.me on your own infrastructure
+                </p>
+              </div>
+
+              <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-3 text-left">
+                <div className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
+                  <span className="text-white/80">Full access to all features without a subscription</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
+                  <span className="text-white/80">Complete control over your data and privacy</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
+                  <span className="text-white/80">Use your own AI API keys and infrastructure</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
+                  <span className="text-white/80">No recurring payments or external dependencies</span>
+                </div>
+              </div>
+
+              <div className="pt-4">
+                <Link href="/dashboard">
+                  <Button className="w-full max-w-xs">
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Go to Dashboard
+                  </Button>
+                </Link>
+              </div>
+
+              <p className="text-xs text-white/40">
+                Running in self-hosted mode • No payment required
+              </p>
+
+              <div className="pt-4 border-t border-white/10">
+                <p className="text-sm text-white/50">
+                  Need help? Check out the{' '}
+                  <a
+                    href="https://github.com/your-org/relevel.me/blob/main/docs/SELF_HOSTING.md"
+                    className="text-violet-400 hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    self-hosting documentation
+                  </a>
+                </p>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
+    )
+  }
+
+  // Hosted pricing page
   return (
     <div className="min-h-screen bg-[#0b0f17] py-12 px-4">
       <div className="max-w-6xl mx-auto space-y-8">
