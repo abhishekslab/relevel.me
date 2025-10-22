@@ -7,8 +7,8 @@ import { cookies } from 'next/headers'
  * Auth callback handler for magic link authentication
  * Supports both PKCE flow (session via cookies) and OAuth code flow
  * 1. Checks for existing session (PKCE) or exchanges code for session (OAuth)
- * 2. Provisions user record if it doesn't exist
- * 3. Redirects to dashboard (subscription check happens on dashboard page)
+ * 2. User record automatically created by database trigger (handle_new_auth_user)
+ * 3. Redirects to onboarding for profile completion
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -86,25 +86,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${baseUrl}/signup?error=no_user`)
   }
 
-  // Provision user record (creates if doesn't exist)
-  try {
-    const provisionResponse = await fetch(`${baseUrl}/api/auth/provision`, {
-      method: 'POST',
-      headers: {
-        'Cookie': request.headers.get('cookie') || '',
-      },
-    })
+  // User record automatically created by database trigger (handle_new_auth_user)
+  // See: supabase/migrations/20250102_add_subscriptions.sql:109-131
+  // No need for manual provisioning - the trigger handles it
 
-    if (!provisionResponse.ok) {
-      console.error('User provisioning failed:', await provisionResponse.text())
-      // Continue anyway - user record might already exist
-    }
-  } catch (error) {
-    console.error('Error calling provision API:', error)
-    // Continue anyway - this is not critical
-  }
-
-  // Always redirect to dashboard
-  // Dashboard page will handle subscription checks using requireSubscription()
-  return NextResponse.redirect(`${baseUrl}/dashboard`)
+  // Redirect to onboarding for profile completion
+  // Onboarding page will check if profile is complete and skip if needed
+  return NextResponse.redirect(`${baseUrl}/onboarding`)
 }

@@ -74,7 +74,8 @@ export async function middleware(request: NextRequest) {
 
   // Protect authenticated routes - just check for user
   if (request.nextUrl.pathname.startsWith('/dashboard') ||
-      request.nextUrl.pathname.startsWith('/settings')) {
+      request.nextUrl.pathname.startsWith('/settings') ||
+      request.nextUrl.pathname.startsWith('/onboarding')) {
     if (!user) {
       const redirectUrl = new URL('/signup', request.url)
       return NextResponse.redirect(redirectUrl)
@@ -82,8 +83,9 @@ export async function middleware(request: NextRequest) {
   }
 
   // Redirect authenticated users away from signup
+  // They should go through onboarding instead
   if (request.nextUrl.pathname === '/signup' && user) {
-    const redirectUrl = new URL('/dashboard', request.url)
+    const redirectUrl = new URL('/onboarding', request.url)
     return NextResponse.redirect(redirectUrl)
   }
 
@@ -91,5 +93,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/signup', '/settings'],
+  matcher: ['/dashboard/:path*', '/signup', '/settings', '/onboarding'],
 }
