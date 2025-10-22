@@ -5,33 +5,35 @@ export async function POST(req: NextRequest) {
   try {
     const supabase = createServerClient()
 
-    // Get user ID from request body (or use hardcoded test user)
-    const body = await req.json().catch(() => ({}))
-    const userId = body.userId
+    // Get authenticated user
+    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
 
-    // If no userId provided, get the first test user
-    let user
-    if (userId) {
-      const { data } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single()
-      user = data
-    } else {
-      // Get first user as fallback
-      const { data } = await supabase
-        .from('users')
-        .select('*')
-        .limit(1)
-        .single()
-      user = data
+    if (authError || !authUser) {
+      return NextResponse.json(
+        { error: 'Not authenticated' },
+        { status: 401 }
+      )
     }
 
-    if (!user) {
+    // Get user record from public.users table
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('auth_user_id', authUser.id)
+      .single()
+
+    if (userError || !user) {
       return NextResponse.json(
-        { error: 'No user found. Please add a user to the database first.' },
+        { error: 'User profile not found. Please complete your profile first.' },
         { status: 404 }
+      )
+    }
+
+    // Validate phone number exists
+    if (!user.phone) {
+      return NextResponse.json(
+        { error: 'Phone number not set. Please add your phone number in profile settings.' },
+        { status: 400 }
       )
     }
 

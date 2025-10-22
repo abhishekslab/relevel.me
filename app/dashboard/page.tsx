@@ -180,7 +180,7 @@ export default function DashboardPage() {
         const { data, error } = await supabase
           .from('users')
           .select('avatar_gender, avatar_url')
-          .eq('id', user.id)
+          .eq('auth_user_id', user.id)
           .single()
 
         if (error) {
@@ -572,7 +572,7 @@ function ProfileModal({ open, onOpenChange, onProfileUpdate }: ProfileModalProps
       const { data, error: fetchError } = await supabase
         .from('users')
         .select('first_name, phone, avatar_url, avatar_gender')
-        .eq('id', user.id)
+        .eq('auth_user_id', user.id)
         .single()
 
       if (fetchError) throw fetchError
@@ -623,7 +623,7 @@ function ProfileModal({ open, onOpenChange, onProfileUpdate }: ProfileModalProps
           avatar_url: avatarUrl.trim(),
           avatar_gender: avatarGender,
         })
-        .eq('id', user.id)
+        .eq('auth_user_id', user.id)
 
       if (updateError) throw updateError
 
