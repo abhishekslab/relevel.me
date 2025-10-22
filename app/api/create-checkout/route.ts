@@ -27,11 +27,11 @@ export async function POST(request: Request) {
 
     const supabase = createServerClient()
 
-    // Get user record from public.users via auth_user_id
+    // Get user record from public.users
     const { data: userRecord } = await supabase
       .from('users')
       .select('id')
-      .eq('auth_user_id', session.user.id)
+      .eq('id', session.user.id)
       .single()
 
     if (!userRecord) {
@@ -105,9 +105,8 @@ export async function POST(request: Request) {
           zipcode: ''
         },
         metadata: {
-          user_id: userRecord.id, // Use public.users.id, not auth.users.id
+          user_id: userRecord.id, // Now auth.uid() = users.id, so they're the same!
           tier: tier,
-          auth_user_id: session.user.id, // Also store auth.users.id for reference
         },
       })
     } catch (sdkError: any) {

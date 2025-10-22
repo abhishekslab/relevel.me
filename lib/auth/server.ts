@@ -10,7 +10,6 @@ export interface AuthSession {
 
 export interface UserWithSubscription {
   id: string
-  auth_user_id: string
   email: string
   created_at: string
   subscription: {
@@ -111,7 +110,6 @@ export async function getUserWithSubscription(): Promise<UserWithSubscription | 
     .from('users')
     .select(`
       id,
-      auth_user_id,
       email,
       created_at,
       subscription:subscriptions(
@@ -121,7 +119,7 @@ export async function getUserWithSubscription(): Promise<UserWithSubscription | 
         dodo_subscription_id
       )
     `)
-    .eq('auth_user_id', session.user.id)
+    .eq('id', session.user.id)
     .single()
 
   if (userError || !userRecord) {
@@ -142,10 +140,35 @@ export async function getUserWithSubscription(): Promise<UserWithSubscription | 
 
 /**
  * Require an active subscription - redirects to /pricing if no active subscription
+ * For self-hosted instances, this check is bypassed when NEXT_PUBLIC_SELF_HOSTED=true
  * Use in Server Components and Route Handlers for subscription-gated content
  */
 export async function requireSubscription(): Promise<UserWithSubscription> {
   const session = await requireAuth()
+
+  // Skip subscription check for self-hosted instances
+  if (process.env.NEXT_PUBLIC_SELF_HOSTED === 'true') {
+    const supabase = createServerClient()
+    const { data: userRecord } = await supabase
+      .from('users')
+      .select('id, email, created_at')
+      .eq('id', session.user.id)
+      .single()
+
+    if (!userRecord) {
+      // User record still required even for self-hosted
+      redirect('/pricing')
+    }
+
+    // Return user without subscription requirement for self-hosted
+    return {
+      ...userRecord,
+      email: userRecord.email || session.user.email || '',
+      subscription: null, // No subscription needed for self-hosted
+    }
+  }
+
+  // Existing subscription check logic for hosted instances
   const userWithSub = await getUserWithSubscription()
 
   // If no user record exists, redirect to pricing (user needs to be provisioned)

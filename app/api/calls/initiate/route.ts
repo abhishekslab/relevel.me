@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('*')
-      .eq('auth_user_id', authUser.id)
+      .eq('id', authUser.id)
       .single()
 
     if (userError || !user) {
