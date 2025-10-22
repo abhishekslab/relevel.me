@@ -81,6 +81,7 @@ export async function POST(request: Request) {
     // Initialize DodoPayments SDK client
     const dodoClient = new DodoPayments({
       bearerToken: dodoSecretKey,
+      environment: (process.env.DODOPAYMENTS_ENVIRONMENT as "live_mode" | "test_mode") || 'live_mode',
     })
 
     // Create subscription with DodoPayments SDK
