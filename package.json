@@ -5,10 +5,14 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "worker": "tsx worker.ts",
+    "worker:prod": "node dist/worker.js"
   },
   "dependencies": {
     "@amplitude/analytics-browser": "^2.27.0",
+    "@bull-board/api": "^6.14.0",
+    "@bull-board/ui": "^6.14.0",
     "@hookform/resolvers": "^5.2.2",
     "@react-three/drei": "9.109.0",
     "@react-three/fiber": "8.15.16",
@@ -17,8 +21,10 @@
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.75.1",
     "autoprefixer": "10.4.20",
+    "bull": "^4.16.5",
     "dodopayments": "^2.2.1",
     "framer-motion": "11.2.13",
+    "ioredis": "^5.8.2",
     "lucide-react": "0.453.0",
     "next": "14.2.8",
     "postcss": "8.4.47",
@@ -31,7 +37,10 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@types/bull": "^3.15.9",
     "@types/node": "24.8.1",
-    "supabase": "^2.51.0"
+    "dotenv": "^17.2.3",
+    "supabase": "^2.51.0",
+    "tsx": "^4.20.6"
   }
 }
