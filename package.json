@@ -4,7 +4,8 @@
   "version": "0.1.0",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && npm run build:worker",
+    "build:worker": "tsc -p tsconfig.worker.json",
     "start": "next start",
     "worker": "tsx worker.ts",
     "worker:prod": "node dist/worker.js"

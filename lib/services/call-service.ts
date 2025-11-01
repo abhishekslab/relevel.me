@@ -141,7 +141,7 @@ export async function initiateCall(params: InitiateCallParams): Promise<Initiate
       };
     }
 
-    const callkaroData = await callkaroResponse.json();
+    const callkaroData = await callkaroResponse.json() as any;
 
     // Update call record with vendor ID
     const { error: updateError } = await supabase
