@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/auth/server';
-import { createBullBoard } from '@bull-board/api';
-import { BullAdapter } from '@bull-board/api/bullAdapter';
 import { dailyCallsQueue } from '@/lib/queue/client';
 
 /**
@@ -11,12 +9,6 @@ import { dailyCallsQueue } from '@/lib/queue/client';
  * Provides UI for monitoring queue jobs
  * Protected by authentication
  */
-
-// Create Bull Board instance
-const serverAdapter = createBullBoard({
-  queues: [new BullAdapter(dailyCallsQueue)],
-  serverAdapter: undefined, // We'll handle rendering manually
-});
 
 export async function GET(req: NextRequest) {
   try {

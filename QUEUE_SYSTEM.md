@@ -214,7 +214,7 @@ Response:
     "crons": [
       {
         "name": "schedule-calls",
-        "pattern": "*/5 * * * *",
+        "cron": "*/5 * * * *",
         "next": 1730350800000
       }
     ]

@@ -68,8 +68,9 @@ async function shutdown() {
   console.log('[Worker] Shutting down...');
 
   try {
-    // Wait for active jobs to complete (with timeout)
-    await dailyCallsQueue.close(30000); // 30 second timeout
+    // Wait for active jobs to complete
+    // false = wait for active jobs to complete before closing
+    await dailyCallsQueue.close(false);
     console.log('[Worker] Queue closed gracefully');
     process.exit(0);
   } catch (error) {

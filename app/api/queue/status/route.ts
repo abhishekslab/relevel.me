@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
         crons: repeatableJobs.map((job) => ({
           key: job.key,
           name: job.name,
-          pattern: job.pattern,
+          cron: job.cron,
           next: job.next,
         })),
       },
