@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { motion, useMotionValue, AnimatePresence } from 'framer-motion'
-import { Flame, Sparkles, Target, Clock, X, Volume2, VolumeX, Settings, LogOut, ChevronLeft, ChevronRight, User, AlertCircle } from 'lucide-react'
+import { Flame, Sparkles, Target, Clock, X, Volume2, VolumeX, Settings, LogOut, ChevronLeft, ChevronRight, User, AlertCircle, MessageSquare, Square } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -18,6 +18,8 @@ import * as THREE from 'three'
 import { playClickSound, toggleMusicMute, getMusicMutedState, playBackgroundMusic, isMusicActuallyPlaying } from '@/lib/sound'
 import { signOut as serverSignOut } from '../actions'
 import { createClient } from '@/lib/auth/client'
+import { getSpeechService, TEST_PHRASES, type SpeechState } from '@/lib/speech'
+import type { VisemeName } from '@/lib/lipsync'
 
 type UUID = string
 type Biome = 'meadow'|'forest'|'desert'|'mist'|'tech'|'peaks'
@@ -139,6 +141,23 @@ export default function DashboardPage() {
     isLoading: true,
   })
 
+  // Speech/lip-sync state
+  const [visemeWeights, setVisemeWeights] = useState<Record<VisemeName, number>>({} as Record<VisemeName, number>)
+  const [isSpeaking, setIsSpeaking] = useState(false)
+
+  // Initialize speech service
+  useEffect(() => {
+    const speechService = getSpeechService()
+    speechService.setOnUpdate((state: SpeechState) => {
+      setVisemeWeights(state.visemeWeights)
+      setIsSpeaking(state.isSpeaking)
+    })
+
+    return () => {
+      speechService.dispose()
+    }
+  }, [])
+
   // Start background music when dashboard loads
   useEffect(() => {
     // Small delay to ensure DOM is ready
@@ -246,6 +265,7 @@ export default function DashboardPage() {
           danceIndex={currentDanceIndex}
           isAnimating={isAnimating}
           avatarUrl={avatarUrl}
+          visemeWeights={visemeWeights}
         />
       </div>
 
@@ -292,6 +312,8 @@ export default function DashboardPage() {
         avatarUrl={avatarUrl}
         setAvatarUrl={setAvatarUrl}
         canMakeCalls={canMakeCalls}
+        visemeWeights={visemeWeights}
+        isSpeaking={isSpeaking}
       />
 
       <div className="fixed inset-0 z-10">
@@ -373,15 +395,44 @@ interface HUDProps {
   avatarUrl: string
   setAvatarUrl: (url: string) => void
   canMakeCalls: boolean
+  visemeWeights: Record<VisemeName, number>
+  isSpeaking: boolean
 }
 
-function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, setIsWorldboardVisible, armatureType, setArmatureType, currentDanceIndex, setCurrentDanceIndex, isAnimating, setIsAnimating, avatarUrl, setAvatarUrl, canMakeCalls }: HUDProps){
+function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, setIsWorldboardVisible, armatureType, setArmatureType, currentDanceIndex, setCurrentDanceIndex, isAnimating, setIsAnimating, avatarUrl, setAvatarUrl, canMakeCalls, visemeWeights, isSpeaking }: HUDProps){
   const [streak, setStreak] = useState(0)
   const [isMusicMuted, setIsMusicMuted] = useState(false)
   const [isMusicPlaying, setIsMusicPlaying] = useState(false)
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
   const [showProfileModal, setShowProfileModal] = useState(false)
+  const [selectedPhraseIndex, setSelectedPhraseIndex] = useState(0)
+  const [showSpeechMenu, setShowSpeechMenu] = useState(false)
   const router = useRouter()
+
+  // Combined test phrases from all categories
+  const allTestPhrases = useMemo(() => {
+    const phrases: string[] = []
+    TEST_PHRASES.rpg.forEach(p => phrases.push(p))
+    TEST_PHRASES.phonetic.forEach(p => phrases.push(p))
+    return phrases
+  }, [])
+
+  // Speech handlers
+  const handleSpeak = async (text: string) => {
+    playClickSound()
+    const speechService = getSpeechService()
+    try {
+      await speechService.speak(text, { rate: 1.0, pitch: 1.0 })
+    } catch (error) {
+      console.error('Speech error:', error)
+    }
+  }
+
+  const handleStopSpeech = () => {
+    playClickSound()
+    const speechService = getSpeechService()
+    speechService.stop()
+  }
 
   const handleProfileUpdate = React.useCallback((data: { firstName: string; phone: string; avatarUrl: string; avatarGender: 'feminine' | 'masculine' }) => {
     // Update armature type if changed
@@ -495,6 +546,67 @@ function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, se
               <Volume2 className="size-5 text-cyan-300"/>
             )}
           </button>
+
+          {/* Speech Test Button */}
+          <div className="relative">
+            <button
+              onClick={() => { playClickSound(); setShowSpeechMenu(!showSpeechMenu) }}
+              className={`rounded-xl ${isSpeaking ? 'bg-violet-500/30 border-violet-400/60 ring-2 ring-violet-400/40 animate-pulse' : 'bg-violet-500/20 border-violet-400/40'} border p-2 hover:bg-violet-500/30 transition active:scale-95`}
+              title="Speech Test (Lip-Sync)"
+            >
+              <MessageSquare className="size-5 text-violet-300"/>
+            </button>
+            {showSpeechMenu && (
+              <div className="absolute right-0 mt-2 w-72 rounded-xl bg-[#0b0f17] border border-white/10 shadow-xl overflow-hidden max-h-96 overflow-y-auto">
+                <div className="p-3 border-b border-white/10">
+                  <div className="text-xs font-medium text-violet-300 mb-2">Lip-Sync Test Phrases</div>
+                  <div className="text-[10px] text-slate-400 mb-2">Select a phrase and click "Speak" to test lip-sync</div>
+
+                  {/* Phrase selection */}
+                  <div className="space-y-1">
+                    {allTestPhrases.map((phrase, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          playClickSound()
+                          setSelectedPhraseIndex(index)
+                        }}
+                        className={`w-full text-left text-xs p-2 rounded-lg transition ${
+                          selectedPhraseIndex === index
+                            ? 'bg-violet-500/30 border border-violet-400/50 text-violet-200'
+                            : 'bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10'
+                        }`}
+                      >
+                        {phrase.length > 60 ? phrase.substring(0, 60) + '...' : phrase}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Control buttons */}
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={() => {
+                        if (!isSpeaking) {
+                          handleSpeak(allTestPhrases[selectedPhraseIndex])
+                        }
+                      }}
+                      disabled={isSpeaking}
+                      className="flex-1 rounded-lg px-3 py-2 text-xs font-medium transition bg-violet-500/30 border border-violet-400/50 text-violet-200 hover:bg-violet-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSpeaking ? 'Speaking...' : 'Speak'}
+                    </button>
+                    <button
+                      onClick={handleStopSpeech}
+                      disabled={!isSpeaking}
+                      className="rounded-lg px-3 py-2 text-xs font-medium transition bg-red-500/30 border border-red-400/50 text-red-200 hover:bg-red-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Square className="size-3" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
 
           <div className="relative">
             <button
@@ -958,17 +1070,24 @@ interface AvatarProps {
   danceIndex: number
   isAnimating: boolean
   avatarUrl?: string
+  visemeWeights?: Record<VisemeName, number>
 }
 
-function Avatar({ armatureType, danceIndex, isAnimating, avatarUrl = DEFAULT_AVATAR_URL }: AvatarProps){
+function Avatar({ armatureType, danceIndex, isAnimating, avatarUrl = DEFAULT_AVATAR_URL, visemeWeights }: AvatarProps){
   // Use dance animation if dancing, otherwise use idle animation
   const animationSrc = isAnimating
     ? DANCE_ANIMATIONS[armatureType][danceIndex]
     : IDLE_ANIMATIONS[armatureType]
 
+  // Hardcoded local GLB model path
+  const localModelSrc = '/models/custom-avatar.glb'
+
+  // Convert viseme weights to emotion format (Ready Player Me uses emotion prop for morph targets)
+  const emotion = visemeWeights && Object.keys(visemeWeights).length > 0 ? visemeWeights : undefined
+
   return (
     <VisageAvatar
-      modelSrc={avatarUrl}
+      modelSrc={localModelSrc}
       animationSrc={animationSrc}
       cameraInitialDistance={3.5}
       cameraTarget={0}
@@ -980,6 +1099,7 @@ function Avatar({ armatureType, danceIndex, isAnimating, avatarUrl = DEFAULT_AVA
       }}
       shadows={false}
       halfBody={false}
+      emotion={emotion}
       onLoaded={() => console.log('Avatar loaded with animation:', animationSrc)}
     />
   )
