@@ -5,6 +5,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { getCallProvider } from '../providers/factory';
+import { config } from '../config';
 
 // Service role client for background jobs (bypasses RLS)
 function getServiceClient() {
@@ -219,30 +220,32 @@ export async function getUsersToCallNow(): Promise<
       }
 
       // Convert current UTC time to user's local timezone
+      const userTimezone = user.local_tz || config.defaultTimezone;
       const userLocalTime = new Date(
-        now.toLocaleString('en-US', { timeZone: user.local_tz || 'Asia/Kolkata' })
+        now.toLocaleString('en-US', { timeZone: userTimezone })
       );
 
       const currentHour = userLocalTime.getHours();
       const currentMinute = userLocalTime.getMinutes();
 
       // Parse user's call_time (format: "HH:MM:SS")
-      const [callHour, callMinute] = (user.call_time || '20:30:00').split(':').map(Number);
+      const userCallTime = user.call_time || config.defaultCallTime;
+      const [callHour, callMinute] = userCallTime.split(':').map(Number);
 
-      // Check if current time is within 5 minutes of call_time
+      // Check if current time is within configured window of call_time
       const currentTotalMinutes = currentHour * 60 + currentMinute;
       const callTotalMinutes = callHour * 60 + callMinute;
 
       if (
         currentTotalMinutes >= callTotalMinutes &&
-        currentTotalMinutes < callTotalMinutes + 5
+        currentTotalMinutes < callTotalMinutes + config.callTimeWindowMinutes
       ) {
         usersToCall.push({
           id: user.id,
           phone: user.phone!,
           name: user.name,
-          local_tz: user.local_tz || 'Asia/Kolkata',
-          call_time: user.call_time || '20:30:00',
+          local_tz: userTimezone,
+          call_time: userCallTime,
         });
       }
     }
