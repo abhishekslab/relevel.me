@@ -1,13 +1,24 @@
 
 # relevel.me — Artha
 
-An open‑world gamified skill-tracking dashboard with voice-first journaling:
-- Three.js starfield background via `@react-three/fiber` + `drei`
-- Pannable / zoomable world map, fog‑of‑war, biomes, skill shrines
-- Quest dock, minimap, HUD with stats (WRS, streak, points)
-- AI-powered voice calls for daily reflection with Artha
-- Supabase authentication and database
-- Magic link sign-up flow
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-Powered-green.svg)](https://supabase.com/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
+An **open-source** gamified skill-tracking dashboard with voice-first journaling and an immersive 3D worldboard interface.
+
+### Features
+
+- 🌌 **Three.js starfield background** via `@react-three/fiber` + `drei`
+- 🗺️ **Interactive world map** - Pannable/zoomable with fog-of-war system
+- 🏰 **Skill shrines** across different biomes (meadow, forest, desert, mist, tech, peaks)
+- 📊 **HUD & Stats** - WRS score, streak tracking, experience points
+- 🎤 **AI Voice Calls** - Daily reflection conversations with Artha
+- 🔐 **Supabase Auth** - Magic link authentication, no passwords
+- 🐳 **Docker Ready** - One-command self-hosted deployment
+- 🔌 **Pluggable Providers** - Swap call providers (CallKaro, Vapi) via config
 
 ## Quick Start
 
@@ -15,7 +26,7 @@ An open‑world gamified skill-tracking dashboard with voice-first journaling:
 
 ```bash
 # Clone repository
-git clone https://github.com/your-org/relevel.me.git
+git clone https://github.com/YOUR_USERNAME/relevel.me.git
 cd relevel.me
 
 # Install dependencies
@@ -164,14 +175,42 @@ DODOPAYMENTS_PRO_PRODUCT_ID=your-product-id
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+We welcome contributions from the community! 🎉
+
+- **Read** [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
+- **Report bugs** by opening an issue
+- **Suggest features** in GitHub Discussions
+- **Submit PRs** for bug fixes or new features
+- **Add call providers** - See [docs/PROVIDERS.md](docs/PROVIDERS.md)
+- **Improve docs** - Documentation PRs are highly valued
+
+Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before contributing.
+
+## Security
+
+Found a security vulnerability? Please report it responsibly:
+
+- **DO NOT** open a public issue
+- Read our [Security Policy](SECURITY.md) for reporting instructions
+- Use GitHub Security Advisories for private reporting
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details
+MIT License - see [LICENSE](LICENSE) for details.
 
-## Support
+Copyright (c) 2025 relevel.me contributors
 
-- **Issues**: [GitHub Issues](https://github.com/your-org/relevel.me/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/relevel.me/discussions)
-- **Self-Hosting Help**: See [docs/SELF_HOSTING.md](docs/SELF_HOSTING.md)
+## Support & Community
+
+- 📖 **Documentation**: [docs/](docs/)
+- 🐛 **Issues**: [GitHub Issues](../../issues) - Report bugs
+- 💬 **Discussions**: [GitHub Discussions](../../discussions) - Ask questions, share ideas
+- 🔐 **Security**: [Security Policy](SECURITY.md) - Report vulnerabilities
+- 🏠 **Self-Hosting**: [Self-Hosting Guide](docs/SELF_HOSTING.md) - Run your own instance
+
+### Quick Links
+
+- [Setup Guide](SETUP.md) - Development setup
+- [Provider Guide](docs/PROVIDERS.md) - Call provider configuration
+- [Self-Hosting Guide](docs/SELF_HOSTING.md) - Production deployment
+- [Architecture Docs](CLAUDE.md) - Codebase overview
