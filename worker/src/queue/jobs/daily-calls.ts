@@ -10,7 +10,7 @@ import {
   DEFAULT_JOB_OPTIONS,
   JOB_NAMES,
 } from '../types';
-import { getUsersToCallNow, initiateCall } from '../../services/call-service';
+import { getUsersToCallNow, initiateCall } from '../../../lib/services/call-service';
 import { dailyCallsQueue } from '../client';
 
 /**

@@ -4,6 +4,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { getCallProvider } from '../providers/factory';
 
 // Service role client for background jobs (bypasses RLS)
 function getServiceClient() {
@@ -77,13 +78,17 @@ export async function initiateCall(params: InitiateCallParams): Promise<Initiate
       };
     }
 
+    // Get configured call provider (CallKaro, Vapi, etc.)
+    const callProvider = getCallProvider();
+    const agentId = process.env.CALLKARO_AGENT_ID || process.env.VAPI_ASSISTANT_ID || '';
+
     // Create call record in database
     const { data: call, error: dbError } = await supabase
       .from('calls')
       .insert({
         user_id: userId,
         to_number: phone,
-        agent_id: process.env.CALLKARO_AGENT_ID || 'artha-daily-journal-v1',
+        agent_id: agentId,
         scheduled_at: new Date().toISOString(),
         status: 'queued',
       })
@@ -100,55 +105,42 @@ export async function initiateCall(params: InitiateCallParams): Promise<Initiate
 
     console.log(`[CallService] Created call record ${call.id} for user ${userId}`);
 
-    // Initiate call via CallKaro API
-    const callkaroResponse = await fetch(
-      `${process.env.CALLKARO_BASE_URL}/call/outbound`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-API-KEY': process.env.CALLKARO_API_KEY!,
-        },
-        body: JSON.stringify({
-          to_number: phone,
-          agent_id: process.env.CALLKARO_AGENT_ID,
-          metadata: {
-            call_id: call.id,
-            user_id: userId,
-            name: name || undefined,
-          },
-        }),
-      }
-    );
+    // Initiate call via configured provider
+    const providerResponse = await callProvider.initiateCall({
+      toNumber: phone,
+      agentId: agentId,
+      metadata: {
+        call_id: call.id,
+        user_id: userId,
+        name: name || undefined,
+      },
+    });
 
-    if (!callkaroResponse.ok) {
-      const errorText = await callkaroResponse.text();
-      console.error('[CallService] CallKaro API error:', errorText);
+    if (!providerResponse.success) {
+      console.error(`[CallService] ${callProvider.name} API error:`, providerResponse.error);
 
       // Update call status to failed
       await supabase
         .from('calls')
         .update({
           status: 'failed',
-          vendor_payload: { error: errorText },
+          vendor_payload: { error: providerResponse.error },
         })
         .eq('id', call.id);
 
       return {
         success: false,
-        error: 'Failed to initiate call with CallKaro',
+        error: `Failed to initiate call with ${callProvider.name}`,
         callId: call.id,
       };
     }
-
-    const callkaroData = await callkaroResponse.json() as any;
 
     // Update call record with vendor ID
     const { error: updateError } = await supabase
       .from('calls')
       .update({
-        vendor_call_id: callkaroData.call_id,
-        vendor_payload: callkaroData,
+        vendor_call_id: providerResponse.vendorCallId,
+        vendor_payload: providerResponse,
         status: 'ringing',
       })
       .eq('id', call.id);
@@ -157,14 +149,16 @@ export async function initiateCall(params: InitiateCallParams): Promise<Initiate
       console.error('[CallService] Failed to update call record:', updateError);
     }
 
-    console.log(`[CallService] Call initiated successfully: ${call.id} -> ${callkaroData.call_id}`);
+    console.log(
+      `[CallService] Call initiated successfully via ${callProvider.name}: ${call.id} -> ${providerResponse.vendorCallId}`
+    );
 
     return {
       success: true,
       callId: call.id,
-      vendorCallId: callkaroData.call_id,
-      status: callkaroData.status,
-      message: callkaroData.message || `Call initiated to ${name || phone}`,
+      vendorCallId: providerResponse.vendorCallId,
+      status: providerResponse.status,
+      message: providerResponse.message || `Call initiated to ${name || phone}`,
     };
   } catch (error) {
     console.error('[CallService] Unexpected error:', error);
