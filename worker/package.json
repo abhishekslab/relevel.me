@@ -1,0 +1,23 @@
+{
+  "name": "relevel-worker",
+  "version": "1.0.0",
+  "description": "Background worker for processing daily calls queue",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.75.1",
+    "bull": "^4.16.5",
+    "dotenv": "^17.2.3",
+    "ioredis": "^5.8.2"
+  },
+  "devDependencies": {
+    "@types/bull": "^3.15.9",
+    "@types/node": "^24.8.1",
+    "tsx": "^4.20.6",
+    "typescript": "^5.6.2"
+  }
+}

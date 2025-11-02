@@ -49,12 +49,11 @@ services:
 
   relevel-worker:
     build:
-      context: .
+      context: ./worker
       dockerfile: Dockerfile
-    image: relevel-me:latest
+    image: relevel-worker:latest
     container_name: relevel-worker
     restart: unless-stopped
-    command: node dist/worker.js
     env_file:
       - .env
     environment:

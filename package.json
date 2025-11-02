@@ -4,11 +4,11 @@
   "version": "0.1.0",
   "scripts": {
     "dev": "next dev",
-    "build": "next build && npm run build:worker",
-    "build:worker": "tsc -p tsconfig.worker.json",
+    "build": "next build",
     "start": "next start",
-    "worker": "tsx worker.ts",
-    "worker:prod": "node dist/worker.js"
+    "worker:dev": "cd worker && npm run dev",
+    "worker:build": "cd worker && npm run build",
+    "worker:start": "cd worker && npm start"
   },
   "dependencies": {
     "@amplitude/analytics-browser": "^2.27.0",

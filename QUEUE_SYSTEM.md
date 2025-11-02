@@ -6,49 +6,68 @@ The queue system enables automated daily calls to users using **Redis** and **Bu
 
 ## Architecture
 
+The queue system is now a **standalone worker service** with its own Docker container:
+
 ```
-┌─────────────────┐
-│   Next.js App   │
-│  (Port 3000)    │
-└────────┬────────┘
-         │
-         ├─── API Routes (/api/queue/*)
-         │
-         │    ┌──────────────┐
-         └────│    Redis     │────┐
-              │  (Port 6379) │    │
-              └──────────────┘    │
-                                  │
-                          ┌───────┴────────┐
-                          │ Worker Process │
-                          │ (Bull Consumer)│
-                          └────────────────┘
-                                  │
-                          ┌───────┴────────┐
-                          │  CallKaro API  │
-                          └────────────────┘
+┌─────────────────┐       ┌──────────────────┐
+│   Next.js App   │       │  Worker Service  │
+│  (Port 3000)    │       │   (Standalone)   │
+└────────┬────────┘       └────────┬─────────┘
+         │                         │
+         ├─── API Routes           ├─── Job Processors
+         │    (/api/queue/*)       │    (Bull Consumer)
+         │                         │
+         │    ┌──────────────┐     │
+         └────│    Redis     │─────┘
+              │  (Port 6379) │
+              └──────────────┘
+                     │
+             ┌───────┴────────┐
+             │  CallKaro API  │
+             └────────────────┘
 ```
 
 ## Components
 
-### 1. **Queue Client** (`lib/queue/client.ts`)
+### Worker Service (`worker/`)
+
+A standalone Node.js service with its own dependencies and Docker container.
+
+**Directory Structure:**
+```
+worker/
+├── src/
+│   ├── index.ts                    # Entry point
+│   ├── queue/
+│   │   ├── client.ts              # Bull queue client
+│   │   ├── worker.ts              # Job processors
+│   │   ├── types.ts               # TypeScript types
+│   │   └── jobs/
+│   │       └── daily-calls.ts     # Call job handlers
+│   └── services/
+│       └── call-service.ts        # Supabase integration
+├── Dockerfile                      # Worker container
+└── package.json                    # Worker dependencies
+```
+
+### 1. **Queue Client** (`worker/src/queue/client.ts`)
 - Initializes Redis connection
 - Creates Bull queue instance
 - Provides health check utilities
 - Handles graceful shutdown
 
-### 2. **Job Processors** (`lib/queue/jobs/daily-calls.ts`)
+### 2. **Job Processors** (`worker/src/queue/jobs/daily-calls.ts`)
 - **processScheduleCalls**: Finds users who need calls at current time
 - **processUserCall**: Initiates individual call for a user
 - Each processor is registered by name in the worker
 
-### 3. **Worker Process** (`lib/queue/worker.ts`)
+### 3. **Worker Process** (`worker/src/queue/worker.ts`)
 - Registers named processors for each job type (Bull best practice)
 - **schedule-calls**: Concurrency of 1 (cron scheduler)
 - **process-user-call**: Concurrency of 5 (parallel call processing)
 - Runs cron job every 5 minutes to check for users
 
-### 4. **Call Service** (`lib/services/call-service.ts`)
+### 4. **Call Service** (`worker/src/services/call-service.ts`)
 - Reusable call initiation logic
 - Timezone-aware user selection
 - Prevents duplicate calls per day
@@ -100,10 +119,16 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
 ### 1. Install Dependencies
 
-Already done:
+**Main App:**
 ```bash
-npm install bull ioredis @bull-board/api @bull-board/ui
-npm install --save-dev @types/bull tsx dotenv
+npm install
+```
+
+**Worker (separate service):**
+```bash
+cd worker
+npm install
+cd ..
 ```
 
 ### 2. Run Database Migration
@@ -114,37 +139,34 @@ npx supabase db push
 npx supabase migration up
 ```
 
-### 3. Start Redis
+### 3. Start Services
 
-**Option A: Local Redis**
+**Development (Local):**
+
+Terminal 1 - Redis:
 ```bash
 redis-server
 ```
 
-**Option B: Docker (Recommended)**
+Terminal 2 - Worker:
 ```bash
-docker-compose up redis -d
+npm run worker:dev
 ```
 
-### 4. Start the Worker
-
-**Development:**
+Terminal 3 - Next.js:
 ```bash
-npm run worker
+npm run dev
 ```
 
-**Production:**
+**Production (Docker - Recommended):**
 ```bash
-npm run build
-npm run worker:prod
+docker compose up --build
 ```
 
-### 5. Start Next.js App
-
-```bash
-npm run dev    # Development
-npm start      # Production
-```
+This starts all three services:
+- `relevel-redis`: Redis server
+- `relevel-worker`: Queue worker
+- `relevel-me`: Next.js app
 
 ## Docker Deployment
 
