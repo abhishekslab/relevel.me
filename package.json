@@ -1,7 +1,29 @@
 {
-  "name": "relevel",
-  "private": true,
-  "version": "0.1.0",
+  "name": "relevel-me",
+  "version": "1.0.0",
+  "description": "Open-source gamified skill-tracking dashboard with voice-first journaling and immersive 3D worldboard interface",
+  "keywords": [
+    "skill-tracking",
+    "gamification",
+    "nextjs",
+    "typescript",
+    "supabase",
+    "voice-ai",
+    "self-hosted",
+    "3d",
+    "three-js",
+    "react"
+  ],
+  "author": "relevel.me contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YOUR_USERNAME/relevel.me.git"
+  },
+  "bugs": {
+    "url": "https://github.com/YOUR_USERNAME/relevel.me/issues"
+  },
+  "homepage": "https://github.com/YOUR_USERNAME/relevel.me#readme",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -12,7 +34,6 @@
     "worker:start": "cd worker && npm start"
   },
   "dependencies": {
-    "@amplitude/analytics-browser": "^2.27.0",
     "@bull-board/api": "^6.14.0",
     "@bull-board/ui": "^6.14.0",
     "@hookform/resolvers": "^5.2.2",
