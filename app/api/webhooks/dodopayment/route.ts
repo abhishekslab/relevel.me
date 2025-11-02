@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/auth/server'
+import { isPaymentsEnabled } from '@/lib/features'
 import crypto from 'crypto'
 
 // Verify webhook signature from DodoPayments
@@ -15,11 +16,18 @@ function verifyWebhookSignature(
 
 export async function POST(request: Request) {
   try {
+    // Check if payments are enabled (disabled for self-hosted)
+    if (!isPaymentsEnabled()) {
+      console.warn('[Webhook:DodoPayments] Received webhook but payments are disabled')
+      // Return 200 to acknowledge but don't process
+      return NextResponse.json({ received: true, processed: false })
+    }
+
     const body = await request.text()
     const signature = request.headers.get('x-dodo-signature')
 
     if (!signature) {
-      console.error('No signature provided')
+      console.error('[Webhook:DodoPayments] No signature provided')
       return NextResponse.json({ error: 'No signature' }, { status: 400 })
     }
 

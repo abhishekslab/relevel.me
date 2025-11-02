@@ -28,6 +28,7 @@ export default function PricingPage() {
   const [notifyEmail, setNotifyEmail] = useState('')
   const [notifyTier, setNotifyTier] = useState<'self_host' | 'max' | null>(null)
   const [loading, setLoading] = useState(false)
+  // Check if this is a self-hosted instance (payments disabled)
   const isSelfHosted = process.env.NEXT_PUBLIC_SELF_HOSTED === 'true'
   const [notifySuccess, setNotifySuccess] = useState(false)
   const router = useRouter()

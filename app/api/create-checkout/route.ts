@@ -1,9 +1,18 @@
 import { NextResponse } from 'next/server'
 import { requireAuth, createServerClient } from '@/lib/auth/server'
+import { isPaymentsEnabled } from '@/lib/features'
 import DodoPayments from 'dodopayments'
 
 export async function POST(request: Request) {
   try {
+    // Check if payments are enabled (disabled for self-hosted)
+    if (!isPaymentsEnabled()) {
+      return NextResponse.json(
+        { error: 'Payments are not available in self-hosted mode' },
+        { status: 403 }
+      )
+    }
+
     // Require authentication
     const session = await requireAuth()
 
