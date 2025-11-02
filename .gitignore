@@ -12,8 +12,13 @@ dist/
 # Environment variables
 .env
 .env.local
+.env.production
 .env.production.local
 .env.development.local
+*.env.local
+*.env.production
+env/
+!.env.example
 
 # Debug
 npm-debug.log*
@@ -32,8 +37,30 @@ yarn-error.log*
 Thumbs.db
 
 # ideation and rough work
-temp
+temp/
+LIPSYNC_ROADMAP.md
 
 # Supabase
 supabase/.temp/
 supabase/.branches/
+
+# TypeScript
+*.tsbuildinfo
+
+# Testing
+coverage/
+.nyc_output/
+
+# Logs
+logs/
+*.log
+
+# Database
+*.db
+*.sqlite
+
+# Docker
+.docker/
+
+# Misc
+.cache/
