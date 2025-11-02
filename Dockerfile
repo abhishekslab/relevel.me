@@ -50,9 +50,6 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-# Copy compiled worker (dist folder)
-COPY --from=builder /app/dist ./dist
-
 # Copy sharp from node_modules for image optimization
 COPY --from=deps /app/node_modules/sharp ./node_modules/sharp
 
