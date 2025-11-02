@@ -39,6 +39,7 @@ Thumbs.db
 # ideation and rough work
 temp/
 LIPSYNC_ROADMAP.md
+SECURITY_CLEANUP.md
 
 # Supabase
 supabase/.temp/
