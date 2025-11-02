@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "typecheck": "tsc --noEmit",
     "worker:dev": "cd worker && npm run dev",
     "worker:build": "cd worker && npm run build",
     "worker:start": "cd worker && npm start"
