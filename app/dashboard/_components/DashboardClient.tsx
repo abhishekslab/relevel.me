@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Canvas, useThree } from '@react-three/fiber'
 import { Stars, Float } from '@react-three/drei'
 import { Avatar as VisageAvatar } from '@readyplayerme/visage'
+import { FileUpload } from '@/components/FileUpload'
 import * as THREE from 'three'
 import { playClickSound, toggleMusicMute, getMusicMutedState, playBackgroundMusic, isMusicActuallyPlaying } from '@/lib/sound'
 import { signOut as serverSignOut } from '../actions'
@@ -127,6 +128,7 @@ export default function DashboardPage() {
   const [currentDanceIndex, setCurrentDanceIndex] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState(DEFAULT_AVATAR_URL)
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState<string | null>(null)
   const camX = useMotionValue(-(WORLD_W/2 - 600))
   const camY = useMotionValue(-(WORLD_H/2 - 350))
 
@@ -209,7 +211,7 @@ export default function DashboardPage() {
 
         const { data, error } = await supabase
           .from('users')
-          .select('avatar_gender, avatar_url, phone, first_name')
+          .select('avatar_gender, avatar_url, phone, first_name, background_image_url')
           .eq('id', user.id)
           .single()
 
@@ -225,6 +227,9 @@ export default function DashboardPage() {
           }
           if (data.avatar_url) {
             setAvatarUrl(data.avatar_url)
+          }
+          if (data.background_image_url) {
+            setBackgroundImageUrl(data.background_image_url)
           }
           // Set profile status
           setProfileStatus({
@@ -259,7 +264,15 @@ export default function DashboardPage() {
       </div>
 
       {/* Avatar layer (Visage creates its own Canvas) */}
-      <div className="absolute inset-0 pointer-events-none">
+      <div
+        className="absolute inset-0 pointer-events-none bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: backgroundImageUrl
+            ? `url(${backgroundImageUrl})`
+            : 'url(/backgrounds/avatar-bg.png)',
+          backgroundBlendMode: 'normal'
+        }}
+      >
         <Avatar
           armatureType={armatureType}
           danceIndex={currentDanceIndex}
@@ -718,6 +731,7 @@ function ProfileModal({ open, onOpenChange, onProfileUpdate }: ProfileModalProps
   const [phone, setPhone] = useState('')
   const [avatarUrl, setAvatarUrl] = useState(DEFAULT_AVATAR_URL)
   const [avatarGender, setAvatarGender] = useState<'feminine' | 'masculine'>(DEFAULT_AVATAR_GENDER)
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
@@ -736,7 +750,7 @@ function ProfileModal({ open, onOpenChange, onProfileUpdate }: ProfileModalProps
 
       const { data, error: fetchError } = await supabase
         .from('users')
-        .select('first_name, phone, avatar_url, avatar_gender')
+        .select('first_name, phone, avatar_url, avatar_gender, background_image_url')
         .eq('id', user.id)
         .single()
 
@@ -747,6 +761,7 @@ function ProfileModal({ open, onOpenChange, onProfileUpdate }: ProfileModalProps
         setPhone(data.phone || '')
         setAvatarUrl(data.avatar_url || DEFAULT_AVATAR_URL)
         setAvatarGender(data.avatar_gender || DEFAULT_AVATAR_GENDER)
+        setBackgroundImageUrl(data.background_image_url || '')
       }
     } catch (err) {
       console.error('Error loading profile:', err)
@@ -787,6 +802,7 @@ function ProfileModal({ open, onOpenChange, onProfileUpdate }: ProfileModalProps
           phone: phone.trim(),
           avatar_url: avatarUrl.trim(),
           avatar_gender: avatarGender,
+          background_image_url: backgroundImageUrl.trim() || null,
         })
         .eq('id', user.id)
 
@@ -919,6 +935,53 @@ function ProfileModal({ open, onOpenChange, onProfileUpdate }: ProfileModalProps
                       Masculine
                     </button>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Custom Assets Section */}
+          <div className="space-y-4 pt-4 border-t border-white/10">
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="size-5 text-emerald-400" />
+                <h3 className="text-lg font-semibold text-emerald-300">Custom Assets</h3>
+              </div>
+
+              <div className="space-y-4">
+                {/* Background Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-white/80 mb-2">
+                    Background Image
+                  </label>
+                  <FileUpload
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                    maxSize={5 * 1024 * 1024}
+                    uploadEndpoint="/api/upload/background"
+                    label="Upload Background"
+                    onUploadComplete={(url) => setBackgroundImageUrl(url)}
+                    currentPreview={backgroundImageUrl || null}
+                  />
+                  <p className="text-xs text-white/40 mt-1">
+                    PNG, JPEG, or WebP up to 5MB
+                  </p>
+                </div>
+
+                {/* Model Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-white/80 mb-2">
+                    3D Avatar Model (.glb)
+                  </label>
+                  <FileUpload
+                    accept=".glb,model/gltf-binary"
+                    maxSize={50 * 1024 * 1024}
+                    uploadEndpoint="/api/upload/model"
+                    label="Upload GLB Model"
+                    onUploadComplete={(url) => setAvatarUrl(url)}
+                  />
+                  <p className="text-xs text-white/40 mt-1">
+                    GLB format up to 50MB, or use Ready Player Me URL above
+                  </p>
                 </div>
               </div>
             </div>
