@@ -12,7 +12,7 @@
   "author": "relevel.me contributors",
   "license": "MIT",
   "dependencies": {
-    "@supabase/supabase-js": "^2.75.1",
+    "@supabase/supabase-js": "^2.78.0",
     "bull": "^4.16.5",
     "dotenv": "^17.2.3",
     "ioredis": "^5.8.2"
