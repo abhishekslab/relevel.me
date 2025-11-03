@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/auth/server';
-import { dailyCallsQueue, checkQueueHealth } from '@/lib/queue/client';
+import { dailyCallsQueue, checkQueueHealth } from '@relevel-me/shared';
 
 /**
  * Queue status endpoint

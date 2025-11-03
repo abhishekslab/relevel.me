@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/auth/server';
-import { dailyCallsQueue } from '@/lib/queue/client';
-import { JOB_NAMES, ScheduleCallsJobData } from '@/lib/queue/types';
+import { dailyCallsQueue, JOB_NAMES, ScheduleCallsJobData } from '@relevel-me/shared';
 
 /**
  * Manual trigger endpoint for daily calls queue

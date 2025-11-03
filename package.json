@@ -1,6 +1,11 @@
 {
   "name": "relevel-me",
   "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "worker"
+  ],
   "description": "Open-source gamified skill-tracking dashboard with voice-first journaling and immersive 3D worldboard interface",
   "keywords": [
     "skill-tracking",

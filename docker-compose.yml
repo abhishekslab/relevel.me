@@ -49,8 +49,8 @@ services:
 
   relevel-worker:
     build:
-      context: ./worker
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: worker/Dockerfile
     image: relevel-worker:latest
     container_name: relevel-worker
     restart: unless-stopped

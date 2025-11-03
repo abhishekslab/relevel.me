@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { getCallProvider } from '@/lib/providers/factory';
+import { getCallProvider } from '@relevel-me/shared';
 
 /**
  * Generic Call Provider Webhook Handler

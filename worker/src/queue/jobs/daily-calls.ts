@@ -10,7 +10,7 @@ import {
   DEFAULT_JOB_OPTIONS,
   JOB_NAMES,
 } from '../types';
-import { getUsersToCallNow, initiateCall } from '@/lib/services/call-service';
+import { getUsersToCallNow, initiateCall } from '@relevel-me/shared';
 import { dailyCallsQueue } from '../client';
 
 /**

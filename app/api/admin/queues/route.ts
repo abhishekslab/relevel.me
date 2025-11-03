@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/auth/server';
-import { dailyCallsQueue } from '@/lib/queue/client';
+import { dailyCallsQueue } from '@relevel-me/shared';
 
 /**
  * Bull Board dashboard endpoint

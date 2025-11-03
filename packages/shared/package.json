@@ -1,24 +1,24 @@
 {
-  "name": "relevel-worker",
+  "name": "@relevel-me/shared",
   "version": "1.0.0",
-  "description": "Background worker for processing daily calls queue",
+  "description": "Shared utilities and services for relevel.me (main app and worker)",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "dev": "tsx src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "dev": "tsc --watch"
   },
+  "keywords": ["relevel", "shared"],
+  "author": "relevel.me contributors",
+  "license": "MIT",
   "dependencies": {
-    "@relevel-me/shared": "*",
     "@supabase/supabase-js": "^2.75.1",
     "bull": "^4.16.5",
     "dotenv": "^17.2.3",
     "ioredis": "^5.8.2"
   },
   "devDependencies": {
-    "@types/bull": "^3.15.9",
     "@types/node": "^24.8.1",
-    "tsx": "^4.20.6",
     "typescript": "^5.6.2"
   }
 }
