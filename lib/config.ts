@@ -16,7 +16,7 @@ export const config = {
    * Default call time (in HH:MM:SS format) for users who haven't set one
    * Can be overridden via DEFAULT_CALL_TIME env var
    */
-  defaultCallTime: process.env.DEFAULT_CALL_TIME || '20:00:00',
+  defaultCallTime: process.env.DEFAULT_CALL_TIME || '21:00:00',
 
   /**
    * Time window (in minutes) for matching call schedules
