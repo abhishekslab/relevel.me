@@ -16,6 +16,19 @@ Thank you for your interest in contributing to **relevel.me**! We welcome contri
 
 This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior by opening an issue.
 
+## License and Contributions
+
+relevel.me is **source-available** software licensed under the **Elastic License 2.0**. This means:
+
+- ✅ **You CAN**: Use for personal purposes, internal business use, modify, fork, learn from
+- ✅ **You CAN**: Submit contributions (they will be licensed under Elastic License 2.0)
+- ❌ **You CANNOT**: Offer as a hosted service to third parties, sell without permission
+- ⚠️ **Derivatives**: If you distribute modified versions, you must share source under the same license
+
+**By submitting a contribution**, you agree that your contributions will be licensed under the Elastic License 2.0.
+
+For commercial licensing inquiries, contact: hello@abhishekslab.xyz
+
 ## Getting Started
 
 1. **Fork the repository** on GitHub

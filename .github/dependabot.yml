@@ -21,7 +21,7 @@ updates:
           - "patch"
     # Separate security updates
     reviewers:
-      - "YOUR_USERNAME"
+      - "abhishekslab"
     # Auto-merge minor and patch updates (optional, configure in repo settings)
     # Enable security updates with higher priority
     versioning-strategy: increase

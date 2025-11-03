@@ -1,13 +1,13 @@
 
 # relevel.me — Artha
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: Elastic-2.0](https://img.shields.io/badge/License-Elastic--2.0-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-Powered-green.svg)](https://supabase.com/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-An **open-source** gamified skill-tracking dashboard with voice-first journaling and an immersive 3D worldboard interface.
+A **source-available** gamified skill-tracking dashboard with voice-first journaling and an immersive 3D worldboard interface. Free for personal and internal business use.
 
 ### Features
 
@@ -26,7 +26,7 @@ An **open-source** gamified skill-tracking dashboard with voice-first journaling
 
 ```bash
 # Clone repository
-git clone https://github.com/YOUR_USERNAME/relevel.me.git
+git clone https://github.com/abhishekslab/relevel.me.git
 cd relevel.me
 
 # Install dependencies
@@ -196,9 +196,13 @@ Found a security vulnerability? Please report it responsibly:
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+**Elastic License 2.0** - see [LICENSE](LICENSE) for details.
+
+**TL;DR:** Free for personal and internal business use. Cannot offer as a hosted service to third parties. Derivative works must be shared under the same license.
 
 Copyright (c) 2025 relevel.me contributors
+
+For commercial licensing inquiries: hello@abhishekslab.xyz
 
 ## Support & Community
 

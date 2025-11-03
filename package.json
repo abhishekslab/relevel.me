@@ -15,15 +15,15 @@
     "react"
   ],
   "author": "relevel.me contributors",
-  "license": "MIT",
+  "license": "Elastic-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/YOUR_USERNAME/relevel.me.git"
+    "url": "git+https://github.com/abhishekslab/relevel.me.git"
   },
   "bugs": {
-    "url": "https://github.com/YOUR_USERNAME/relevel.me/issues"
+    "url": "https://github.com/abhishekslab/relevel.me/issues"
   },
-  "homepage": "https://github.com/YOUR_USERNAME/relevel.me#readme",
+  "homepage": "https://github.com/abhishekslab/relevel.me#readme",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
