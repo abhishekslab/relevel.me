@@ -50,7 +50,7 @@
     "@supabase/supabase-js": "^2.75.1",
     "autoprefixer": "10.4.20",
     "bull": "^4.16.5",
-    "dodopayments": "^2.2.1",
+    "dodopayments": "^2.4.2",
     "framer-motion": "11.2.13",
     "ioredis": "^5.8.2",
     "lucide-react": "0.453.0",
