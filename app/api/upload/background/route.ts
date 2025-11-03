@@ -66,15 +66,10 @@ export async function POST(request: NextRequest) {
       throw new Error(uploadError.message)
     }
 
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('backgrounds')
-      .getPublicUrl(fileName)
-
-    // Update user record with new background URL
+    // Store only the path in database
     const { error: updateError } = await supabase
       .from('users')
-      .update({ background_image_url: publicUrl })
+      .update({ background_image_path: fileName })
       .eq('id', user.id)
 
     if (updateError) {
@@ -82,9 +77,19 @@ export async function POST(request: NextRequest) {
       throw new Error(updateError.message)
     }
 
+    // Generate signed URL to return to client (valid for 1 year)
+    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+      .from('backgrounds')
+      .createSignedUrl(fileName, 31536000)
+
+    if (signedUrlError || !signedUrlData) {
+      console.error('Signed URL error:', signedUrlError)
+      throw new Error('Failed to create signed URL')
+    }
+
     return NextResponse.json({
       success: true,
-      url: publicUrl,
+      url: signedUrlData.signedUrl,
       path: fileName
     })
 

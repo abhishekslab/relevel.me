@@ -2,6 +2,7 @@
 'use client'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion, useMotionValue, AnimatePresence } from 'framer-motion'
 import { Flame, Sparkles, Target, Clock, X, Volume2, VolumeX, Settings, LogOut, ChevronLeft, ChevronRight, User, AlertCircle, MessageSquare, Square } from 'lucide-react'
@@ -211,7 +212,7 @@ export default function DashboardPage() {
 
         const { data, error } = await supabase
           .from('users')
-          .select('avatar_gender, avatar_url, phone, first_name, background_image_url')
+          .select('avatar_gender, avatar_url, phone, first_name, background_image_path')
           .eq('id', user.id)
           .single()
 
@@ -228,9 +229,20 @@ export default function DashboardPage() {
           if (data.avatar_url) {
             setAvatarUrl(data.avatar_url)
           }
-          if (data.background_image_url) {
-            setBackgroundImageUrl(data.background_image_url)
+
+          // Generate signed URL from stored path
+          if (data.background_image_path) {
+            const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+              .from('backgrounds')
+              .createSignedUrl(data.background_image_path, 31536000) // 1 year
+
+            if (!signedUrlError && signedUrlData) {
+              setBackgroundImageUrl(signedUrlData.signedUrl)
+            } else {
+              console.error('Error generating signed URL:', signedUrlError)
+            }
           }
+
           // Set profile status
           setProfileStatus({
             hasPhone: !!data.phone,
@@ -457,6 +469,7 @@ function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, se
     if (data.avatarUrl) {
       setAvatarUrl(data.avatarUrl)
     }
+    // Note: Background image is handled by upload API directly, no need to update here
   }, [armatureType, setArmatureType, setCurrentDanceIndex, setAvatarUrl])
 
   // Load user's call streak
@@ -690,6 +703,16 @@ function HUD({ zoom, setZoom, isDockOpen, setIsDockOpen, isWorldboardVisible, se
                   Profile
                 </button>
 
+                {/* Settings Section */}
+                <Link
+                  href="/settings"
+                  onClick={() => { playClickSound(); setShowSettingsMenu(false) }}
+                  className="w-full p-3 flex items-center gap-2 hover:bg-white/5 transition text-left text-sm border-b border-white/10"
+                >
+                  <Settings className="size-4" />
+                  Settings
+                </Link>
+
                 {/* Sign Out Section */}
                 <button
                   onClick={handleSignOut}
@@ -750,7 +773,7 @@ function ProfileModal({ open, onOpenChange, onProfileUpdate }: ProfileModalProps
 
       const { data, error: fetchError } = await supabase
         .from('users')
-        .select('first_name, phone, avatar_url, avatar_gender, background_image_url')
+        .select('first_name, phone, avatar_url, avatar_gender, background_image_path')
         .eq('id', user.id)
         .single()
 
@@ -761,7 +784,19 @@ function ProfileModal({ open, onOpenChange, onProfileUpdate }: ProfileModalProps
         setPhone(data.phone || '')
         setAvatarUrl(data.avatar_url || DEFAULT_AVATAR_URL)
         setAvatarGender(data.avatar_gender || DEFAULT_AVATAR_GENDER)
-        setBackgroundImageUrl(data.background_image_url || '')
+
+        // Generate signed URL from path for preview
+        if (data.background_image_path) {
+          const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+            .from('backgrounds')
+            .createSignedUrl(data.background_image_path, 31536000)
+
+          if (!signedUrlError && signedUrlData) {
+            setBackgroundImageUrl(signedUrlData.signedUrl)
+          }
+        } else {
+          setBackgroundImageUrl('')
+        }
       }
     } catch (err) {
       console.error('Error loading profile:', err)
@@ -802,7 +837,6 @@ function ProfileModal({ open, onOpenChange, onProfileUpdate }: ProfileModalProps
           phone: phone.trim(),
           avatar_url: avatarUrl.trim(),
           avatar_gender: avatarGender,
-          background_image_url: backgroundImageUrl.trim() || null,
         })
         .eq('id', user.id)
 
