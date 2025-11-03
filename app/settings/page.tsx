@@ -1,13 +1,13 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
 import { Shield, ArrowLeft, Clock, Bell } from 'lucide-react'
 import { signOut } from '../dashboard/actions'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { createBrowserClient } from '@/lib/auth/client'
+import { createClient } from '@/lib/auth/client'
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -23,7 +23,7 @@ export default function SettingsPage() {
 
   const loadSettings = async () => {
     try {
-      const supabase = createBrowserClient()
+      const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
 
       if (!user) return
@@ -53,7 +53,7 @@ export default function SettingsPage() {
     setMessage('')
 
     try {
-      const supabase = createBrowserClient()
+      const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
 
       if (!user) return
@@ -101,9 +101,9 @@ export default function SettingsPage() {
               <Bell className="w-5 h-5 text-emerald-400" />
               Daily Call Preferences
             </CardTitle>
-            <CardDescription className="text-white/60">
+            <p className="text-sm text-white/60 mt-2">
               Configure when you'd like to receive your daily journaling call
-            </CardDescription>
+            </p>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Enable/Disable Toggle */}
@@ -113,7 +113,7 @@ export default function SettingsPage() {
                 <p className="text-sm text-white/60">Receive automated calls for journaling</p>
               </div>
               <Button
-                variant={callEnabled ? "default" : "outline"}
+                variant={callEnabled ? undefined : "outline"}
                 size="sm"
                 onClick={() => setCallEnabled(!callEnabled)}
                 disabled={loading}
