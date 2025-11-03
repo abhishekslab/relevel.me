@@ -29,7 +29,7 @@ relevel.me uses a **dual XP system** that combines:
 - **Global XP**: Represents overall growth through reflection and meta-learning
 - **Skill XP**: Tracks mastery in specific skills through deliberate practice
 
-This design aligns with the Artha narrative: *reflection feeds growth, practice shapes mastery*.
+This design philosophy follows: *reflection feeds growth, practice shapes mastery*.
 
 ### Design Principles
 
@@ -48,7 +48,7 @@ This design aligns with the Artha narrative: *reflection feeds growth, practice 
 Global XP represents the user's **meta-learning capability** — their ability to reflect, maintain discipline, and grow holistically. It's earned through:
 
 - **Daily reflections** (primary source)
-- **Completing evening calls with Artha**
+- **Completing evening calls with your AI assistant**
 - **Meta-skill milestones** (Discipline, Retention, Self-Awareness)
 - **Streak bonuses**
 
@@ -87,7 +87,7 @@ Users have a single global level that represents their overall journey.
 - **Level 20**: Custom skill creation
 - **Level 30**: Advanced analytics dashboard
 - **Level 50**: Mentor mode (help others)
-- **Level 100**: Artha's Echo (special title + cosmetics)
+- **Level 100**: Master title (special title + cosmetics)
 
 ---
 
@@ -170,7 +170,7 @@ Daily reflections are the **core loop** of relevel.me. They:
 
 ### How Reflections Work
 
-Every evening, users receive a call from **Artha** (AI agent) that:
+Every evening, users receive a call from their **AI assistant** that:
 - Reviews the day's skill practice
 - Asks reflection questions
 - Extracts insights from the conversation
@@ -571,7 +571,7 @@ Existing artifacts system can be enhanced:
 | Sigil of Streaks | Streak freeze × 1 | 7-day streak |
 | Hourglass of Focus | +10% skill XP for 1 day | Global level 10 |
 | Mentor's Compass | Share skills with others | Global level 30 |
-| Artha's Echo | +25% all XP, custom title | Global level 100 |
+| Master's Echo | +25% all XP, custom title | Global level 100 |
 
 ### Titles & Badges
 
@@ -582,7 +582,7 @@ Earned through milestones:
 - "The Dedicated" (30-day streak)
 - "The Polymath" (10 skills at level 20+)
 - "The Master" (1 skill at level 70+)
-- "Artha's Reflection" (level 100)
+- "The Enlightened" (level 100)
 
 **Badges (shown in achievements):**
 - Streak milestones (7, 30, 100, 365 days)
@@ -708,7 +708,7 @@ Earned through milestones:
 ### Week 1: The Beginner
 
 - **Day 1:** Signs up, starts with 3 discovered skills (Retention, Discipline, JavaScript)
-- **Day 1 Evening:** First call with Artha → 50 global XP awarded
+- **Day 1 Evening:** First reflection call → 50 global XP awarded
 - **Day 2:** Logs 2 hours of JavaScript practice → 200 skill XP
 - **Day 7:** Completes 7-day reflection streak → 200 bonus XP + "Week Warrior" badge
 
@@ -743,7 +743,7 @@ Earned through milestones:
 - Global: Level 42 (125,000 XP)
 - Top Skill: JavaScript Level 52 (10,000 XP from 1,200 hours)
 - Streak: 365 days (1.25× multiplier)
-- Title: "Artha's Dedicated Scholar"
+- Title: "The Dedicated Scholar"
 
 ---
 

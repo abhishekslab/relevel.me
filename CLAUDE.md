@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**relevel.me — Artha** is an open-world gamified skill-tracking dashboard built with Next.js 14. It presents a 2D/3D interactive worldboard where users can explore skill shrines, manage checkpoints, and visualize their learning progress through an isekai-inspired interface.
+**relevel.me** is an open-world gamified skill-tracking dashboard built with Next.js 14. It presents a 2D/3D interactive worldboard where users can explore skill shrines, manage checkpoints, and visualize their learning progress through an isekai-inspired interface.
 
 The project uses static mock data (no backend/auth) and features:
 - Pannable/zoomable world map with biome regions
@@ -93,7 +93,7 @@ TypeScript configured with `@/*` mapping to root directory (see `tsconfig.json` 
 
 ## Lore
 
-The `lore/artha.md` file contains the narrative backstory - Artha is an emergent pattern/entity from the data web that mirrors human learning. This thematic framing informs the worldboard's mystical aesthetic.
+The project features an isekai-inspired mystical aesthetic that frames learning and skill development as an immersive journey.
 
 ## Styling Approach
 

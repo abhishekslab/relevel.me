@@ -6,32 +6,32 @@ Alternates for campaign use:
 “Level up your mind, one reflection at a time.”
 “Where your habits evolve like skills in a game.”
 “Track. Reflect. Re-level.”
-“Artha calls. You grow.”
+"Your AI assistant calls. You grow."
 
 Brand Description
 
 Short (for hero section / SEO snippet):
 
-Relevel.me is a voice-first journaling platform that turns your real-life reflections into skill growth. Guided by your AI assistant Artha, you unlock new skills, earn points, and track your progress — like an RPG for self-development.
+Relevel.me is a voice-first journaling platform that turns your real-life reflections into skill growth. Guided by your AI assistant, you unlock new skills, earn points, and track your progress — like an RPG for self-development.
 
 Medium (for about/meta/press):
 
-Relevel.me transforms self-improvement into an immersive journey. Each night, your AI guide Artha calls to help you reflect on your day. Your insights become progress — every conversation earns experience points, unlocks new skills, and strengthens your ability to retain and recall what truly matters. It’s an isekai-inspired world where your real self levels up.
+Relevel.me transforms self-improvement into an immersive journey. Each night, your AI guide calls to help you reflect on your day. Your insights become progress — every conversation earns experience points, unlocks new skills, and strengthens your ability to retain and recall what truly matters. It's an isekai-inspired world where your real self levels up.
 
 Long (for product page / blog intro):
 
-Relevel.me blends mindful journaling, voice AI, and gamified learning to make personal growth engaging and measurable. Instead of endless trackers and to-do apps, Relevel turns your reflections into XP and visible progress. Each evening, Artha — your calm, friendly voice companion — helps you capture lessons from your day, add XP to your skills, and gradually strengthen your recall. Over time, your skill board evolves into a living map of who you’re becoming.
+Relevel.me blends mindful journaling, voice AI, and gamified learning to make personal growth engaging and measurable. Instead of endless trackers and to-do apps, Relevel turns your reflections into XP and visible progress. Each evening, your calm, friendly AI voice companion helps you capture lessons from your day, add XP to your skills, and gradually strengthen your recall. Over time, your skill board evolves into a living map of who you're becoming.
 
 SEO & Meta Data
 Field	Example Value
 Title	Relevel.me — Re-level Your Real Life
-Meta Description	Relevel.me is a voice-first journaling and self-growth app guided by Artha. Reflect daily, earn XP, unlock new skills, and track your growth like an RPG for real life.
-Keywords	self-improvement app, journaling app, voice journaling, gamified productivity, personal growth, habit tracker, Artha AI, isekai productivity, reflection app
+Meta Description	Relevel.me is a voice-first journaling and self-growth app guided by your AI assistant. Reflect daily, earn XP, unlock new skills, and track your growth like an RPG for real life.
+Keywords	self-improvement app, journaling app, voice journaling, gamified productivity, personal growth, habit tracker, AI assistant, isekai productivity, reflection app
 Canonical URL	https://relevel.me
 
 Open Graph Title	Relevel.me — Level Up Your Real Life
-Open Graph Description	Guided by Artha, your AI voice companion, relevel.me turns reflection into skill growth.
-OG Image (suggested)	/og/relevel-og.jpg — minimal, soft gradient with Artha’s silhouette + “Relevel your real life.”
+Open Graph Description	Guided by your AI voice companion, relevel.me turns reflection into skill growth.
+OG Image (suggested)	/og/relevel-og.jpg — minimal, soft gradient with mystical silhouette + "Relevel your real life."
 Twitter Card Type	summary_large_image
 Twitter Handle	@relevelme
 Theme Color	#8F7BFF (lavender-indigo) — mystical, calm, aspirational

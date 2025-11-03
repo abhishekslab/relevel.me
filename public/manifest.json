@@ -1,7 +1,7 @@
 {
   "name": "Relevel.me — Re-level Your Real Life",
   "short_name": "Relevel.me",
-  "description": "Voice-first journaling platform guided by Artha. Reflect daily, earn XP, unlock new skills, and track your growth.",
+  "description": "Voice-first journaling platform with AI assistant. Reflect daily, earn XP, unlock new skills, and track your growth.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0E0A1E",

@@ -34,7 +34,7 @@ export default function Home() {
           Re-level your real life.
         </p> */}
         <p className="text-base md:text-lg opacity-90 text-[#EDEDF8] leading-relaxed">
-          Voice-first journaling platform guided by Artha. Reflect daily, earn XP, unlock new skills, and track your growth.
+          Voice-first journaling platform with AI assistant. Reflect daily, earn XP, unlock new skills, and track your growth.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
           <Link

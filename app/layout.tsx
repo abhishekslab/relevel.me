@@ -3,8 +3,8 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Relevel.me — Re-level Your Real Life',
-  description: 'Relevel.me is a voice-first journaling and self-growth app guided by Artha. Reflect daily, earn XP, unlock new skills, and track your growth like an RPG for real life.',
-  keywords: ['self-improvement app', 'journaling app', 'voice journaling', 'gamified productivity', 'personal growth', 'habit tracker', 'Artha AI', 'isekai productivity', 'reflection app'],
+  description: 'Relevel.me is a voice-first journaling and self-growth app guided by your AI assistant. Reflect daily, earn XP, unlock new skills, and track your growth like an RPG for real life.',
+  keywords: ['self-improvement app', 'journaling app', 'voice journaling', 'gamified productivity', 'personal growth', 'habit tracker', 'AI assistant', 'isekai productivity', 'reflection app'],
   authors: [{ name: 'Relevel.me' }],
   creator: 'Relevel.me',
   metadataBase: new URL('https://relevel.me'),
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'Relevel.me — Level Up Your Real Life',
-    description: 'Guided by Artha, your AI voice companion, relevel.me turns reflection into skill growth.',
+    description: 'Guided by your AI voice companion, relevel.me turns reflection into skill growth.',
     url: 'https://relevel.me',
     siteName: 'Relevel.me',
     images: [
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Relevel.me — Level Up Your Real Life',
-    description: 'Guided by Artha, your AI voice companion, relevel.me turns reflection into skill growth.',
+    description: 'Guided by your AI voice companion, relevel.me turns reflection into skill growth.',
     images: ['/og-image.png'],
     creator: '@relevelme',
   },

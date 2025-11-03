@@ -1,5 +1,5 @@
 
-# relevel.me — Artha
+# relevel.me
 
 [![License: Elastic-2.0](https://img.shields.io/badge/License-Elastic--2.0-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
@@ -15,7 +15,7 @@ A **source-available** gamified skill-tracking dashboard with voice-first journa
 - 🗺️ **Interactive world map** - Pannable/zoomable with fog-of-war system
 - 🏰 **Skill shrines** across different biomes (meadow, forest, desert, mist, tech, peaks)
 - 📊 **HUD & Stats** - WRS score, streak tracking, experience points
-- 🎤 **AI Voice Calls** - Daily reflection conversations with Artha
+- 🎤 **AI Voice Calls** - Daily reflection conversations with your AI assistant
 - 🔐 **Supabase Auth** - Magic link authentication, no passwords
 - 🐳 **Docker Ready** - One-command self-hosted deployment
 - 🔌 **Pluggable Providers** - Swap call providers (CallKaro, Vapi) via config
@@ -115,7 +115,7 @@ supabase/
 - Zoom controls (0.6x - 2.2x)
 
 ### Voice Journaling
-- Evening reflection calls with Artha
+- Evening reflection calls with your AI assistant
 - Phone number validation and profile management
 - Call history and streak tracking
 

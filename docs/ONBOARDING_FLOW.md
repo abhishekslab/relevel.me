@@ -1,6 +1,6 @@
 # User Onboarding Flow - Complete Audit
 
-**Project:** relevel.me (Artha)
+**Project:** relevel.me
 **Date:** 2025-10-22
 **Status:** 🔴 Critical Issues Found
 
@@ -60,7 +60,7 @@ Call Initiation ❌ FAILS if no phone
 ```typescript
 // User sees:
 - Logo
-- "Voice-first journaling platform guided by Artha"
+- "Voice-first journaling platform with AI assistant"
 - [Get Started] button → /signup
 - [Learn More] button → /vision
 ```

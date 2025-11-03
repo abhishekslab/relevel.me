@@ -100,7 +100,7 @@ export default function OnboardingForm({ email }: OnboardingFormProps) {
           Welcome to relevel.me
         </CardTitle>
         <p className="text-base text-white/60 mt-2">
-          Let's set up your profile to get started with Artha, your voice-first journaling companion.
+          Let's set up your profile to get started with your voice-first journaling companion.
         </p>
       </CardHeader>
 
@@ -154,7 +154,7 @@ export default function OnboardingForm({ email }: OnboardingFormProps) {
               disabled={isLoading}
             />
             <p className="text-xs text-white/40">
-              Required for evening reflection calls from Artha. Include country code.
+              Required for evening reflection calls. Include country code.
             </p>
           </div>
 

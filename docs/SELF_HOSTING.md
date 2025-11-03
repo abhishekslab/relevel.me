@@ -244,7 +244,7 @@ docker run -d \
 ### 2. Configure Agent
 
 Example agent configuration:
-- **Name**: Artha Daily Reflection
+- **Name**: Daily Reflection Assistant
 - **Purpose**: Evening journaling companion
 - **Voice**: Choose preferred voice
 - **Instructions**: Guide user through daily reflection
