@@ -6,8 +6,12 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy package files
+# Copy package files for workspace
 COPY package.json package-lock.json ./
+COPY web/package.json ./web/
+COPY worker/package.json ./worker/
+COPY packages/shared/package.json ./packages/shared/
+
 RUN npm ci --legacy-peer-deps
 
 # Install sharp for image optimization
@@ -46,9 +50,9 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 # Copy necessary files
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/web/public ./public
+COPY --from=builder /app/web/.next/standalone ./
+COPY --from=builder /app/web/.next/static ./.next/static
 
 # Copy sharp from node_modules for image optimization
 COPY --from=deps /app/node_modules/sharp ./node_modules/sharp

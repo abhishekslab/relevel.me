@@ -64,8 +64,8 @@ jobs:
           echo "Build failed: worker/dist directory not found"
           exit 1
         fi
-        if [ ! -d ".next" ]; then
-          echo "Build failed: .next directory not found"
+        if [ ! -d "web/.next" ]; then
+          echo "Build failed: web/.next directory not found"
           exit 1
         fi
         echo "All builds successful"

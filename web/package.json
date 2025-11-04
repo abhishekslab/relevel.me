@@ -1,0 +1,44 @@
+{
+  "name": "relevel-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Next.js web application for relevel.me",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@bull-board/api": "^6.14.0",
+    "@bull-board/ui": "^6.14.0",
+    "@hookform/resolvers": "^5.2.2",
+    "@react-three/drei": "9.109.0",
+    "@react-three/fiber": "8.15.16",
+    "@react-three/postprocessing": "^3.0.4",
+    "@readyplayerme/visage": "^6.16.0",
+    "@relevel-me/shared": "*",
+    "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.75.1",
+    "autoprefixer": "10.4.20",
+    "bull": "^4.16.5",
+    "dodopayments": "^2.2.1",
+    "framer-motion": "11.2.13",
+    "ioredis": "^5.8.2",
+    "lucide-react": "0.453.0",
+    "next": "14.2.8",
+    "postcss": "8.4.47",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-hook-form": "^7.65.0",
+    "tailwindcss": "3.4.13",
+    "three": "0.160.0",
+    "typescript": "5.6.2",
+    "zod": "^4.1.12",
+    "dotenv": "^17.2.3"
+  },
+  "devDependencies": {
+    "@types/bull": "^3.15.9",
+    "@types/node": "24.8.1"
+  }
+}

@@ -31,16 +31,24 @@ npm start
 
 ## Architecture
 
-### Next.js App Router Structure
+### Monorepo Structure
 
-- **`app/page.tsx`** — Landing page with "Enter World" button
-- **`app/dashboard/page.tsx`** — Main worldboard interface (10kb+ file containing all game logic)
-- **`app/layout.tsx`** — Root layout with metadata
-- **`app/globals.css`** — Dark theme base styles (`#0b0f17` background)
+This project follows a monorepo structure with npm workspaces:
+
+- **`web/`** — Next.js web application
+- **`worker/`** — Background job processor (Bull queues)
+- **`packages/shared/`** — Shared utilities and services used by both web and worker
+
+### Next.js App Router Structure (web/)
+
+- **`web/app/page.tsx`** — Landing page with "Enter World" button
+- **`web/app/dashboard/page.tsx`** — Main worldboard interface (10kb+ file containing all game logic)
+- **`web/app/layout.tsx`** — Root layout with metadata
+- **`web/app/globals.css`** — Dark theme base styles (`#0b0f17` background)
 
 ### Component Organization
 
-The dashboard page is monolithic by design - all game components are defined in a single file (`app/dashboard/page.tsx`):
+The dashboard page is monolithic by design - all game components are defined in a single file (`web/app/dashboard/page.tsx`):
 
 - **HUD** — Top bar with WRS, streak, points badges, and zoom slider
 - **WorldDecor** — Grid background overlay
@@ -51,11 +59,11 @@ The dashboard page is monolithic by design - all game components are defined in 
 - **Dock** — Right sidebar with Quest Log, Evening Call, Artifacts, Allocate Points cards
 - **MiniMap** — Bottom-left viewport indicator
 
-UI primitives in `components/ui/` (badge, button, card, progress, slider, tabs) are minimal shadcn-style components with Tailwind styling.
+UI primitives in `web/components/ui/` (badge, button, card, progress, slider, tabs) are minimal shadcn-style components with Tailwind styling.
 
 ### Key Data Structures
 
-All mock data is defined at the top of `app/dashboard/page.tsx`:
+All mock data is defined at the top of `web/app/dashboard/page.tsx`:
 
 ```typescript
 const SKILLS: Skill[]           // Master skill list (id, code, name, category)
@@ -89,7 +97,7 @@ Camera offset centers the world at startup: `-(WORLD_W/2 - 600)`, `-(WORLD_H/2 -
 
 ### Path Aliases
 
-TypeScript configured with `@/*` mapping to root directory (see `tsconfig.json` baseUrl/paths).
+TypeScript configured with `@/*` mapping to web directory root (see `web/tsconfig.json` baseUrl/paths).
 
 ## Lore
 
