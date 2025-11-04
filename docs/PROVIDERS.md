@@ -125,7 +125,7 @@ export interface CallProvider {
 
 ### Step 1: Create Provider Implementation
 
-Create `lib/providers/implementations/yourprovider-provider.ts`:
+Create `web/lib/providers/implementations/yourprovider-provider.ts`:
 
 ```typescript
 import {
@@ -235,7 +235,7 @@ export class YourProviderProvider implements CallProvider {
 
 ### Step 2: Register in Factory
 
-Update `lib/providers/factory.ts`:
+Update `web/lib/providers/factory.ts`:
 
 ```typescript
 import { YourProviderProvider } from './implementations/yourprovider-provider';

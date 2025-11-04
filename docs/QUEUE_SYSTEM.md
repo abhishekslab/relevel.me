@@ -373,7 +373,7 @@ Default: 5 concurrent jobs
 
 Default: Every 5 minutes (`*/5 * * * *`)
 
-To change, edit `CRON_PATTERNS.CHECK_USERS` in `lib/queue/types.ts`.
+To change, edit `CRON_PATTERNS.CHECK_USERS` in `web/lib/queue/types.ts`.
 
 ### Job Retention
 
@@ -381,7 +381,7 @@ To change, edit `CRON_PATTERNS.CHECK_USERS` in `lib/queue/types.ts`.
 - Failed jobs: Last 500 kept
 - Schedule jobs: Last 10 completed, 50 failed
 
-Adjust in `lib/queue/types.ts` if needed.
+Adjust in `web/lib/queue/types.ts` if needed.
 
 ## Security Notes
 

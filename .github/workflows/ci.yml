@@ -77,6 +77,15 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Create .env file for Docker Compose
+      run: |
+        cat > .env << EOF
+        NEXT_PUBLIC_SUPABASE_URL=https://example.supabase.co
+        NEXT_PUBLIC_SUPABASE_ANON_KEY=dummy-key-for-build
+        SUPABASE_SERVICE_ROLE_KEY=dummy-key-for-build
+        NEXT_PUBLIC_SELF_HOSTED=true
+        EOF
+
     - name: Build Docker images
       run: docker compose build
       env:

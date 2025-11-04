@@ -17,7 +17,7 @@ The most important aspect of Visage's `Avatar` component is that it **creates it
 
 ### Our Implementation
 
-In `app/dashboard/page.tsx`, we use a **layered approach**:
+In `web/app/dashboard/page.tsx`, we use a **layered approach**:
 
 ```tsx
 <div className="relative min-h-screen w-full">
@@ -42,7 +42,7 @@ In `app/dashboard/page.tsx`, we use a **layered approach**:
 
 ## Components
 
-### Avatar Component (`app/dashboard/page.tsx:554-579`)
+### Avatar Component (`web/app/dashboard/page.tsx:554-579`)
 
 Our custom `Avatar` wrapper handles animation state and passes props to Visage:
 
@@ -129,7 +129,7 @@ public/animation/
 
 ### Animation Configuration
 
-Defined in `app/dashboard/page.tsx:61-84`:
+Defined in `web/app/dashboard/page.tsx:61-84`:
 
 ```tsx
 type ArmatureType = 'feminine' | 'masculine'
