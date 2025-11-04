@@ -26,11 +26,11 @@
 
 #### Problem
 
-`app/dashboard/page.tsx` is a client component with no subscription check. Users can access the dashboard even without an active subscription.
+`web/app/dashboard/page.tsx` is a client component with no subscription check. Users can access the dashboard even without an active subscription.
 
 **Current Code:**
 ```typescript
-// app/dashboard/page.tsx:1-2
+// web/app/dashboard/page.tsx:1-2
 'use client'
 export default function DashboardPage() {
   // No subscription validation!
@@ -55,7 +55,7 @@ Create a server component wrapper that enforces subscription before rendering th
 **Step 1:** Rename current dashboard to a client component:
 
 ```typescript
-// app/dashboard/_components/DashboardClient.tsx
+// web/app/dashboard/_components/DashboardClient.tsx
 'use client'
 import React, { useEffect, useState } from 'react'
 // ... all current imports
@@ -69,7 +69,7 @@ export default function DashboardClient() {
 **Step 2:** Create new server component page:
 
 ```typescript
-// app/dashboard/page.tsx
+// web/app/dashboard/page.tsx
 import { requireSubscription } from '@/lib/auth/server'
 import DashboardClient from './_components/DashboardClient'
 
@@ -95,7 +95,7 @@ mv app/dashboard/page.tsx app/dashboard/_components/DashboardClient.tsx
 If you need to keep the dashboard as a pure client component:
 
 ```typescript
-// app/dashboard/page.tsx
+// web/app/dashboard/page.tsx
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -173,8 +173,8 @@ export default function DashboardPage() {
 
 #### Files to Modify
 
-- `app/dashboard/page.tsx` (restructure)
-- Create `app/dashboard/_components/DashboardClient.tsx`
+- `web/app/dashboard/page.tsx` (restructure)
+- Create `web/app/dashboard/_components/DashboardClient.tsx`
 
 #### Testing
 
@@ -223,7 +223,7 @@ Auth callback → Profile completion → Dashboard (complete profile)
 **Step 1:** Create onboarding page
 
 ```typescript
-// app/onboarding/page.tsx
+// web/app/onboarding/page.tsx
 import { requireAuth, createServerClient } from '@/lib/auth/server'
 import { redirect } from 'next/navigation'
 import OnboardingForm from './_components/OnboardingForm'
@@ -257,7 +257,7 @@ export default async function OnboardingPage() {
 **Step 2:** Create onboarding form component
 
 ```typescript
-// app/onboarding/_components/OnboardingForm.tsx
+// web/app/onboarding/_components/OnboardingForm.tsx
 'use client'
 
 import { useState } from 'react'
@@ -492,7 +492,7 @@ export default function OnboardingForm({ email }: OnboardingFormProps) {
 **Step 3:** Update auth callback to redirect to onboarding
 
 ```typescript
-// app/auth/callback/route.ts:109
+// web/app/auth/callback/route.ts:109
 // CHANGE THIS LINE:
 return NextResponse.redirect(`${baseUrl}/dashboard`)
 
@@ -521,12 +521,12 @@ if (request.nextUrl.pathname.startsWith('/dashboard') ||
 
 #### Files to Create
 
-- `app/onboarding/page.tsx`
-- `app/onboarding/_components/OnboardingForm.tsx`
+- `web/app/onboarding/page.tsx`
+- `web/app/onboarding/_components/OnboardingForm.tsx`
 
 #### Files to Modify
 
-- `app/auth/callback/route.ts` (line 109)
+- `web/app/auth/callback/route.ts` (line 109)
 - `middleware.ts` (lines 76-82, 94)
 
 #### Testing
@@ -573,7 +573,7 @@ User loads dashboard → See banner "Phone required" → Completes profile → C
 #### Solution: Add Profile Completeness Check to Dashboard
 
 ```typescript
-// app/dashboard/_components/DashboardClient.tsx (or current dashboard file)
+// web/app/dashboard/_components/DashboardClient.tsx (or current dashboard file)
 
 import { AlertCircle } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -668,7 +668,7 @@ export default function DashboardClient() {
 If you prefer a reusable component:
 
 ```typescript
-// app/dashboard/_components/ProfileIncompleteAlert.tsx
+// web/app/dashboard/_components/ProfileIncompleteAlert.tsx
 'use client'
 
 import { AlertCircle } from 'lucide-react'
@@ -716,8 +716,8 @@ export default function ProfileIncompleteAlert({
 
 #### Files to Modify
 
-- `app/dashboard/page.tsx` or `app/dashboard/_components/DashboardClient.tsx`
-- Optional: Create `app/dashboard/_components/ProfileIncompleteAlert.tsx`
+- `web/app/dashboard/page.tsx` or `web/app/dashboard/_components/DashboardClient.tsx`
+- Optional: Create `web/app/dashboard/_components/ProfileIncompleteAlert.tsx`
 - Import Alert components from `@/components/ui/alert` (may need to create if doesn't exist)
 
 #### Create Alert Component (if missing)
@@ -730,7 +730,7 @@ npx shadcn-ui@latest add alert
 Or manually create:
 
 ```typescript
-// components/ui/alert.tsx
+// web/components/ui/alert.tsx
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
@@ -810,7 +810,7 @@ This creates:
 **Step 1:** Update auth callback to remove provision API call
 
 ```typescript
-// app/auth/callback/route.ts
+// web/app/auth/callback/route.ts
 
 // DELETE LINES 89-105:
 /*
@@ -850,7 +850,7 @@ mv app/api/auth/provision app/api/auth/_archive/
 Or comment out the entire file:
 
 ```typescript
-// app/api/auth/provision/route.ts
+// web/app/api/auth/provision/route.ts
 // ARCHIVED: User creation now handled by database trigger
 // See: supabase/migrations/20250102_add_subscriptions.sql:109-131
 /*
@@ -872,8 +872,8 @@ CREATE OR REPLACE FUNCTION public.handle_new_auth_user()
 
 #### Files to Modify
 
-- `app/auth/callback/route.ts` (remove lines 89-105)
-- `app/api/auth/provision/route.ts` (archive or comment out)
+- `web/app/auth/callback/route.ts` (remove lines 89-105)
+- `web/app/api/auth/provision/route.ts` (archive or comment out)
 
 #### Files to Document
 
@@ -912,7 +912,7 @@ After successful payment, user returns to `/dashboard?checkout=success` but noth
 #### Solution: Add Success Toast
 
 ```typescript
-// app/dashboard/_components/DashboardClient.tsx
+// web/app/dashboard/_components/DashboardClient.tsx
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Check } from 'lucide-react'
@@ -966,7 +966,7 @@ npm install sonner
 ```
 
 ```typescript
-// app/dashboard/_components/DashboardClient.tsx
+// web/app/dashboard/_components/DashboardClient.tsx
 import { toast } from 'sonner'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
@@ -1010,8 +1010,8 @@ export default function RootLayout({ children }) {
 
 #### Files to Modify
 
-- `app/dashboard/_components/DashboardClient.tsx`
-- Optional: `app/layout.tsx` (if using toast library)
+- `web/app/dashboard/_components/DashboardClient.tsx`
+- Optional: `web/app/layout.tsx` (if using toast library)
 
 #### Testing
 
@@ -1038,7 +1038,7 @@ Avatar and profile data loads after component mounts, causing a brief flash of d
 #### Solution: Add Skeleton Loading State
 
 ```typescript
-// app/dashboard/_components/DashboardClient.tsx
+// web/app/dashboard/_components/DashboardClient.tsx
 export default function DashboardClient() {
   const [profileLoaded, setProfileLoaded] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState('')
@@ -1096,7 +1096,7 @@ export default function DashboardClient() {
 
 #### Files to Modify
 
-- `app/dashboard/_components/DashboardClient.tsx`
+- `web/app/dashboard/_components/DashboardClient.tsx`
 
 ---
 
@@ -1227,7 +1227,7 @@ npm install react-joyride
 ```
 
 ```typescript
-// app/dashboard/_components/OnboardingTutorial.tsx
+// web/app/dashboard/_components/OnboardingTutorial.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -1321,7 +1321,7 @@ export default function OnboardingTutorial() {
 Usage:
 
 ```typescript
-// app/dashboard/_components/DashboardClient.tsx
+// web/app/dashboard/_components/DashboardClient.tsx
 import OnboardingTutorial from './OnboardingTutorial'
 
 export default function DashboardClient() {

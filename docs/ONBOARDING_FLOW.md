@@ -55,7 +55,7 @@ Call Initiation ❌ FAILS if no phone
 
 ### Step 1: Landing Page (`/`)
 
-**File:** `app/page.tsx`
+**File:** `web/app/page.tsx`
 
 ```typescript
 // User sees:
@@ -73,7 +73,7 @@ Call Initiation ❌ FAILS if no phone
 
 ### Step 2: Signup Page (`/signup`)
 
-**File:** `app/signup/page.tsx`
+**File:** `web/app/signup/page.tsx`
 
 **User Actions:**
 1. User enters email address
@@ -104,7 +104,7 @@ const { error } = await supabase.auth.signInWithOtp({
 
 ### Step 3: Email Click & Auth Callback (`/auth/callback`)
 
-**File:** `app/auth/callback/route.ts`
+**File:** `web/app/auth/callback/route.ts`
 
 **Code Flow:**
 ```typescript
@@ -159,7 +159,7 @@ $$
 
 #### 3b. Provision API Called SECOND
 
-**File:** `app/api/auth/provision/route.ts`
+**File:** `web/app/api/auth/provision/route.ts`
 
 ```typescript
 // Check if user record already exists
@@ -211,7 +211,7 @@ created_at: '2025-10-22T10:00:00Z'
 
 ### Step 4: Dashboard Landing (`/dashboard`)
 
-**File:** `app/dashboard/page.tsx`
+**File:** `web/app/dashboard/page.tsx`
 
 **Middleware Check:** `middleware.ts:76-82`
 ```typescript
@@ -227,7 +227,7 @@ if (request.nextUrl.pathname.startsWith('/dashboard')) {
 
 **Expected Code (MISSING):**
 ```typescript
-// app/dashboard/page.tsx
+// web/app/dashboard/page.tsx
 export default async function DashboardPage() {
   const userWithSub = await requireSubscription() // ❌ NOT CALLED
   // ... rest of component
@@ -268,7 +268,7 @@ export default function DashboardPage() {
 
 ### Step 5: Profile Modal (Optional, User-Initiated)
 
-**File:** `app/dashboard/page.tsx:551-778`
+**File:** `web/app/dashboard/page.tsx:551-778`
 
 **User Action:** Clicks Profile button in settings menu
 
@@ -300,7 +300,7 @@ const { error } = await supabase
 
 ### Step 6: Call Initiation (Feature Use)
 
-**File:** `app/api/calls/initiate/route.ts`
+**File:** `web/app/api/calls/initiate/route.ts`
 
 **User Action:** Clicks "Call now" button
 
@@ -347,7 +347,7 @@ if (!user.phone) {
 
 ### Step 7: Subscription Flow (Pricing Page)
 
-**File:** `app/pricing/page.tsx`
+**File:** `web/app/pricing/page.tsx`
 
 **How User Gets Here:**
 - NOT automatically (should be redirected from dashboard)
@@ -566,7 +566,7 @@ User confused, manually navigates to /pricing
 
 #### Gap 1: No Subscription Enforcement on Dashboard
 
-**Location:** `app/dashboard/page.tsx`
+**Location:** `web/app/dashboard/page.tsx`
 
 **Issue:** Dashboard is a client component with no subscription check
 
@@ -671,7 +671,7 @@ export default async function OnboardingPage() {
 
 Update auth callback:
 ```typescript
-// app/auth/callback/route.ts
+// web/app/auth/callback/route.ts
 return NextResponse.redirect(`${baseUrl}/onboarding`) // Changed from /dashboard
 ```
 
@@ -681,7 +681,7 @@ return NextResponse.redirect(`${baseUrl}/onboarding`) // Changed from /dashboard
 
 #### Gap 4: Phone Number Not Validated Upfront
 
-**Location:** `app/api/calls/initiate/route.ts:33`
+**Location:** `web/app/api/calls/initiate/route.ts:33`
 
 **Issue:** Phone validation happens too late (at feature use)
 
@@ -697,7 +697,7 @@ Dashboard loads → Check phone → Show banner if missing → Block call button
 
 **Recommended Solution:**
 
-`app/dashboard/page.tsx`:
+`web/app/dashboard/page.tsx`:
 ```typescript
 const [hasPhone, setHasPhone] = useState(false)
 
@@ -743,7 +743,7 @@ useEffect(() => {
 
 **Location:**
 - `supabase/migrations/20250102_add_subscriptions.sql:109` (trigger)
-- `app/api/auth/provision/route.ts` (API endpoint)
+- `web/app/api/auth/provision/route.ts` (API endpoint)
 
 **Issue:** Two mechanisms create user records, potential race condition
 
@@ -764,16 +764,16 @@ useEffect(() => {
 
 **Current:**
 ```typescript
-// app/api/create-checkout/route.ts:94
+// web/app/api/create-checkout/route.ts:94
 return_url: `${APP_URL}/dashboard?checkout=success`
 
-// app/dashboard/page.tsx
+// web/app/dashboard/page.tsx
 // ❌ No code checks for ?checkout=success
 ```
 
 **Recommended Solution:**
 ```typescript
-// app/dashboard/page.tsx
+// web/app/dashboard/page.tsx
 const searchParams = useSearchParams()
 
 useEffect(() => {
@@ -791,7 +791,7 @@ useEffect(() => {
 
 #### Gap 7: No Loading State During Profile Load
 
-**Location:** `app/dashboard/page.tsx:178-199`
+**Location:** `web/app/dashboard/page.tsx:178-199`
 
 **Issue:** UI renders with defaults while profile loads
 

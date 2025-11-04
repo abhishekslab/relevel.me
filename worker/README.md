@@ -59,7 +59,7 @@ docker compose up worker
 
 ## Environment Variables
 
-Required environment variables (set in `.env`):
+Required environment variables (set in root `.env` file for monorepo):
 - `REDIS_URL` - Redis connection URL (default: redis://redis:6379)
 - `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
 - `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key (for bypassing RLS)
