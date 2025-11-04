@@ -69,3 +69,54 @@ jobs:
           exit 1
         fi
         echo "All builds successful"
+
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Build Docker images
+      run: docker compose build
+      env:
+        # Build args for Next.js
+        NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy-key-for-build
+        NEXT_PUBLIC_SELF_HOSTED: true
+
+    - name: Start services
+      run: docker compose up -d
+      env:
+        NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: dummy-key-for-build
+        SUPABASE_SERVICE_ROLE_KEY: dummy-key-for-build
+        NEXT_PUBLIC_SELF_HOSTED: true
+
+    - name: Wait for services to be ready
+      run: |
+        echo "Waiting for services to start..."
+        sleep 10
+        docker compose ps
+
+    - name: Check web service health
+      run: |
+        for i in {1..30}; do
+          if curl -f http://localhost:3001/ > /dev/null 2>&1; then
+            echo "Web service is healthy"
+            exit 0
+          fi
+          echo "Waiting for web service... ($i/30)"
+          sleep 2
+        done
+        echo "Web service failed to start"
+        docker compose logs relevel-me
+        exit 1
+
+    - name: Check container logs
+      if: always()
+      run: docker compose logs
+
+    - name: Stop services
+      if: always()
+      run: docker compose down

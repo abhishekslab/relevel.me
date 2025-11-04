@@ -49,16 +49,18 @@ RUN apk add --no-cache libc6-compat
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy necessary files
-COPY --from=builder /app/web/public ./public
+# Copy standalone output from builder
 COPY --from=builder /app/web/.next/standalone ./
-COPY --from=builder /app/web/.next/static ./.next/static
+
+# Copy static files
+COPY --from=builder /app/web/.next/static ./web/.next/static
+COPY --from=builder /app/web/public ./web/public
 
 # Copy sharp from node_modules for image optimization
 COPY --from=deps /app/node_modules/sharp ./node_modules/sharp
 
 # Create cache directory with proper permissions
-RUN mkdir -p .next/cache && chown -R nextjs:nodejs .next/cache
+RUN mkdir -p web/.next/cache && chown -R nextjs:nodejs web/.next/cache
 
 # Set ownership of the app directory
 RUN chown -R nextjs:nodejs /app
@@ -70,4 +72,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["node", "server.js"]
+# Run from web subdirectory where server.js is located
+CMD ["node", "web/server.js"]
