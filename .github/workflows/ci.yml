@@ -27,11 +27,25 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Run TypeScript type check
+    - name: Typecheck shared package
+      run: cd packages/shared && npx tsc --noEmit
+      continue-on-error: false
+
+    - name: Build shared package
+      run: cd packages/shared && npm run build
+
+    - name: Typecheck worker
+      run: cd worker && npx tsc --noEmit
+      continue-on-error: false
+
+    - name: Build worker
+      run: cd worker && npm run build
+
+    - name: Run TypeScript type check (app)
       run: npm run typecheck
       continue-on-error: false
 
-    - name: Build project
+    - name: Build project (app)
       run: npm run build
       env:
         # Minimal env vars needed for build
@@ -42,8 +56,16 @@ jobs:
 
     - name: Check for build artifacts
       run: |
+        if [ ! -d "packages/shared/dist" ]; then
+          echo "Build failed: packages/shared/dist directory not found"
+          exit 1
+        fi
+        if [ ! -d "worker/dist" ]; then
+          echo "Build failed: worker/dist directory not found"
+          exit 1
+        fi
         if [ ! -d ".next" ]; then
           echo "Build failed: .next directory not found"
           exit 1
         fi
-        echo "Build successful"
+        echo "All builds successful"
