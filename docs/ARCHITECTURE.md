@@ -115,7 +115,7 @@ packages/shared/
 │  ┌────────────────────────────────────────────────────┐    │
 │  │            Next.js Web App (web/)                  │    │
 │  │                                                     │    │
-│  │  • Dashboard UI (worldboard, 3D avatar)            │    │
+│  │  • Dashboard UI (3D avatar, quest dock)             │    │
 │  │  • API Routes (/api/*)                             │    │
 │  │  • Auth flows (/auth/callback)                     │    │
 │  │  • Middleware (session checks)                     │    │
@@ -344,7 +344,7 @@ See [.github/workflows/ci.yml](../.github/workflows/ci.yml).
 
 **skills**
 - Predefined skill catalog
-- Categorized by biome (meadow, forest, desert, etc.)
+- Categorized by type (technical, personal development, etc.)
 
 **user_skills**
 - User progress on skills

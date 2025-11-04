@@ -4,14 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**relevel.me** is an open-world gamified skill-tracking dashboard built with Next.js 14. It presents a 2D/3D interactive worldboard where users can explore skill shrines, manage checkpoints, and visualize their learning progress through an isekai-inspired interface.
+**relevel.me** is a gamified skill-tracking dashboard built with Next.js 14. It provides voice-first journaling with an AI assistant and visualizes learning progress through an immersive interface.
 
-The project uses static mock data (no backend/auth) and features:
-- Pannable/zoomable world map with biome regions
-- Fog-of-war system that reveals as skills are discovered
-- Three.js starfield background
-- Quest dock, minimap, HUD with stats (WRS, streak, points)
-- Skill shrines positioned across different biomes (meadow, forest, desert, mist, tech, peaks)
+The project features:
+- Three.js starfield background and 3D avatar companion
+- Quest dock with HUD stats (WRS, streak, points)
+- Voice call integration for daily reflections
+- Supabase authentication and database
+- Background worker for scheduled calls
 
 ## Development Commands
 
@@ -42,47 +42,32 @@ This project follows a monorepo structure with npm workspaces:
 ### Next.js App Router Structure (web/)
 
 - **`web/app/page.tsx`** — Landing page with "Enter World" button
-- **`web/app/dashboard/page.tsx`** — Main worldboard interface (10kb+ file containing all game logic)
+- **`web/app/dashboard/page.tsx`** — Main dashboard with 3D avatar and quest dock
 - **`web/app/layout.tsx`** — Root layout with metadata
 - **`web/app/globals.css`** — Dark theme base styles (`#0b0f17` background)
 
 ### Component Organization
 
-The dashboard page is monolithic by design - all game components are defined in a single file (`web/app/dashboard/page.tsx`):
+The dashboard page contains the main interactive components in `web/app/dashboard/_components/DashboardClient.tsx`:
 
-- **HUD** — Top bar with WRS, streak, points badges, and zoom slider
-- **WorldDecor** — Grid background overlay
-- **BiomeRegions** — SVG-rendered colored zones for different skill categories
-- **FogOfWar** — CSS mask-based visibility system using radial gradients
-- **Shrines** — Interactive skill nodes positioned via `SHRINES` constant
-- **PlayerMarker** — Cyan pulsing indicator at player position
-- **Dock** — Right sidebar with Quest Log, Evening Call, Artifacts, Allocate Points cards
-- **MiniMap** — Bottom-left viewport indicator
+- **HUD** — Top bar with WRS, streak, points badges
+- **3D Avatar** — Ready Player Me avatar with lip-sync animation
+- **Dock** — Toggleable sidebar with Quest Log, Evening Call, Artifacts, Allocate Points cards
+- **Three.js Scene** — Starfield background with fog effects
 
 UI primitives in `web/components/ui/` (badge, button, card, progress, slider, tabs) are minimal shadcn-style components with Tailwind styling.
 
 ### Key Data Structures
 
-All mock data is defined at the top of `web/app/dashboard/page.tsx`:
+Dashboard data is fetched from Supabase via server actions in `web/app/dashboard/actions.ts`:
 
-```typescript
-const SKILLS: Skill[]           // Master skill list (id, code, name, category)
-const SHRINES: Record<UUID, {x, y, biome}>  // Shrine positions on 2800x1600 world
-const USER_SKILLS: UserSkill[]  // Player progress (level, xp, discovered, due_at)
-const CHECKPOINTS: Checkpoint[] // Due quests/reviews
-const ARTIFACTS: Artifact[]     // Active power-ups with effects
-```
+- **User Profile** - Avatar URL, preferences, subscription status
+- **Skills** - Learning goals and skill tracking
+- **Checkpoints** - Scheduled reviews and quest items
+- **Artifacts** - Active power-ups with effects
+- **Calls** - Voice call history and transcripts
 
-Types: `Skill`, `UserSkill`, `Checkpoint`, `Artifact`, `Biome`, `UUID`
-
-### Camera & Interaction System
-
-- **Panning**: Framer Motion's `drag` + `useMotionValue` for `camX`/`camY`
-- **Zoom**: State-controlled `zoom` (0.6-2.2) applied via CSS `scale`
-- **Keyboard**: WASD/arrow keys move camera (step adjusted by zoom)
-- **Mouse wheel**: Ctrl+wheel or large deltaY triggers zoom
-
-Camera offset centers the world at startup: `-(WORLD_W/2 - 600)`, `-(WORLD_H/2 - 350)`
+The dashboard client uses simplified mock data for Quest Log display.
 
 ### Visual Effects
 
@@ -91,9 +76,7 @@ Camera offset centers the world at startup: `-(WORLD_W/2 - 600)`, `-(WORLD_H/2 -
   - Fog effect from z=10 to z=40
   - Float animation wrapper for subtle movement
 
-- **Fog-of-War**: Dynamically generated CSS `mask-image` with radial gradients centered on revealed shrines + player position
-
-- **Shrine Glow**: Discovered shrines have `shadow-[0_0_24px_8px_rgba(168,85,247,0.35)]` and conic gradient rotation on hover
+- **3D Avatar**: Ready Player Me GLB models with lip-sync animation using browser TTS and phoneme mapping
 
 ### Path Aliases
 
@@ -113,16 +96,16 @@ The project features an isekai-inspired mystical aesthetic that frames learning 
 
 ## Data Flow Patterns
 
-All data is currently static mock data with no API calls:
-- `addMinsISO(m)` helper generates future timestamps for due dates
-- `xpToNextPct(level, xp)` calculates progress to next level using power function
-- No persistence layer - refreshing resets all state
+- **Authentication**: Supabase Auth with magic link email flow
+- **Database**: PostgreSQL via Supabase with row-level security (RLS)
+- **Server Actions**: Next.js server actions in `actions.ts` files for data fetching
+- **API Routes**: `/api/calls/initiate` for call initiation, webhooks for call status updates
+- **Background Jobs**: Bull queue with Redis for scheduled daily calls (worker process)
 
-## Future Extension Points
+## Key Architecture Patterns
 
-To add real backend integration:
-1. Replace mock constants with API fetch calls (likely in a `useEffect` or RSC data fetch)
-2. Add user authentication (currently hardcoded `user_id: 'u1'`)
-3. Wire up "Start", "Call now", "Assign" buttons to actual actions
-4. Implement skill unlock/discovery logic based on XP thresholds
-5. Add checkpoint completion flow with item review interface
+- **Monorepo**: npm workspaces with web, worker, and shared packages
+- **Provider Pattern**: Pluggable call providers (CallKaro, Vapi) via factory pattern
+- **Server/Client Split**: Server components for data fetching, client components for interactivity
+- **Background Jobs**: Bull queue for scheduled tasks (daily calls, reminders)
+- **Row-Level Security**: Supabase RLS policies enforce data access control

@@ -7,13 +7,11 @@
 [![Supabase](https://img.shields.io/badge/Supabase-Powered-green.svg)](https://supabase.com/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-A **source-available** gamified skill-tracking dashboard with voice-first journaling and an immersive 3D worldboard interface. Free for personal and internal business use.
+A **source-available** gamified skill-tracking dashboard with voice-first journaling and 3D avatar companion. Free for personal and internal business use.
 
 ### Features
 
 - 🌌 **Three.js starfield background** via `@react-three/fiber` + `drei`
-- 🗺️ **Interactive world map** - Pannable/zoomable with fog-of-war system
-- 🏰 **Skill shrines** across different biomes (meadow, forest, desert, mist, tech, peaks)
 - 📊 **HUD & Stats** - WRS score, streak tracking, experience points
 - 🎤 **AI Voice Calls** - Daily reflection conversations with your AI assistant
 - 🔐 **Supabase Auth** - Magic link authentication, no passwords
@@ -89,7 +87,7 @@ This project follows a monorepo structure using npm workspaces:
 relevel.me/                     # Monorepo root
 ├── web/                        # Next.js web application
 │   ├── app/                   # App Router pages
-│   │   ├── dashboard/         # Main worldboard interface
+│   │   ├── dashboard/         # Main dashboard
 │   │   │   ├── page.tsx       # Server component (subscription check)
 │   │   │   ├── _components/   # Dashboard client components
 │   │   │   └── actions.ts     # Server actions
@@ -138,13 +136,6 @@ relevel.me/                     # Monorepo root
 ```
 
 ## Key Features
-
-### Worldboard
-- Interactive 2800x1600 world map with biomes (meadow, forest, desert, mist, tech, peaks)
-- Fog-of-war system revealing skills as you progress
-- Shrine system with skill categories
-- WASD/arrow key navigation + mouse drag panning
-- Zoom controls (0.6x - 2.2x)
 
 ### Voice Journaling
 - Evening reflection calls with your AI assistant

@@ -6,8 +6,7 @@
 
 This is the main web application for relevel.me, built with Next.js 14 using the App Router. It provides:
 
-- Interactive 2D/3D worldboard with skill shrines
-- 3D avatar with lip-sync animation
+- 3D avatar companion with lip-sync animation
 - Voice call integration for daily reflections
 - Gamified skill tracking with XP, levels, and streaks
 - Subscription-based access control
@@ -156,15 +155,14 @@ npm start
 
 ### Dashboard
 
-The main worldboard interface with:
+The main dashboard interface with:
 
-- **Worldboard**: Pannable/zoomable 2D map with skill shrines
-- **3D Avatar**: Ready Player Me avatar with lip-sync
+- **3D Avatar**: Ready Player Me avatar with lip-sync animation
 - **HUD**: Stats display (WRS, streak, points)
 - **Dock**: Quest log, call button, artifacts, point allocation
-- **Minimap**: World overview with viewport indicator
+- **Starfield**: Three.js starfield background with fog effects
 
-**Implementation:** `app/dashboard/page.tsx`
+**Implementation:** `app/dashboard/page.tsx` and `app/dashboard/_components/DashboardClient.tsx`
 
 ### Voice Calls
 
@@ -317,7 +315,7 @@ See [docker-compose.yml](../docker-compose.yml) in root.
 
 - Avatar loads after component mount (flash of default)
 - Lip-sync has 10-30ms lag with browser TTS
-- Large worldboard canvas can impact performance on low-end devices
+- Three.js rendering can impact performance on low-end devices
 
 ## Contributing
 
