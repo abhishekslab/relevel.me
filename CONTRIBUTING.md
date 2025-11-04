@@ -191,31 +191,47 @@ Documentation improvements are always welcome! This includes:
 
 ## Project Structure
 
+This project uses npm workspaces to manage a monorepo:
+
 ```
 relevel.me/
-├── app/                    # Next.js App Router
-│   ├── api/               # API routes
-│   ├── dashboard/         # Main dashboard
-│   └── ...
-├── components/            # React components
-│   └── ui/               # UI primitives
-├── lib/                   # Utilities and services
-│   ├── providers/        # Call/payment providers
-│   ├── services/         # Business logic
-│   └── ...
-├── worker/                # Background job workers
-├── supabase/              # Database migrations
-└── docs/                  # Documentation
-
+├── web/                   # Next.js web application
+│   ├── app/              # Next.js App Router
+│   │   ├── api/          # API routes
+│   │   ├── dashboard/    # Main dashboard
+│   │   └── ...
+│   ├── components/       # React components
+│   │   └── ui/          # UI primitives
+│   ├── lib/              # Utilities and services
+│   │   ├── providers/   # Call/payment providers
+│   │   ├── services/    # Business logic
+│   │   ├── auth/        # Authentication helpers
+│   │   └── queue/       # Queue client
+│   ├── middleware.ts    # Auth middleware
+│   └── package.json     # Web app dependencies
+│
+├── worker/               # Background job processor
+│   ├── src/
+│   │   ├── queue/       # Bull queue setup
+│   │   └── jobs/        # Job processors
+│   └── package.json     # Worker dependencies
+│
+├── packages/
+│   └── shared/          # Shared utilities
+│       └── src/         # Shared code
+│
+├── supabase/            # Database migrations
+├── docs/                # Documentation
+└── package.json         # Root workspace config
 ```
 
 ## Adding New Call Providers
 
 To add support for a new voice call provider:
 
-1. Create `lib/providers/implementations/your-provider.ts`
+1. Create `web/lib/providers/implementations/your-provider.ts`
 2. Implement the `CallProvider` interface
-3. Add to factory in `lib/providers/factory.ts`
+3. Add to factory in `web/lib/providers/factory.ts`
 4. Update `.env.example` with required variables
 5. Document in `docs/PROVIDERS.md`
 

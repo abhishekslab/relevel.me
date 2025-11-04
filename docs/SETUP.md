@@ -100,22 +100,29 @@ Open http://localhost:3000 and click "Enter World"
 ## File Structure
 
 ```
-├── .env.local                         # Environment variables (DO NOT COMMIT)
+relevel.me/
+├── .env                               # Environment variables (DO NOT COMMIT)
 ├── supabase/
 │   └── migrations/
-│       └── 0001_init.sql             # Database schema
-├── lib/
-│   └── supabase/
-│       ├── client.ts                 # Browser Supabase client
-│       └── server.ts                 # Server Supabase client
-├── app/
-│   ├── api/
-│   │   └── calls/
-│   │       └── initiate/
-│   │           └── route.ts          # API endpoint for call initiation
-│   └── dashboard/
-│       └── page.tsx                  # UI with "Call now" button
-└── package.json                      # Dependencies
+│       └── 0001_init.sql              # Database schema
+├── web/                               # Next.js web application
+│   ├── lib/
+│   │   ├── auth/
+│   │   │   ├── client.ts             # Browser Supabase client
+│   │   │   └── server.ts             # Server Supabase client
+│   │   └── providers/                # Call providers
+│   ├── app/
+│   │   ├── api/
+│   │   │   └── calls/
+│   │   │       └── initiate/
+│   │   │           └── route.ts      # API endpoint for call initiation
+│   │   └── dashboard/
+│   │       └── page.tsx              # UI with "Call now" button
+│   └── package.json                   # Web app dependencies
+├── worker/                            # Background job processor
+│   └── src/                          # Worker source code
+├── packages/shared/                   # Shared utilities
+└── package.json                       # Root workspace config
 ```
 
 ## Database Schema

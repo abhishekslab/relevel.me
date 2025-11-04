@@ -29,18 +29,24 @@ A **source-available** gamified skill-tracking dashboard with voice-first journa
 git clone https://github.com/abhishekslab/relevel.me.git
 cd relevel.me
 
-# Install dependencies
+# Install all dependencies (uses npm workspaces)
 npm install
 
-# Set up environment variables
-cp .env.example .env.local
-# Edit .env.local with your Supabase and CallKaro credentials
+# Set up environment variables for web app
+cp .env.example .env
+# Edit .env with your Supabase and CallKaro credentials
 
-# Run database migrations (see docs/SELF_HOSTING.md for setup)
-# Then start dev server
+# Run database migrations (see docs/SELF_HOSTING.md for Supabase setup)
+
+# Start web development server
 npm run dev
 # Open http://localhost:3000
+
+# (Optional) In another terminal, start the worker
+npm run worker:dev
 ```
+
+**Note:** The `npm run dev` command automatically runs from the `web/` directory. All workspace dependencies (web, worker, shared) are installed from the root.
 
 ### For Self-Hosting
 
@@ -77,32 +83,58 @@ See [docs/SELF_HOSTING.md](docs/SELF_HOSTING.md) for complete setup instructions
 
 ## Project Structure
 
+This project follows a monorepo structure using npm workspaces:
+
 ```
-app/
-├── dashboard/              # Main worldboard interface
-│   ├── page.tsx           # Server component (subscription check)
-│   ├── _components/       # Dashboard client components
-│   └── actions.ts         # Server actions (sign out, etc.)
-├── onboarding/            # Profile completion flow
-├── pricing/               # Subscription plans / self-hosted info
-├── auth/
-│   ├── callback/          # Magic link callback handler
-│   └── signup/            # Sign up page
-└── api/
-    └── calls/             # CallKaro webhook handlers
-
-lib/
-├── auth/
-│   ├── client.ts          # Client-side Supabase client
-│   └── server.ts          # Server-side auth helpers
-
-docs/
-├── SELF_HOSTING.md        # Self-hosting guide
-├── ONBOARDING_FLOW.md     # User onboarding audit
-└── GAPS_AND_FIXES.md      # Implementation fixes
-
-supabase/
-└── migrations/            # Database schema and RLS policies
+relevel.me/                     # Monorepo root
+├── web/                        # Next.js web application
+│   ├── app/                   # App Router pages
+│   │   ├── dashboard/         # Main worldboard interface
+│   │   │   ├── page.tsx       # Server component (subscription check)
+│   │   │   ├── _components/   # Dashboard client components
+│   │   │   └── actions.ts     # Server actions
+│   │   ├── onboarding/        # Profile completion flow
+│   │   ├── pricing/           # Subscription plans
+│   │   ├── auth/callback/     # Auth callback handler
+│   │   └── api/               # API routes
+│   │       ├── calls/         # Call webhooks
+│   │       ├── queue/         # Queue management
+│   │       └── admin/         # Admin endpoints
+│   ├── components/            # React components
+│   │   └── ui/               # UI primitives (shadcn-style)
+│   ├── lib/                   # Utilities and services
+│   │   ├── auth/             # Authentication helpers
+│   │   ├── providers/        # Call/payment providers
+│   │   ├── queue/            # Bull queue client
+│   │   └── services/         # Business logic
+│   ├── public/               # Static assets
+│   ├── middleware.ts         # Auth middleware
+│   ├── next.config.js        # Next.js configuration
+│   └── package.json          # Web app dependencies
+│
+├── worker/                    # Background job processor
+│   ├── src/
+│   │   ├── queue/            # Bull queue setup
+│   │   ├── jobs/             # Job processors
+│   │   └── services/         # Worker services
+│   ├── Dockerfile            # Worker container
+│   └── package.json          # Worker dependencies
+│
+├── packages/
+│   └── shared/               # Shared utilities
+│       ├── src/              # Shared code
+│       └── package.json      # Shared dependencies
+│
+├── supabase/
+│   └── migrations/           # Database schema and RLS policies
+│
+├── docs/                      # Documentation
+│   ├── SELF_HOSTING.md       # Self-hosting guide
+│   ├── SETUP.md              # Setup instructions
+│   ├── QUEUE_SYSTEM.md       # Queue architecture
+│   └── ...                   # Additional docs
+│
+└── package.json              # Root workspace configuration
 ```
 
 ## Key Features
