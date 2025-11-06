@@ -30,11 +30,8 @@ export default function Home() {
         <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#8F7BFF] to-[#C6B5FF] bg-clip-text text-transparent">
           relevel.me
         </h1>
-        {/* <p className="text-xl md:text-2xl font-semibold text-[#C6B5FF]">
-          Re-level your real life.
-        </p> */}
         <p className="text-base md:text-lg opacity-90 text-[#EDEDF8] leading-relaxed">
-          Voice-first journaling platform with AI assistant. Reflect daily, earn XP, unlock new skills, and track your growth.
+          A second brain you can call. Redefining productivity with the world’s first call based memory companion
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
           <Link
@@ -45,18 +42,20 @@ export default function Home() {
             Get Started
           </Link>
           <Link
-            href="/vision"
+            href="https://github.com/abhishekslab/relevel.me"
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-block rounded-xl bg-white/5 border border-white/10 px-8 py-3 font-semibold text-[#C6B5FF] hover:bg-white/10 transition-all duration-300"
           >
-            Learn More
+            Self Host
           </Link>
         </div>
         <div className="flex gap-6 justify-center text-sm text-white/60 mt-6">
-          <Link href="/pricing" className="hover:text-[#8F7BFF] transition">
-            Pricing
-          </Link>
           <Link href="/vision" className="hover:text-[#8F7BFF] transition">
             Vision
+          </Link>
+          <Link href="https://github.com/abhishekslab/relevel.me" target="_blank" rel="noopener noreferrer" className="hover:text-[#8F7BFF] transition">
+            GitHub
           </Link>
           <Link href="/privacy" className="hover:text-[#8F7BFF] transition">
             Privacy

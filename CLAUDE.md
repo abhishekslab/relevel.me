@@ -4,12 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**relevel.me** is a gamified skill-tracking dashboard built with Next.js 14. It provides voice-first journaling with an AI assistant and visualizes learning progress through an immersive interface.
+**relevel.me** is a voice-first second brain — an AI memory companion you can call. Built with Next.js 14, it captures your thoughts through natural conversation and transforms them into a structured, searchable memory graph.
 
 The project features:
+- Voice-first memory capture through phone calls
+- AI-powered transcription and intelligent tagging
+- Memory graph where ideas connect by topic, tone, and intent
+- Reflective intelligence that surfaces forgotten goals and patterns
+- Optional gamification layer (skill trees, XP, quests) for memory visualization
 - Three.js starfield background and 3D avatar companion
-- Quest dock with HUD stats (WRS, streak, points)
-- Voice call integration for daily reflections
 - Supabase authentication and database
 - Background worker for scheduled calls
 
@@ -41,9 +44,10 @@ This project follows a monorepo structure with npm workspaces:
 
 ### Next.js App Router Structure (web/)
 
-- **`web/app/page.tsx`** — Landing page with "Enter World" button
-- **`web/app/dashboard/page.tsx`** — Main dashboard with 3D avatar and quest dock
-- **`web/app/layout.tsx`** — Root layout with metadata
+- **`web/app/page.tsx`** — Landing page with "A second brain you can call" tagline
+- **`web/app/dashboard/page.tsx`** — Main dashboard with memory visualization and 3D avatar
+- **`web/app/vision/page.tsx`** — Vision page explaining voice-first second brain concept
+- **`web/app/layout.tsx`** — Root layout with SEO metadata
 - **`web/app/globals.css`** — Dark theme base styles (`#0b0f17` background)
 
 ### Component Organization
@@ -62,12 +66,12 @@ UI primitives in `web/components/ui/` (badge, button, card, progress, slider, ta
 Dashboard data is fetched from Supabase via server actions in `web/app/dashboard/actions.ts`:
 
 - **User Profile** - Avatar URL, preferences, subscription status
-- **Skills** - Learning goals and skill tracking
-- **Checkpoints** - Scheduled reviews and quest items
-- **Artifacts** - Active power-ups with effects
-- **Calls** - Voice call history and transcripts
+- **Skills** - Memory nodes and knowledge areas (optional gamification)
+- **Checkpoints** - Scheduled reflections and memory reviews
+- **Artifacts** - Active power-ups with effects (optional gamification)
+- **Calls** - Voice call history and transcripts (core memory capture)
 
-The dashboard client uses simplified mock data for Quest Log display.
+The dashboard client visualizes memory as an optional gamified interface with quest logs and skill progression.
 
 ### Visual Effects
 
@@ -82,9 +86,9 @@ The dashboard client uses simplified mock data for Quest Log display.
 
 TypeScript configured with `@/*` mapping to web directory root (see `web/tsconfig.json` baseUrl/paths).
 
-## Lore
+## Positioning
 
-The project features an isekai-inspired mystical aesthetic that frames learning and skill development as an immersive journey.
+**relevel.me** is a voice-first second brain — an AI memory companion you can call. The project features a mystical, clarity-focused aesthetic that frames memory and cognition as connected knowledge networks. Optional gamification visualizes your evolving mind as memory orbs and skill trees.
 
 ## Styling Approach
 

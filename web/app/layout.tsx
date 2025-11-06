@@ -2,9 +2,9 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Relevel.me — Re-level Your Real Life',
-  description: 'Relevel.me is a voice-first journaling and self-growth app guided by your AI assistant. Reflect daily, earn XP, unlock new skills, and track your growth like an RPG for real life.',
-  keywords: ['self-improvement app', 'journaling app', 'voice journaling', 'gamified productivity', 'personal growth', 'habit tracker', 'AI assistant', 'isekai productivity', 'reflection app'],
+  title: 'Relevel.me — A Second Brain You Can Call',
+  description: 'Relevel.me is the world\'s first voice-first second brain — an AI memory companion you can literally call. Speak your thoughts, and Relevel.me remembers, organizes, and reflects them back when you need clarity.',
+  keywords: ['voice AI', 'second brain', 'AI memory', 'personal knowledge management', 'journaling AI', 'recall assistant', 'cognitive companion', 'voice journaling', 'reflection AI', 'productivity tool', 'memory OS'],
   authors: [{ name: 'Relevel.me' }],
   creator: 'Relevel.me',
   metadataBase: new URL('https://relevel.me'),
@@ -12,8 +12,8 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   openGraph: {
-    title: 'Relevel.me — Level Up Your Real Life',
-    description: 'Guided by your AI voice companion, relevel.me turns reflection into skill growth.',
+    title: 'Relevel.me — A Second Brain You Can Call',
+    description: 'Relevel.me transforms your voice into structured memory — capturing ideas, reflections, and insights in real time.',
     url: 'https://relevel.me',
     siteName: 'Relevel.me',
     images: [
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Relevel.me — Re-level your real life.',
+        alt: 'Relevel.me — A second brain you can call.',
       },
     ],
     locale: 'en_US',
@@ -29,8 +29,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Relevel.me — Level Up Your Real Life',
-    description: 'Guided by your AI voice companion, relevel.me turns reflection into skill growth.',
+    title: 'A Second Brain You Can Call',
+    description: 'Relevel.me — the world\'s first voice-first second brain. Speak your thoughts. Remember everything.',
     images: ['/og-image.png'],
     creator: '@relevelme',
   },

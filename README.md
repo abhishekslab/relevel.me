@@ -7,16 +7,18 @@
 [![Supabase](https://img.shields.io/badge/Supabase-Powered-green.svg)](https://supabase.com/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-A **source-available** gamified skill-tracking dashboard with voice-first journaling and 3D avatar companion. Free for personal and internal business use.
+A **source-available** voice-first second brain — an AI memory companion you can call. Think aloud, remember everything, and achieve clarity through conversation. Free for personal and internal business use.
 
 ### Features
 
-- 🌌 **Three.js starfield background** via `@react-three/fiber` + `drei`
-- 📊 **HUD & Stats** - WRS score, streak tracking, experience points
-- 🎤 **AI Voice Calls** - Daily reflection conversations with your AI assistant
+- 🧠 **Voice-First Second Brain** - Call and speak your thoughts, your AI companion remembers everything
+- 🎤 **AI Voice Calls** - Daily reflection conversations with your AI memory companion
+- 🔗 **Memory Graph** - Your ideas become connected nodes, linked by meaning
+- 🪞 **Reflective Intelligence** - AI surfaces forgotten goals and patterns
 - 🔐 **Supabase Auth** - Magic link authentication, no passwords
 - 🐳 **Docker Ready** - One-command self-hosted deployment
 - 🔌 **Pluggable Providers** - Swap call providers (CallKaro, Vapi) via config
+- 🎮 **Optional Gamification** - Visualize your memory as skill trees and experience points
 
 ## Quick Start
 
@@ -178,16 +180,23 @@ relevel.me/                     # Monorepo root
 
 ## Key Features
 
-### Voice Journaling
-- Evening reflection calls with your AI assistant
+### Voice-First Memory Capture
+- Call anytime to speak your thoughts freely
+- Automatic transcription and intelligent tagging
 - Phone number validation and profile management
-- Call history and streak tracking
+- Call history and memory timeline
 
-### Gamification
+### Memory Graph & Recall
+- Each idea becomes a node connected by topic, tone, and intent
+- Context-aware retrieval through natural conversation
+- AI surfaces forgotten goals, patterns, and contradictions
+- Zero friction capture, high recall architecture
+
+### Optional Gamification Layer
+- Visualize your evolving mind as skill trees
 - WRS (Weighted Reflection Score)
-- Daily streak counter
-- Experience points and leveling system
-- Quest log and checkpoint system
+- Daily streak counter and experience points
+- Quest log for memory milestones
 - Artifact power-ups
 
 ### Authentication & Profiles
