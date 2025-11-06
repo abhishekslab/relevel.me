@@ -60,9 +60,11 @@ Call Initiation ❌ FAILS if no phone
 ```typescript
 // User sees:
 - Logo
-- "Voice-first journaling platform with AI assistant"
+- "A second brain you can call"
+- "Think aloud. Remember everything. Your AI companion remembers, organizes, and reflects."
 - [Get Started] button → /signup
-- [Learn More] button → /vision
+- [Self Host] button → GitHub
+- Footer: Vision, GitHub, Privacy
 ```
 
 **Database State:** None (no user yet)

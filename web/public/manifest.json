@@ -1,7 +1,7 @@
 {
-  "name": "Relevel.me — Re-level Your Real Life",
+  "name": "Relevel.me — A Second Brain You Can Call",
   "short_name": "Relevel.me",
-  "description": "Voice-first journaling platform with AI assistant. Reflect daily, earn XP, unlock new skills, and track your growth.",
+  "description": "Voice-first second brain. Call and speak your thoughts, your AI companion remembers everything.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0E0A1E",
@@ -25,7 +25,7 @@
     {
       "name": "Dashboard",
       "short_name": "Dashboard",
-      "description": "Open your skill worldboard",
+      "description": "View your memory graph",
       "url": "/dashboard",
       "icons": [{ "src": "/logo.png", "sizes": "96x96" }]
     }
