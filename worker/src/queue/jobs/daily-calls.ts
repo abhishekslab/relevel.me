@@ -9,8 +9,9 @@ import {
   ProcessUserCallJobData,
   DEFAULT_JOB_OPTIONS,
   JOB_NAMES,
-} from '../types';
-import { getUsersToCallNow, initiateCall } from '@relevel-me/shared';
+  getUsersToCallNow,
+  initiateCall,
+} from '@relevel-me/shared';
 import { dailyCallsQueue } from '../client';
 
 /**
@@ -69,13 +70,17 @@ export async function processScheduleCalls(job: Job<ScheduleCallsJobData>) {
  * Process individual user call
  */
 export async function processUserCall(job: Job<ProcessUserCallJobData>) {
-  console.log(`[Job:${job.id}] Processing user call for ${job.data.name || job.data.userId}`);
+  const { retryCount = 0 } = job.data;
+  console.log(
+    `[Job:${job.id}] Processing user call for ${job.data.name || job.data.userId}` +
+      (retryCount > 0 ? ` (retry ${retryCount}/2)` : '')
+  );
 
   try {
-    const { userId, phone, name } = job.data;
+    const { userId, phone, name, originalCallId } = job.data;
 
     // Initiate the call
-    const result = await initiateCall({ userId, phone, name });
+    const result = await initiateCall({ userId, phone, name, retryCount, originalCallId });
 
     if (!result.success) {
       console.error(`[Job:${job.id}] Call initiation failed:`, result.error);

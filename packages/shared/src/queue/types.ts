@@ -23,6 +23,8 @@ export interface ProcessUserCallJobData {
   phone: string;
   name: string | null;
   scheduledAt: string; // ISO timestamp
+  retryCount?: number; // Number of previous attempts (0 = first call, 1 = first retry, 2 = second retry)
+  originalCallId?: string; // ID of the original call (if this is a retry)
 }
 
 // Job options
@@ -51,4 +53,11 @@ export const DEFAULT_JOB_OPTIONS: DailyCallsJobOptions = {
 export const CRON_PATTERNS = {
   // Run every 5 minutes to check for users who need calls
   CHECK_USERS: '*/5 * * * *',
+} as const;
+
+// Retry configuration
+export const RETRY_CONFIG = {
+  MAX_RETRIES: 2, // Total of 3 attempts (1 initial + 2 retries)
+  RETRY_DELAY_MS: 30 * 60 * 1000, // 30 minutes in milliseconds
+  RETRY_ON_STATUSES: ['failed', 'no_answer', 'busy', 'no-answer'], // Statuses that trigger retries
 } as const;

@@ -5,7 +5,7 @@
 
 import { dailyCallsQueue } from './client';
 import { processScheduleCalls, processUserCall } from './jobs/daily-calls';
-import { JOB_NAMES, CRON_PATTERNS, ScheduleCallsJobData } from './types';
+import { JOB_NAMES, CRON_PATTERNS, ScheduleCallsJobData } from '@relevel-me/shared';
 
 const CONCURRENCY = parseInt(process.env.QUEUE_CONCURRENCY || '5', 10);
 

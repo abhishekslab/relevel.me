@@ -41,14 +41,21 @@ worker/
 │   ├── queue/
 │   │   ├── client.ts              # Bull queue client
 │   │   ├── worker.ts              # Job processors
-│   │   ├── types.ts               # TypeScript types
 │   │   └── jobs/
 │   │       └── daily-calls.ts     # Call job handlers
-│   └── services/
-│       └── call-service.ts        # Supabase integration
 ├── Dockerfile                      # Worker container
 └── package.json                    # Worker dependencies
+
+packages/shared/
+└── src/
+    ├── queue/
+    │   ├── client.ts              # Shared Bull queue client
+    │   └── types.ts               # Shared TypeScript types
+    └── services/
+        └── call-service.ts        # Shared call initiation logic
 ```
+
+**Note:** Types and services are centralized in `packages/shared` to ensure consistency between web and worker packages.
 
 ### 1. **Queue Client** (`worker/src/queue/client.ts`)
 - Initializes Redis connection
@@ -58,7 +65,7 @@ worker/
 
 ### 2. **Job Processors** (`worker/src/queue/jobs/daily-calls.ts`)
 - **processScheduleCalls**: Finds users who need calls at current time
-- **processUserCall**: Initiates individual call for a user
+- **processUserCall**: Initiates individual call for a user (with retry support)
 - Each processor is registered by name in the worker
 
 ### 3. **Worker Process** (`worker/src/queue/worker.ts`)
@@ -67,16 +74,85 @@ worker/
 - **process-user-call**: Concurrency of 5 (parallel call processing)
 - Runs cron job every 5 minutes to check for users
 
-### 4. **Call Service** (`worker/src/services/call-service.ts`)
+### 4. **Call Service** (`packages/shared/src/services/call-service.ts`)
 - Reusable call initiation logic
 - Timezone-aware user selection
-- Prevents duplicate calls per day
+- Prevents duplicate initial calls per day (allows retries)
+- **Automatic retry scheduling**: Schedules up to 2 retries (30 min intervals) for failed/unanswered calls
 
 ### 5. **API Routes**
 - `POST /api/queue/trigger` - Manual trigger for testing
 - `GET /api/queue/status` - Queue health and statistics
 - `GET /api/admin/queues` - Bull Board dashboard info
-- `POST /api/webhooks/callkaro` - Webhook for call status updates
+- `POST /api/webhooks/call` - Generic webhook for call status updates (auto-schedules retries)
+
+## Call Retry System
+
+### Overview
+
+The system automatically retries failed or unanswered calls **without requiring database changes**. It uses Bull's delayed job feature to schedule retries.
+
+### Retry Configuration
+
+**Constants** (defined in `packages/shared/src/queue/types.ts`):
+- `MAX_RETRIES`: 2 (total of 3 attempts: 1 initial + 2 retries)
+- `RETRY_DELAY_MS`: 1,800,000 ms (30 minutes)
+- `RETRY_ON_STATUSES`: `['failed', 'no_answer', 'busy', 'no-answer']`
+
+### How It Works
+
+1. **Initial Call**: User receives a call at their scheduled time
+2. **Status Update**: Webhook receives call status from provider
+3. **Retry Decision**: If status is in `RETRY_ON_STATUSES`, system checks retry count
+4. **Schedule Retry**: If under max retries, schedules a delayed job for 30 minutes later
+5. **Retry Execution**: Worker processes the delayed job and initiates another call
+6. **Repeat**: Process continues until call succeeds or max retries reached
+
+### Retry Flow
+
+```
+Initial Call (9:00 PM)
+    │
+    ├─ [Completed] ──> No retry needed ✓
+    │
+    └─ [Failed/No Answer/Busy]
+        │
+        └─> Schedule Retry 1 (9:30 PM)
+            │
+            ├─ [Completed] ──> Success ✓
+            │
+            └─ [Failed/No Answer/Busy]
+                │
+                └─> Schedule Retry 2 (10:00 PM)
+                    │
+                    ├─ [Completed] ──> Success ✓
+                    │
+                    └─ [Failed] ──> Max retries reached ✗
+```
+
+### Implementation Details
+
+**No Database Changes Required:**
+- Retry count tracked by counting today's call records
+- Original call ID passed through job metadata
+- Duplicate check bypassed for retry attempts
+
+**Key Functions:**
+- `scheduleRetryIfNeeded()` - Checks status and schedules retry job
+- `initiateCall()` - Accepts `retryCount` parameter to allow retries
+- `processUserCall()` - Passes retry information through the chain
+
+### Monitoring Retries
+
+**Log Messages:**
+```
+[CallService] Scheduled retry 1/2 for call {id} in 30 minutes
+[Job:{id}] Processing user call for {name} (retry 1/2)
+[CallService] Call {id} - max retries (2) reached
+```
+
+**Queue Status:**
+Check delayed jobs via `/api/queue/status` endpoint.
 
 ## Database Schema
 
@@ -199,9 +275,12 @@ The worker automatically:
 2. Queries users where:
    - `call_enabled = true`
    - Current time in user's timezone matches their `call_time` (±5 min window)
-   - No call today (status: queued/ringing/in_progress/completed)
+   - No successful call today
 3. Enqueues individual call jobs for each user
-4. Processes calls with retry logic (2 attempts)
+4. Processes calls with automatic retry on failure:
+   - Up to 3 total attempts (1 initial + 2 retries)
+   - 30-minute delay between attempts
+   - Triggered automatically by webhook on failed/unanswered calls
 
 ### Manual Trigger (Testing)
 
@@ -299,21 +378,27 @@ After 3 failures, job moves to failed queue (kept for debugging).
 
 ## Webhook Integration
 
-### CallKaro Webhook Setup
+### Call Provider Webhook Setup
 
-1. Go to CallKaro dashboard
-2. Set webhook URL: `https://your-domain.com/api/webhooks/callkaro`
+1. Go to your call provider dashboard (CallKaro, Vapi, etc.)
+2. Set webhook URL: `https://your-domain.com/api/webhooks/call`
 3. (Optional) Set webhook secret in `.env.local`
 
 ### Webhook Payload
 
-CallKaro sends updates for:
+Call providers send status updates for:
 - `ringing` - Call initiated
 - `in_progress` - User answered
-- `completed` - Call finished successfully
-- `failed` - Call failed
-- `no_answer` - User didn't answer
-- `busy` - User line was busy
+- `completed` - Call finished successfully ✓ (no retry)
+- `failed` - Call failed ⟳ (triggers retry)
+- `no_answer` / `no-answer` - User didn't answer ⟳ (triggers retry)
+- `busy` - User line was busy ⟳ (triggers retry)
+
+**Automatic Retry Scheduling:**
+When webhook receives a failed/unanswered status, the system automatically:
+1. Counts existing call attempts for the user today
+2. If under max retries (2), schedules a new call job with 30-min delay
+3. Returns `retry_scheduled: true` in webhook response
 
 ## Troubleshooting
 
@@ -394,12 +479,14 @@ Adjust in `web/lib/queue/types.ts` if needed.
 ## Future Enhancements
 
 - [ ] Bull Board full UI dashboard
-- [ ] Call retry logic for failed calls
+- [x] Call retry logic for failed calls (✓ Implemented: 3 attempts, 30-min intervals)
 - [ ] User notification preferences (SMS, email)
 - [ ] Call scheduling window (only call during X-Y hours)
 - [ ] Analytics dashboard for call metrics
 - [ ] A/B testing for different agent scripts
 - [ ] Voice call recording transcription analysis
+- [ ] Configurable retry delays per user
+- [ ] Smart retry scheduling (avoid late night retries)
 
 ## Support
 

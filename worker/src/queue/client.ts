@@ -5,7 +5,7 @@
 
 import Queue from 'bull';
 import Redis from 'ioredis';
-import { QUEUE_NAMES } from './types';
+import { QUEUE_NAMES } from '@relevel-me/shared';
 
 // Redis connection configuration
 const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';

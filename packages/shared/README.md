@@ -9,7 +9,8 @@ This package contains code shared between the `web` and `worker` packages, inclu
 - **Configuration**: Environment variable management
 - **Call Providers**: Voice call provider abstractions (CallKaro, Vapi, etc.)
 - **Queue Client**: Bull queue client for background jobs
-- **Services**: Shared business logic (call service, Supabase integration)
+- **Queue Types**: Shared TypeScript types for Bull queue jobs
+- **Services**: Shared business logic (call service with retry support, Supabase integration)
 
 ## Installation
 
@@ -158,18 +159,30 @@ console.log('Waiting jobs:', stats.waiting)
 ### Call Service
 
 ```typescript
-import { CallService } from '@relevel-me/shared'
-
-const callService = new CallService()
+import { initiateCall, scheduleRetryIfNeeded } from '@relevel-me/shared'
 
 // Initiate call for user
-const result = await callService.initiateCall('user-uuid')
+const result = await initiateCall({
+  userId: 'user-uuid',
+  phone: '+1234567890',
+  name: 'John Doe'
+})
 
 if (result.success) {
-  console.log('Call created:', result.call)
+  console.log('Call created:', result.callId)
 } else {
   console.error('Call failed:', result.error)
 }
+
+// Schedule retry if needed (called by webhook handler)
+const retryScheduled = await scheduleRetryIfNeeded({
+  callId: 'call-uuid',
+  userId: 'user-uuid',
+  phone: '+1234567890',
+  name: 'John Doe',
+  status: 'no_answer', // Triggers retry
+  retryCount: 0 // First retry
+})
 ```
 
 ## Development

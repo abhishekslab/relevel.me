@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { getCallProvider } from '@relevel-me/shared';
+import { getCallProvider, scheduleRetryIfNeeded } from '@relevel-me/shared';
 
 /**
  * Generic Call Provider Webhook Handler
@@ -58,10 +58,10 @@ export async function POST(req: NextRequest) {
 
     const supabase = getServiceClient();
 
-    // Find the call by vendor_call_id
+    // Find the call by vendor_call_id (include phone for retry scheduling)
     const { data: call, error: findError } = await supabase
       .from('calls')
-      .select('id, user_id, status')
+      .select('id, user_id, status, to_number')
       .eq('vendor_call_id', payload.vendorCallId)
       .single();
 
@@ -119,6 +119,36 @@ export async function POST(req: NextRequest) {
 
     console.log(`[Webhook:${callProvider.name}] Updated call ${call.id} to status: ${payload.status}`);
 
+    // Schedule retry if call failed/was unanswered
+    // Count how many calls were made today to determine retry count
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const { count: callsToday } = await supabase
+      .from('calls')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', call.user_id)
+      .gte('created_at', todayStart.toISOString());
+
+    // Get user info for retry scheduling
+    const { data: user } = await supabase
+      .from('users')
+      .select('name')
+      .eq('id', call.user_id)
+      .single();
+
+    // Retry count is current number of calls - 1 (since this call is already counted)
+    const currentRetryCount = (callsToday || 1) - 1;
+
+    const retryScheduled = await scheduleRetryIfNeeded({
+      callId: call.id,
+      userId: call.user_id,
+      phone: call.to_number,
+      name: user?.name || null,
+      status: payload.status,
+      retryCount: currentRetryCount,
+    });
+
     // TODO: Process transcript and create checkpoints/insights
     // if (payload.status === 'completed' && payload.transcript) {
     //   await processTranscript(call.user_id, call.id, payload.transcript);
@@ -128,6 +158,7 @@ export async function POST(req: NextRequest) {
       success: true,
       call_id: call.id,
       status: payload.status,
+      retry_scheduled: retryScheduled,
     });
   } catch (error) {
     console.error('[Webhook:Call] Error processing webhook:', error);
