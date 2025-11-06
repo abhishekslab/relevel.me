@@ -1,0 +1,30 @@
+FROM node:20-alpine
+
+# Install dependencies for better compatibility
+RUN apk add --no-cache libc6-compat
+
+# Set working directory
+WORKDIR /app
+
+# Copy all package.json files to set up workspace structure
+COPY package*.json ./
+COPY web/package*.json ./web/
+COPY worker/package*.json ./worker/
+COPY packages/shared/package*.json ./packages/shared/
+
+# Install all workspace dependencies
+RUN npm ci
+
+# Copy tsconfig files
+COPY tsconfig.json ./
+COPY web/tsconfig.json ./web/
+COPY packages/shared/tsconfig.json ./packages/shared/
+
+# Copy next.config.js for Next.js
+COPY web/next.config.js ./web/
+
+# Expose Next.js dev server port
+EXPOSE 3000
+
+# Start Next.js in development mode with hot reloading
+CMD ["npm", "run", "dev"]

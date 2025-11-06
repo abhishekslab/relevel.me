@@ -189,13 +189,15 @@ You should see: `users`, `calls`, `subscriptions`
 
 ## Docker Deployment
 
-### Quick Start with Docker Compose
+### Production Docker Compose (Recommended for Self-Hosting)
+
+For production deployments with optimized builds:
 
 ```bash
 # 1. Create .env file
 cat > .env <<EOF
 NEXT_PUBLIC_SELF_HOSTED=true
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_APP_URL=http://localhost:3001
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 CALLKARO_API_KEY=your-api-key
@@ -203,19 +205,47 @@ CALLKARO_BASE_URL=https://api.callkaro.com
 CALLKARO_AGENT_ID=your-agent-id
 EOF
 
-# 2. Start services
-docker-compose up -d
+# 2. Start services (production build)
+docker compose up -d
 
 # 3. View logs
-docker-compose logs -f relevel
+docker compose logs -f relevel-me
 
 # 4. Access application
+open http://localhost:3001
+```
+
+**Production Configuration:**
+- Uses `docker-compose.yml`
+- Multi-stage optimized build
+- Runs on port 3001
+- Includes web app, worker, and Redis
+
+### Development Docker Compose (with Hot Reloading)
+
+For local development with automatic code reloading:
+
+```bash
+# 1. Create .env file (same as above)
+
+# 2. Start services with hot reloading
+docker compose -f docker-compose.dev.yml up
+
+# 3. Access application
 open http://localhost:3000
 ```
 
+**Development Configuration:**
+- Uses `docker-compose.dev.yml`
+- Hot reloading for web and worker
+- Runs on port 3000
+- Volume mounts for source code
+- Faster iteration cycle
+
 ### Docker Compose Configuration
 
-See `docker-compose.yml` in the repository root.
+- **Production**: `docker-compose.yml` - Optimized for deployment
+- **Development**: `docker-compose.dev.yml` - Hot reloading enabled
 
 ### Custom Docker Build
 
@@ -259,13 +289,31 @@ Example agent configuration:
 
 ## Running the Application
 
-### Development Mode
+### Local Development (npm)
 
 ```bash
 npm run dev
 ```
 
 Access at: http://localhost:3000
+
+### Docker Development (with hot reloading)
+
+```bash
+docker compose -f docker-compose.dev.yml up
+```
+
+Access at: http://localhost:3000
+
+Changes to code automatically reload!
+
+### Docker Production
+
+```bash
+docker compose up -d
+```
+
+Access at: http://localhost:3001
 
 ### Production Mode
 

@@ -64,11 +64,43 @@ Or use the Supabase Dashboard → Table Editor → users table.
 
 ### 4. Start Development Server
 
+**Option A: Local Development (npm)**
+
 ```bash
 npm run dev
 ```
 
 Open http://localhost:3000 and click "Enter World"
+
+**Option B: Docker Development (with hot reloading)**
+
+```bash
+# Start all services (web, worker, redis) with hot reloading
+docker compose -f docker-compose.dev.yml up
+
+# Or run in detached mode
+docker compose -f docker-compose.dev.yml up -d
+```
+
+Open http://localhost:3000 and click "Enter World"
+
+**Docker Benefits:**
+- No Node.js installation required
+- Automatic hot reloading
+- Redis included and configured
+- Consistent environment
+
+**Docker Common Commands:**
+```bash
+# View logs
+docker compose -f docker-compose.dev.yml logs -f web
+
+# Rebuild after dependency changes
+docker compose -f docker-compose.dev.yml up --build
+
+# Stop services
+docker compose -f docker-compose.dev.yml down
+```
 
 ### 5. Test the Call Now Button
 

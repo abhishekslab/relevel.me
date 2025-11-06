@@ -1,0 +1,80 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: relevel-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data_dev:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - relevel-network-dev
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: relevel-web-dev
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount source code for hot reloading
+      - ./web:/app/web
+      - ./packages:/app/packages
+      - ./package.json:/app/package.json
+      - ./package-lock.json:/app/package-lock.json
+      - ./tsconfig.json:/app/tsconfig.json
+      # Preserve root node_modules (npm workspaces installs everything here)
+      - node_modules:/app/node_modules
+      # Preserve Next.js cache
+      - nextjs_cache:/app/web/.next
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=development
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - relevel-network-dev
+    command: npm run dev
+
+  worker:
+    build:
+      context: .
+      dockerfile: worker/Dockerfile.dev
+    container_name: relevel-worker-dev
+    volumes:
+      # Mount source code for hot reloading
+      - ./worker:/app/worker
+      - ./packages:/app/packages
+      - ./package.json:/app/package.json
+      - ./package-lock.json:/app/package-lock.json
+      - ./tsconfig.json:/app/tsconfig.json
+      # Preserve root node_modules (npm workspaces installs everything here)
+      - node_modules:/app/node_modules
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=development
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - relevel-network-dev
+    command: npm run worker:dev
+
+volumes:
+  redis_data_dev:
+  node_modules:
+  nextjs_cache:
+
+networks:
+  relevel-network-dev:
+    driver: bridge

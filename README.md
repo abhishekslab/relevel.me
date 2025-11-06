@@ -22,6 +22,8 @@ A **source-available** gamified skill-tracking dashboard with voice-first journa
 
 ### For Development
 
+#### Option 1: Local Development (npm)
+
 ```bash
 # Clone repository
 git clone https://github.com/abhishekslab/relevel.me.git
@@ -46,21 +48,60 @@ npm run worker:dev
 
 **Note:** The `npm run dev` command automatically runs from the `web/` directory. All workspace dependencies (web, worker, shared) are installed from the root.
 
-### For Self-Hosting
+#### Option 2: Docker Development Environment (with hot reloading)
+
+```bash
+# Clone repository
+git clone https://github.com/abhishekslab/relevel.me.git
+cd relevel.me
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your Supabase and CallKaro credentials
+
+# Start all services (web, worker, redis) with hot reloading
+docker compose -f docker-compose.dev.yml up
+
+# Access at http://localhost:3000
+# Changes to code automatically reload!
+```
+
+**Benefits:**
+- ✅ No Node.js installation required
+- ✅ Automatic hot reloading for web and worker
+- ✅ Redis included and configured
+- ✅ Consistent environment across team
+- ✅ Isolated from local machine setup
+
+**Common commands:**
+```bash
+# Rebuild after dependency changes
+docker compose -f docker-compose.dev.yml up --build
+
+# View logs
+docker compose -f docker-compose.dev.yml logs -f web
+
+# Stop services
+docker compose -f docker-compose.dev.yml down
+```
+
+### For Self-Hosting (Production)
 
 **Want to run relevel.me on your own infrastructure?** Check out our comprehensive [Self-Hosting Guide](docs/SELF_HOSTING.md).
 
-Quick Docker setup:
+Quick Docker production setup:
 ```bash
 # 1. Configure environment
 cp .env.example .env
 # Edit .env with your credentials
 
-# 2. Start with Docker Compose
-docker-compose up -d
+# 2. Start with Docker Compose (production build)
+docker compose up -d
 
 # 3. Access at http://localhost:3001
 ```
+
+**Note:** For production deployment, use `docker-compose.yml` (optimized build). For development with hot reloading, use `docker-compose.dev.yml` (see Option 2 above).
 
 See [docs/SELF_HOSTING.md](docs/SELF_HOSTING.md) for complete setup instructions, including:
 - Supabase project setup and database migrations
