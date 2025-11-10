@@ -22,7 +22,10 @@ module.exports = {
         'onnxruntime-node',
         '@huggingface/inference',
         'openai',
-        'sharp' // Also used by transformers, has native bindings
+        'sharp', // Also used by transformers, has native bindings
+        // Sentry OpenTelemetry instrumentation - avoid dynamic require warnings
+        '@opentelemetry/instrumentation',
+        'require-in-the-middle'
       );
     }
 

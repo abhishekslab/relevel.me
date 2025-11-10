@@ -16,7 +16,7 @@ import { Canvas, useThree } from '@react-three/fiber'
 import { Stars, Float } from '@react-three/drei'
 import { Avatar as VisageAvatar } from '@readyplayerme/visage'
 import { FileUpload } from '@/components/FileUpload'
-import FloatingInputBar from './FloatingInputBar'
+import ChatInterface from './ChatInterface'
 import * as THREE from 'three'
 import { playClickSound, toggleMusicMute, getMusicMutedState, playBackgroundMusic, isMusicActuallyPlaying } from '@/lib/sound'
 import { signOut as serverSignOut } from '../actions'
@@ -208,6 +208,17 @@ export default function DashboardPage() {
   const isProfileIncomplete = !profileStatus.isLoading && (!profileStatus.hasPhone || !profileStatus.hasFirstName)
   const canMakeCalls = profileStatus.hasPhone
 
+  // Speech handler for avatar
+  const handleSpeak = async (text: string) => {
+    playClickSound()
+    const speechService = getSpeechService()
+    try {
+      await speechService.speak(text, { rate: 1.0, pitch: 1.0 })
+    } catch (error) {
+      console.error('Speech error:', error)
+    }
+  }
+
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
       {/* Starfield background layer */}
@@ -295,8 +306,8 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Floating Input Bar */}
-      <FloatingInputBar />
+      {/* Chat Interface */}
+      <ChatInterface onAvatarSpeak={handleSpeak} />
     </div>
   )
 }

@@ -87,18 +87,9 @@ function createLogger(): Logger {
       req: pino.stdSerializers.req,
       res: pino.stdSerializers.res,
     },
-    // Pretty print in development
-    transport: isDevelopment
-      ? {
-          target: 'pino-pretty',
-          options: {
-            colorize: true,
-            translateTime: 'HH:MM:ss Z',
-            ignore: 'pid,hostname',
-            singleLine: false,
-          },
-        }
-      : undefined,
+    // Disable pino-pretty transport to avoid worker thread issues with Next.js
+    // Use standard JSON logging instead (can be prettified by external tools)
+    // If you need pretty logs, use: pino-pretty < logfile.ndjson
   };
 
   return pino(baseConfig);
@@ -127,7 +118,7 @@ export function createChildLogger(context: Record<string, any>): Logger {
  * Generate a unique request ID for correlation
  */
 export function generateRequestId(): string {
-  return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  return `req_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 }
 
 /**

@@ -21,8 +21,13 @@ export * from './providers/factory';
 export * from './providers/embedding-provider';
 export * from './providers/embedding-factory';
 
+// LLM providers
+export * from './providers/llm-provider';
+export * from './providers/llm-factory';
+
 // Services
 export * from './services/call-service';
+export * from './services/chat-service';
 
 // Queue types and client
 export * from './queue/types';

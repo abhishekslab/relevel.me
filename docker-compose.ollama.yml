@@ -1,0 +1,45 @@
+# Optional: Run Ollama as a Docker service
+# Usage: docker compose -f docker-compose.dev.yml -f docker-compose.ollama.yml up
+
+services:
+  # Extend web service to wait for Ollama
+  web:
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+  # Extend worker service to wait for Ollama
+  worker:
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+  ollama:
+    build:
+      context: .
+      dockerfile: Dockerfile.ollama
+      args:
+        - OLLAMA_MODEL=llama3.2:latest  # Model to bake into the image
+    container_name: relevel-ollama
+    ports:
+      - "11434:11434"
+    networks:
+      - relevel-network-dev
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    # Uncomment for GPU support (requires nvidia-docker)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+networks:
+  relevel-network-dev:
+    driver: bridge

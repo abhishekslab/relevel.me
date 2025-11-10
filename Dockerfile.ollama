@@ -1,0 +1,31 @@
+FROM ollama/ollama:latest
+
+# Set the model to download (can be overridden at build time)
+ARG OLLAMA_MODEL=llama3.2:latest
+
+# Download the model during build
+RUN set -x && \
+    echo "=== Starting Ollama server ===" && \
+    ollama serve > /tmp/ollama.log 2>&1 & \
+    OLLAMA_PID=$! && \
+    echo "Ollama PID: $OLLAMA_PID" && \
+    echo "Waiting for Ollama server to start..." && \
+    for i in {1..30}; do \
+        if curl -s http://localhost:11434/api/tags > /dev/null 2>&1; then \
+            echo "Ollama server is ready!"; \
+            break; \
+        fi; \
+        echo "Waiting... ($i/30)"; \
+        sleep 1; \
+    done && \
+    echo "=== Pulling model: ${OLLAMA_MODEL} (this may take several minutes) ===" && \
+    ollama pull ${OLLAMA_MODEL} && \
+    echo "=== Model ${OLLAMA_MODEL} downloaded successfully ===" && \
+    echo "=== Stopping Ollama server ===" && \
+    kill $OLLAMA_PID && \
+    wait $OLLAMA_PID 2>/dev/null || true && \
+    echo "=== Build complete ==="
+
+# Default command - the base image already has ENTRYPOINT ["/bin/ollama"]
+# So we just need to specify "serve" as the command
+CMD ["serve"]
