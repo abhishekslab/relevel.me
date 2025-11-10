@@ -16,6 +16,7 @@ import { Canvas, useThree } from '@react-three/fiber'
 import { Stars, Float } from '@react-three/drei'
 import { Avatar as VisageAvatar } from '@readyplayerme/visage'
 import { FileUpload } from '@/components/FileUpload'
+import FloatingInputBar from './FloatingInputBar'
 import * as THREE from 'three'
 import { playClickSound, toggleMusicMute, getMusicMutedState, playBackgroundMusic, isMusicActuallyPlaying } from '@/lib/sound'
 import { signOut as serverSignOut } from '../actions'
@@ -293,6 +294,9 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Floating Input Bar */}
+      <FloatingInputBar />
     </div>
   )
 }

@@ -10,6 +10,11 @@ export * from './config';
 export * from './providers/call-provider';
 export * from './providers/factory';
 
+// Embedding providers
+// Only export the interface and factory - providers are lazy-loaded
+export * from './providers/embedding-provider';
+export * from './providers/embedding-factory';
+
 // Services
 export * from './services/call-service';
 

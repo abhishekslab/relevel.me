@@ -23,10 +23,12 @@
     "autoprefixer": "10.4.20",
     "bull": "^4.16.5",
     "dodopayments": "^2.2.1",
+    "dotenv": "^17.2.3",
     "framer-motion": "11.2.13",
     "ioredis": "^5.8.2",
     "lucide-react": "0.453.0",
     "next": "14.2.8",
+    "openai": "^6.8.1",
     "postcss": "8.4.47",
     "react": "18.3.1",
     "react-dom": "18.3.1",
@@ -34,8 +36,7 @@
     "tailwindcss": "3.4.13",
     "three": "0.160.0",
     "typescript": "5.6.2",
-    "zod": "^4.1.12",
-    "dotenv": "^17.2.3"
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@types/bull": "^3.15.9",
