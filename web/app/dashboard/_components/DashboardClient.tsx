@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence } from 'framer-motion'
-import { Flame, Sparkles, Target, Clock, X, Volume2, VolumeX, Settings, LogOut, ChevronLeft, ChevronRight, User, AlertCircle, MessageSquare, Square } from 'lucide-react'
+import { Flame, Sparkles, Target, Clock, X, Volume2, VolumeX, Settings, LogOut, ChevronLeft, ChevronRight, User, AlertCircle, MessageSquare, Square, Bell, Bug } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -336,6 +336,7 @@ function HUD({ isDockOpen, setIsDockOpen, armatureType, setArmatureType, current
   const [showProfileModal, setShowProfileModal] = useState(false)
   const [selectedPhraseIndex, setSelectedPhraseIndex] = useState(0)
   const [showSpeechMenu, setShowSpeechMenu] = useState(false)
+  const [showDebugMenu, setShowDebugMenu] = useState(false)
   const router = useRouter()
 
   // Combined test phrases from all categories
@@ -476,67 +477,6 @@ function HUD({ isDockOpen, setIsDockOpen, armatureType, setArmatureType, current
             )}
           </button>
 
-          {/* Speech Test Button */}
-          <div className="relative">
-            <button
-              onClick={() => { playClickSound(); setShowSpeechMenu(!showSpeechMenu) }}
-              className={`rounded-xl ${isSpeaking ? 'bg-violet-500/30 border-violet-400/60 ring-2 ring-violet-400/40 animate-pulse' : 'bg-violet-500/20 border-violet-400/40'} border p-2 hover:bg-violet-500/30 transition active:scale-95`}
-              title="Speech Test (Lip-Sync)"
-            >
-              <MessageSquare className="size-5 text-violet-300"/>
-            </button>
-            {showSpeechMenu && (
-              <div className="absolute right-0 mt-2 w-72 rounded-xl bg-[#0b0f17] border border-white/10 shadow-xl overflow-hidden max-h-96 overflow-y-auto">
-                <div className="p-3 border-b border-white/10">
-                  <div className="text-xs font-medium text-violet-300 mb-2">Lip-Sync Test Phrases</div>
-                  <div className="text-[10px] text-slate-400 mb-2">Select a phrase and click "Speak" to test lip-sync</div>
-
-                  {/* Phrase selection */}
-                  <div className="space-y-1">
-                    {allTestPhrases.map((phrase, index) => (
-                      <button
-                        key={index}
-                        onClick={() => {
-                          playClickSound()
-                          setSelectedPhraseIndex(index)
-                        }}
-                        className={`w-full text-left text-xs p-2 rounded-lg transition ${
-                          selectedPhraseIndex === index
-                            ? 'bg-violet-500/30 border border-violet-400/50 text-violet-200'
-                            : 'bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10'
-                        }`}
-                      >
-                        {phrase.length > 60 ? phrase.substring(0, 60) + '...' : phrase}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Control buttons */}
-                  <div className="flex gap-2 mt-3">
-                    <button
-                      onClick={() => {
-                        if (!isSpeaking) {
-                          handleSpeak(allTestPhrases[selectedPhraseIndex])
-                        }
-                      }}
-                      disabled={isSpeaking}
-                      className="flex-1 rounded-lg px-3 py-2 text-xs font-medium transition bg-violet-500/30 border border-violet-400/50 text-violet-200 hover:bg-violet-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isSpeaking ? 'Speaking...' : 'Speak'}
-                    </button>
-                    <button
-                      onClick={handleStopSpeech}
-                      disabled={!isSpeaking}
-                      className="rounded-lg px-3 py-2 text-xs font-medium transition bg-red-500/30 border border-red-400/50 text-red-200 hover:bg-red-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Square className="size-3" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
           <div className="relative">
             <button
               onClick={() => { playClickSound(); setShowSettingsMenu(!showSettingsMenu) }}
@@ -546,80 +486,131 @@ function HUD({ isDockOpen, setIsDockOpen, armatureType, setArmatureType, current
               <Settings className="size-5 text-emerald-300"/>
             </button>
             {showSettingsMenu && (
-              <div className="absolute right-0 mt-2 w-64 rounded-xl bg-[#0b0f17] border border-white/10 shadow-xl overflow-hidden">
-                {/* Avatar Animation Section */}
-                <div className="p-3 border-b border-white/10">
-                  <div className="text-xs font-medium text-purple-300 mb-2">Avatar Animation</div>
-                  <div className="flex items-center gap-1 rounded-lg bg-purple-500/20 border border-purple-400/40 p-1">
-                    <button
-                      onClick={() => {
-                        playClickSound()
-                        const dances = DANCE_ANIMATIONS[armatureType]
-                        setCurrentDanceIndex((currentDanceIndex - 1 + dances.length) % dances.length)
-                        if (!isAnimating) setIsAnimating(true)
-                      }}
-                      className="rounded-lg p-1.5 transition text-purple-300 hover:bg-purple-500/20"
-                      title="Previous dance"
-                    >
-                      <ChevronLeft className="size-4" />
-                    </button>
-                    <span className="text-xs text-purple-300 font-medium px-2 flex-1 text-center">
-                      {isAnimating ? `${currentDanceIndex + 1}/${DANCE_ANIMATIONS[armatureType].length}` : 'Idle'}
-                    </span>
-                    <button
-                      onClick={() => {
-                        playClickSound()
-                        const dances = DANCE_ANIMATIONS[armatureType]
-                        setCurrentDanceIndex((currentDanceIndex + 1) % dances.length)
-                        if (!isAnimating) setIsAnimating(true)
-                      }}
-                      className="rounded-lg p-1.5 transition text-purple-300 hover:bg-purple-500/20"
-                      title="Next dance"
-                    >
-                      <ChevronRight className="size-4" />
-                    </button>
-                    <button
-                      onClick={() => {
-                        playClickSound()
-                        if (isAnimating) {
-                          setIsAnimating(false)
-                        } else {
-                          setArmatureType(armatureType === 'feminine' ? 'masculine' : 'feminine')
-                          setCurrentDanceIndex(0)
-                        }
-                      }}
-                      className="ml-1 rounded-lg px-2 py-1.5 transition text-purple-300 hover:bg-purple-500/20 text-xs font-medium"
-                      title={isAnimating ? 'Stop dancing (back to idle)' : 'Switch armature type'}
-                    >
-                      {isAnimating ? '◼' : (armatureType === 'feminine' ? 'F' : 'M')}
-                    </button>
-                  </div>
-                </div>
-
+              <div className="absolute right-0 mt-2 w-64 rounded-xl bg-white/5 border border-white/10 backdrop-blur shadow-xl overflow-hidden max-h-[80vh] overflow-y-auto">
                 {/* Profile Section */}
                 <button
                   data-profile-button
                   onClick={() => { playClickSound(); setShowProfileModal(true); setShowSettingsMenu(false) }}
-                  className="w-full p-3 flex items-center gap-2 hover:bg-white/5 transition text-left text-sm border-b border-white/10"
+                  className="w-full p-3 flex items-center gap-2 hover:bg-white/10 transition text-left text-sm border-b border-white/10 text-white"
                 >
                   <User className="size-4" />
                   Profile
                 </button>
 
-                {/* Settings Section */}
-                <Link
-                  href="/settings"
-                  onClick={() => { playClickSound(); setShowSettingsMenu(false) }}
-                  className="w-full p-3 flex items-center gap-2 hover:bg-white/5 transition text-left text-sm border-b border-white/10"
+                {/* Debug Section */}
+                <button
+                  onClick={() => { playClickSound(); setShowDebugMenu(!showDebugMenu) }}
+                  className="w-full p-3 flex items-center gap-2 hover:bg-white/10 transition text-left text-sm border-b border-white/10 text-white"
                 >
-                  <Settings className="size-4" />
-                  Settings
-                </Link>
+                  <Bug className="size-4" />
+                  Debug
+                </button>
+
+                {showDebugMenu && (
+                  <div className="border-b border-white/10 bg-black/20">
+                    {/* Avatar Animation Section */}
+                    <div className="p-3 border-b border-white/10">
+                      <div className="text-xs font-medium text-purple-300 mb-2">Avatar Animation</div>
+                      <div className="flex items-center gap-1 rounded-lg bg-purple-500/20 border border-purple-400/40 p-1">
+                        <button
+                          onClick={() => {
+                            playClickSound()
+                            const dances = DANCE_ANIMATIONS[armatureType]
+                            setCurrentDanceIndex((currentDanceIndex - 1 + dances.length) % dances.length)
+                            if (!isAnimating) setIsAnimating(true)
+                          }}
+                          className="rounded-lg p-1.5 transition text-purple-300 hover:bg-purple-500/20"
+                          title="Previous dance"
+                        >
+                          <ChevronLeft className="size-4" />
+                        </button>
+                        <span className="text-xs text-purple-300 font-medium px-2 flex-1 text-center">
+                          {isAnimating ? `${currentDanceIndex + 1}/${DANCE_ANIMATIONS[armatureType].length}` : 'Idle'}
+                        </span>
+                        <button
+                          onClick={() => {
+                            playClickSound()
+                            const dances = DANCE_ANIMATIONS[armatureType]
+                            setCurrentDanceIndex((currentDanceIndex + 1) % dances.length)
+                            if (!isAnimating) setIsAnimating(true)
+                          }}
+                          className="rounded-lg p-1.5 transition text-purple-300 hover:bg-purple-500/20"
+                          title="Next dance"
+                        >
+                          <ChevronRight className="size-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            playClickSound()
+                            if (isAnimating) {
+                              setIsAnimating(false)
+                            } else {
+                              setArmatureType(armatureType === 'feminine' ? 'masculine' : 'feminine')
+                              setCurrentDanceIndex(0)
+                            }
+                          }}
+                          className="ml-1 rounded-lg px-2 py-1.5 transition text-purple-300 hover:bg-purple-500/20 text-xs font-medium"
+                          title={isAnimating ? 'Stop dancing (back to idle)' : 'Switch armature type'}
+                        >
+                          {isAnimating ? '◼' : (armatureType === 'feminine' ? 'F' : 'M')}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Speech Test Lip-Sync Section */}
+                    <div className="p-3">
+                      <div className="text-xs font-medium text-violet-300 mb-2">Speech Test (Lip-Sync)</div>
+                      <div className="text-[10px] text-slate-400 mb-2">Select a phrase and click "Speak" to test lip-sync</div>
+
+                      {/* Phrase selection */}
+                      <div className="space-y-1 max-h-48 overflow-y-auto mb-3">
+                        {allTestPhrases.map((phrase, index) => (
+                          <button
+                            key={index}
+                            onClick={() => {
+                              playClickSound()
+                              setSelectedPhraseIndex(index)
+                            }}
+                            className={`w-full text-left text-xs p-2 rounded-lg transition ${
+                              selectedPhraseIndex === index
+                                ? 'bg-violet-500/30 border border-violet-400/50 text-violet-200'
+                                : 'bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10'
+                            }`}
+                          >
+                            {phrase.length > 60 ? phrase.substring(0, 60) + '...' : phrase}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Control buttons */}
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            if (!isSpeaking) {
+                              handleSpeak(allTestPhrases[selectedPhraseIndex])
+                            }
+                          }}
+                          disabled={isSpeaking}
+                          className="flex-1 rounded-lg px-3 py-2 text-xs font-medium transition bg-violet-500/30 border border-violet-400/50 text-violet-200 hover:bg-violet-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isSpeaking ? 'Speaking...' : 'Speak'}
+                        </button>
+                        <button
+                          onClick={handleStopSpeech}
+                          disabled={!isSpeaking}
+                          className="rounded-lg px-3 py-2 text-xs font-medium transition bg-red-500/30 border border-red-400/50 text-red-200 hover:bg-red-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <Square className="size-3" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Sign Out Section */}
                 <button
                   onClick={handleSignOut}
-                  className="w-full p-3 flex items-center gap-2 hover:bg-white/5 transition text-left text-sm"
+                  className="w-full p-3 flex items-center gap-2 hover:bg-white/10 transition text-left text-sm text-white"
                 >
                   <LogOut className="size-4" />
                   Sign Out
@@ -658,6 +649,8 @@ function ProfileModal({ open, onOpenChange, onProfileUpdate }: ProfileModalProps
   const [avatarUrl, setAvatarUrl] = useState(DEFAULT_AVATAR_URL)
   const [avatarGender, setAvatarGender] = useState<'feminine' | 'masculine'>(DEFAULT_AVATAR_GENDER)
   const [backgroundImageUrl, setBackgroundImageUrl] = useState('')
+  const [callEnabled, setCallEnabled] = useState(true)
+  const [callTime, setCallTime] = useState('21:00')
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
@@ -676,7 +669,7 @@ function ProfileModal({ open, onOpenChange, onProfileUpdate }: ProfileModalProps
 
       const { data, error: fetchError } = await supabase
         .from('users')
-        .select('first_name, phone, avatar_url, avatar_gender, background_image_path')
+        .select('first_name, phone, avatar_url, avatar_gender, background_image_path, call_enabled, call_time')
         .eq('id', user.id)
         .single()
 
@@ -687,6 +680,11 @@ function ProfileModal({ open, onOpenChange, onProfileUpdate }: ProfileModalProps
         setPhone(data.phone || '')
         setAvatarUrl(data.avatar_url || DEFAULT_AVATAR_URL)
         setAvatarGender(data.avatar_gender || DEFAULT_AVATAR_GENDER)
+        setCallEnabled(data.call_enabled ?? true)
+        // Convert TIME format (HH:MM:SS) to input format (HH:MM)
+        if (data.call_time) {
+          setCallTime(data.call_time.substring(0, 5))
+        }
 
         // Generate signed URL from path for preview
         if (data.background_image_path) {
@@ -740,6 +738,8 @@ function ProfileModal({ open, onOpenChange, onProfileUpdate }: ProfileModalProps
           phone: phone.trim(),
           avatar_url: avatarUrl.trim(),
           avatar_gender: avatarGender,
+          call_enabled: callEnabled,
+          call_time: `${callTime}:00`, // Convert HH:MM to HH:MM:SS
         })
         .eq('id', user.id)
 
@@ -918,6 +918,53 @@ function ProfileModal({ open, onOpenChange, onProfileUpdate }: ProfileModalProps
                   />
                   <p className="text-xs text-white/40 mt-1">
                     GLB format up to 50MB, or use Ready Player Me URL above
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Preferences Section */}
+          <div className="space-y-4 pt-4 border-t border-white/10">
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Bell className="size-5 text-amber-400" />
+                <h3 className="text-lg font-semibold text-amber-300">Preferences</h3>
+              </div>
+
+              <div className="space-y-4">
+                {/* Daily Call Toggle */}
+                <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                  <div>
+                    <p className="text-sm font-medium text-white/90">Enable Daily Calls</p>
+                    <p className="text-xs text-white/60">Receive automated calls for journaling</p>
+                  </div>
+                  <Button
+                    variant={callEnabled ? undefined : "outline"}
+                    size="sm"
+                    onClick={() => { playClickSound(); setCallEnabled(!callEnabled) }}
+                    disabled={isLoading || isSaving}
+                    className={callEnabled ? "bg-emerald-600 hover:bg-emerald-500" : ""}
+                  >
+                    {callEnabled ? 'Enabled' : 'Disabled'}
+                  </Button>
+                </div>
+
+                {/* Call Time Picker */}
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm font-medium text-white/80">
+                    <Clock className="size-4 text-violet-400" />
+                    Preferred Call Time
+                  </label>
+                  <input
+                    type="time"
+                    value={callTime}
+                    onChange={(e) => setCallTime(e.target.value)}
+                    disabled={isLoading || isSaving || !callEnabled}
+                    className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+                  <p className="text-xs text-white/40">
+                    Calls will be made at this time in your local timezone (default: 9:00 PM)
                   </p>
                 </div>
               </div>
