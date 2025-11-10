@@ -18,6 +18,7 @@
     "@react-three/postprocessing": "^3.0.4",
     "@readyplayerme/visage": "^6.16.0",
     "@relevel-me/shared": "*",
+    "@sentry/nextjs": "^8.40.0",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.75.1",
     "autoprefixer": "10.4.20",

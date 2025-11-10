@@ -12,12 +12,19 @@
 // Load environment variables
 import 'dotenv/config';
 
-console.log('='.repeat(60));
-console.log('🔧 Relevel.me Queue Worker');
-console.log('='.repeat(60));
-console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-console.log(`Redis URL: ${process.env.REDIS_URL || 'redis://localhost:6379'}`);
-console.log('='.repeat(60));
+// Initialize Sentry for error tracking
+import { initSentry } from './sentry';
+initSentry();
+
+// Initialize logger
+import { logger } from '@relevel-me/shared';
+
+logger.info('='.repeat(60));
+logger.info('🔧 Relevel.me Queue Worker');
+logger.info('='.repeat(60));
+logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
+logger.info(`Redis URL: ${process.env.REDIS_URL || 'redis://localhost:6379'}`);
+logger.info('='.repeat(60));
 
 // Import and start the worker
 import './queue/worker';

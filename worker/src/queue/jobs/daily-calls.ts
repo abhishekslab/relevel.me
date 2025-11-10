@@ -11,20 +11,26 @@ import {
   JOB_NAMES,
   getUsersToCallNow,
   initiateCall,
+  createChildLogger,
+  logSuccess,
+  logError,
 } from '@relevel-me/shared';
+import { captureException } from '@relevel-me/shared';
 import { dailyCallsQueue } from '../client';
+
+const logger = createChildLogger({ service: 'DailyCallsJob' });
 
 /**
  * Main job processor - schedules calls for users who need them
  */
 export async function processScheduleCalls(job: Job<ScheduleCallsJobData>) {
-  console.log(`[Job:${job.id}] Processing schedule-calls job`, job.data);
+  logger.info({ jobId: job.id, data: job.data }, 'Processing schedule-calls job');
 
   try {
     // Get users who should be called right now
     const users = await getUsersToCallNow();
 
-    console.log(`[Job:${job.id}] Found ${users.length} users to call`);
+    logger.info({ jobId: job.id, userCount: users.length }, `Found ${users.length} users to call`);
 
     if (users.length === 0) {
       return {
@@ -35,6 +41,8 @@ export async function processScheduleCalls(job: Job<ScheduleCallsJobData>) {
     }
 
     // Enqueue individual call jobs for each user
+    logger.debug({ jobId: job.id, userIds: users.map(u => u.id) }, 'Enqueueing individual call jobs');
+
     const jobPromises = users.map((user) =>
       dailyCallsQueue.add(
         JOB_NAMES.PROCESS_USER_CALL,
@@ -51,9 +59,18 @@ export async function processScheduleCalls(job: Job<ScheduleCallsJobData>) {
       )
     );
 
-    await Promise.all(jobPromises);
+    const enqueuedJobs = await Promise.all(jobPromises);
 
-    console.log(`[Job:${job.id}] Enqueued ${users.length} call jobs`);
+    logger.info({
+      jobId: job.id,
+      usersScheduled: users.length,
+      enqueuedJobIds: enqueuedJobs.map(j => j.id)
+    }, `Enqueued ${users.length} call jobs`);
+
+    logSuccess(logger, 'Schedule calls job completed', {
+      jobId: job.id,
+      usersScheduled: users.length
+    });
 
     return {
       success: true,
@@ -61,7 +78,8 @@ export async function processScheduleCalls(job: Job<ScheduleCallsJobData>) {
       users: users.map((u) => ({ id: u.id, name: u.name, phone: u.phone })),
     };
   } catch (error) {
-    console.error(`[Job:${job.id}] Error processing schedule-calls:`, error);
+    logError(logger, 'Error processing schedule-calls job', error as Error, { jobId: job.id });
+    captureException(error, { tags: { job: 'schedule-calls', jobId: job.id } });
     throw error; // Let Bull handle the retry
   }
 }
@@ -70,26 +88,39 @@ export async function processScheduleCalls(job: Job<ScheduleCallsJobData>) {
  * Process individual user call
  */
 export async function processUserCall(job: Job<ProcessUserCallJobData>) {
-  const { retryCount = 0 } = job.data;
-  console.log(
-    `[Job:${job.id}] Processing user call for ${job.data.name || job.data.userId}` +
-      (retryCount > 0 ? ` (retry ${retryCount}/2)` : '')
-  );
+  const { retryCount = 0, userId, phone, name, originalCallId } = job.data;
+
+  logger.info({
+    jobId: job.id,
+    userId,
+    userName: name,
+    phone: `***${phone.slice(-4)}`,
+    retryCount,
+    originalCallId,
+    attemptNumber: job.attemptsMade + 1
+  }, `Processing user call${retryCount > 0 ? ` (retry ${retryCount}/2)` : ''}`);
 
   try {
-    const { userId, phone, name, originalCallId } = job.data;
-
     // Initiate the call
     const result = await initiateCall({ userId, phone, name, retryCount, originalCallId });
 
     if (!result.success) {
-      console.error(`[Job:${job.id}] Call initiation failed:`, result.error);
+      logError(logger, 'Call initiation failed', new Error(result.error || 'Unknown error'), {
+        jobId: job.id,
+        userId,
+        retryCount
+      });
+      captureException(new Error(result.error || 'Failed to initiate call'), {
+        tags: { job: 'process-user-call', jobId: job.id, userId, retryCount }
+      });
       throw new Error(result.error || 'Failed to initiate call');
     }
 
-    console.log(`[Job:${job.id}] Call initiated successfully:`, {
+    logSuccess(logger, 'Call initiated successfully', {
+      jobId: job.id,
+      userId,
       callId: result.callId,
-      vendorCallId: result.vendorCallId,
+      vendorCallId: result.vendorCallId
     });
 
     return {
@@ -99,7 +130,15 @@ export async function processUserCall(job: Job<ProcessUserCallJobData>) {
       message: result.message,
     };
   } catch (error) {
-    console.error(`[Job:${job.id}] Error processing user call:`, error);
+    logError(logger, 'Error processing user call job', error as Error, {
+      jobId: job.id,
+      userId,
+      retryCount,
+      attemptsMade: job.attemptsMade
+    });
+    captureException(error, {
+      tags: { job: 'process-user-call', jobId: job.id, userId, retryCount: retryCount.toString() }
+    });
     throw error;
   }
 }

@@ -8,6 +8,17 @@ import { getCallProvider } from '../providers/factory';
 import { config } from '../config';
 import { dailyCallsQueue } from '../queue/client';
 import { JOB_NAMES, ProcessUserCallJobData, DEFAULT_JOB_OPTIONS } from '../queue/types';
+import {
+  createChildLogger,
+  logDatabaseError,
+  logSuccess,
+  logError,
+  logApiRequest,
+} from '../logger';
+import { captureException } from '../sentry';
+
+// Create service logger
+const logger = createChildLogger({ service: 'CallService' });
 
 // Retry configuration constants
 const MAX_RETRIES = 2; // Total of 3 attempts (1 initial + 2 retries)
@@ -55,11 +66,19 @@ export interface InitiateCallResult {
 export async function initiateCall(params: InitiateCallParams): Promise<InitiateCallResult> {
   const { userId, phone, name, retryCount = 0, originalCallId } = params;
 
+  logger.info({
+    userId,
+    phone: `***${phone.slice(-4)}`,
+    retryCount,
+    originalCallId
+  }, 'Initiating call');
+
   try {
     const supabase = getServiceClient();
 
     // Validate phone number
     if (!phone) {
+      logger.warn({ userId }, 'Phone number is required but not provided');
       return {
         success: false,
         error: 'Phone number is required',
@@ -71,6 +90,8 @@ export async function initiateCall(params: InitiateCallParams): Promise<Initiate
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
 
+      logger.debug({ userId, todayStart: todayStart.toISOString() }, 'Checking for duplicate calls');
+
       const { data: existingCall } = await supabase
         .from('calls')
         .select('id, status')
@@ -80,7 +101,11 @@ export async function initiateCall(params: InitiateCallParams): Promise<Initiate
         .single();
 
       if (existingCall) {
-        console.log(`[CallService] User ${userId} already has a call today (${existingCall.status})`);
+        logger.info({
+          userId,
+          existingCallId: existingCall.id,
+          status: existingCall.status
+        }, 'User already has a call today - skipping');
         return {
           success: false,
           error: 'User already has a call today',
@@ -88,15 +113,20 @@ export async function initiateCall(params: InitiateCallParams): Promise<Initiate
           status: existingCall.status,
         };
       }
+
+      logger.debug({ userId }, 'No duplicate calls found');
     } else {
-      console.log(`[CallService] Retry attempt ${retryCount} for user ${userId}`);
+      logger.info({ userId, retryCount, originalCallId }, `Retry attempt ${retryCount}`);
     }
 
     // Get configured call provider (CallKaro, Vapi, etc.)
     const callProvider = getCallProvider();
     const agentId = process.env.CALLKARO_AGENT_ID || process.env.VAPI_ASSISTANT_ID || '';
 
+    logger.debug({ provider: callProvider.name, agentId }, 'Using call provider');
+
     // Create call record in database
+    logger.info({ userId, phone: `***${phone.slice(-4)}`, agentId }, 'Creating call record');
     const { data: call, error: dbError } = await supabase
       .from('calls')
       .insert({
@@ -110,16 +140,24 @@ export async function initiateCall(params: InitiateCallParams): Promise<Initiate
       .single();
 
     if (dbError || !call) {
-      console.error('[CallService] Database error:', dbError);
+      logDatabaseError(logger, 'INSERT', 'calls', dbError, { userId, phone: `***${phone.slice(-4)}` });
+      captureException(dbError, { tags: { operation: 'create_call', userId } });
       return {
         success: false,
         error: 'Failed to create call record',
       };
     }
 
-    console.log(`[CallService] Created call record ${call.id} for user ${userId}`);
+    logSuccess(logger, 'Call record created', { callId: call.id, userId });
 
     // Initiate call via configured provider
+    logApiRequest(logger, 'POST', `${callProvider.name}.initiateCall`, {
+      callId: call.id,
+      userId,
+      phone: `***${phone.slice(-4)}`,
+      agentId
+    });
+
     const providerResponse = await callProvider.initiateCall({
       toNumber: phone,
       agentId: agentId,
@@ -131,7 +169,14 @@ export async function initiateCall(params: InitiateCallParams): Promise<Initiate
     });
 
     if (!providerResponse.success) {
-      console.error(`[CallService] ${callProvider.name} API error:`, providerResponse.error);
+      logError(logger, `${callProvider.name} API call failed`, new Error(providerResponse.error || 'Unknown error'), {
+        callId: call.id,
+        userId,
+        provider: callProvider.name
+      });
+      captureException(new Error(`${callProvider.name} API error: ${providerResponse.error}`), {
+        tags: { operation: 'initiate_call_provider', callId: call.id, provider: callProvider.name }
+      });
 
       // Update call status to failed
       await supabase
@@ -149,7 +194,14 @@ export async function initiateCall(params: InitiateCallParams): Promise<Initiate
       };
     }
 
+    logger.info({
+      callId: call.id,
+      vendorCallId: providerResponse.vendorCallId,
+      provider: callProvider.name
+    }, 'Provider call initiated successfully');
+
     // Update call record with vendor ID
+    logger.debug({ callId: call.id, vendorCallId: providerResponse.vendorCallId }, 'Updating call with vendor ID');
     const { error: updateError } = await supabase
       .from('calls')
       .update({
@@ -160,12 +212,22 @@ export async function initiateCall(params: InitiateCallParams): Promise<Initiate
       .eq('id', call.id);
 
     if (updateError) {
-      console.error('[CallService] Failed to update call record:', updateError);
+      // CRITICAL: This should be treated as an error since the call was made but DB is out of sync
+      logDatabaseError(logger, 'UPDATE', 'calls', updateError, {
+        callId: call.id,
+        vendorCallId: providerResponse.vendorCallId
+      });
+      captureException(updateError, {
+        tags: { operation: 'update_call_vendor_id', callId: call.id, severity: 'critical' }
+      });
     }
 
-    console.log(
-      `[CallService] Call initiated successfully via ${callProvider.name}: ${call.id} -> ${providerResponse.vendorCallId}`
-    );
+    logSuccess(logger, 'Call initiated successfully', {
+      callId: call.id,
+      vendorCallId: providerResponse.vendorCallId,
+      userId,
+      provider: callProvider.name
+    });
 
     return {
       success: true,
@@ -175,7 +237,8 @@ export async function initiateCall(params: InitiateCallParams): Promise<Initiate
       message: providerResponse.message || `Call initiated to ${name || phone}`,
     };
   } catch (error) {
-    console.error('[CallService] Unexpected error:', error);
+    logError(logger, 'Unexpected error in initiateCall', error as Error, { userId, phone: `***${phone.slice(-4)}` });
+    captureException(error, { tags: { operation: 'initiate_call', userId } });
     return {
       success: false,
       error: String(error),
@@ -196,12 +259,19 @@ export async function getUsersToCallNow(): Promise<
     call_time: string;
   }>
 > {
+  logger.info('Fetching users to call now');
+
   try {
     const supabase = getServiceClient();
 
     // Get all users who are enabled for calls and haven't been called today
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
+
+    logger.debug({
+      todayStart: todayStart.toISOString(),
+      filters: { call_enabled: true, phone_not_null: true }
+    }, 'Querying users with calls enabled');
 
     const { data: users, error } = await supabase
       .from('users')
@@ -210,13 +280,18 @@ export async function getUsersToCallNow(): Promise<
       .not('phone', 'is', null);
 
     if (error || !users) {
-      console.error('[CallService] Error fetching users:', error);
+      logDatabaseError(logger, 'SELECT', 'users', error);
+      captureException(error, { tags: { operation: 'get_users_to_call' } });
       return [];
     }
+
+    logger.info({ totalUsers: users.length }, 'Users fetched, filtering by timezone and call window');
 
     // Filter users based on their local time and call_time
     const now = new Date();
     const usersToCall = [];
+    let skippedDuplicate = 0;
+    let skippedOutsideWindow = 0;
 
     for (const user of users) {
       // Check if user already has a call today
@@ -229,6 +304,8 @@ export async function getUsersToCallNow(): Promise<
         .single();
 
       if (existingCall) {
+        skippedDuplicate++;
+        logger.debug({ userId: user.id, existingCallId: existingCall.id }, 'User already has call today - skipping');
         continue; // Skip users who already have a call today
       }
 
@@ -253,6 +330,14 @@ export async function getUsersToCallNow(): Promise<
         currentTotalMinutes >= callTotalMinutes &&
         currentTotalMinutes < callTotalMinutes + config.callTimeWindowMinutes
       ) {
+        logger.debug({
+          userId: user.id,
+          timezone: userTimezone,
+          localTime: `${currentHour}:${currentMinute}`,
+          callTime: userCallTime,
+          window: config.callTimeWindowMinutes
+        }, 'User is within call window - adding to list');
+
         usersToCall.push({
           id: user.id,
           phone: user.phone!,
@@ -260,13 +345,28 @@ export async function getUsersToCallNow(): Promise<
           local_tz: userTimezone,
           call_time: userCallTime,
         });
+      } else {
+        skippedOutsideWindow++;
+        logger.debug({
+          userId: user.id,
+          localTime: `${currentHour}:${currentMinute}`,
+          callTime: userCallTime,
+          window: config.callTimeWindowMinutes
+        }, 'User outside call window - skipping');
       }
     }
 
-    console.log(`[CallService] Found ${usersToCall.length} users to call now`);
+    logSuccess(logger, 'User filtering complete', {
+      totalUsers: users.length,
+      usersToCall: usersToCall.length,
+      skippedDuplicate,
+      skippedOutsideWindow
+    });
+
     return usersToCall;
   } catch (error) {
-    console.error('[CallService] Error in getUsersToCallNow:', error);
+    logError(logger, 'Error in getUsersToCallNow', error as Error);
+    captureException(error, { tags: { operation: 'get_users_to_call' } });
     return [];
   }
 }
@@ -285,29 +385,46 @@ export async function scheduleRetryIfNeeded(params: {
 }): Promise<boolean> {
   const { callId, userId, phone, name, status, retryCount = 0 } = params;
 
+  logger.info({
+    callId,
+    userId,
+    status,
+    retryCount
+  }, 'Checking if retry needed');
+
   // Check if status warrants a retry
   if (!RETRY_ON_STATUSES.includes(status)) {
-    console.log(`[CallService] Call ${callId} status '${status}' - no retry needed`);
+    logger.info({ callId, status }, 'Status does not warrant retry');
     return false;
   }
 
   // Check if we've already hit max retries
   if (retryCount >= MAX_RETRIES) {
-    console.log(`[CallService] Call ${callId} - max retries (${MAX_RETRIES}) reached`);
+    logger.warn({ callId, retryCount, maxRetries: MAX_RETRIES }, 'Max retries reached - not scheduling retry');
     return false;
   }
 
   try {
     // Schedule retry job with 30-minute delay
     const nextRetryCount = retryCount + 1;
+    const scheduledTime = new Date(Date.now() + RETRY_DELAY_MS);
     const jobData: ProcessUserCallJobData = {
       userId,
       phone,
       name,
-      scheduledAt: new Date(Date.now() + RETRY_DELAY_MS).toISOString(),
+      scheduledAt: scheduledTime.toISOString(),
       retryCount: nextRetryCount,
       originalCallId: callId,
     };
+
+    logger.info({
+      callId,
+      userId,
+      nextRetryCount,
+      maxRetries: MAX_RETRIES,
+      delayMinutes: RETRY_DELAY_MS / 60000,
+      scheduledTime: scheduledTime.toISOString()
+    }, 'Scheduling retry job');
 
     await dailyCallsQueue.add(JOB_NAMES.PROCESS_USER_CALL, jobData, {
       ...DEFAULT_JOB_OPTIONS,
@@ -315,12 +432,18 @@ export async function scheduleRetryIfNeeded(params: {
       attempts: 1, // Don't retry the retry job itself
     });
 
-    console.log(
-      `[CallService] Scheduled retry ${nextRetryCount}/${MAX_RETRIES} for call ${callId} in 30 minutes`
-    );
+    logSuccess(logger, `Retry scheduled: ${nextRetryCount}/${MAX_RETRIES}`, {
+      callId,
+      userId,
+      scheduledTime: scheduledTime.toISOString()
+    });
+
     return true;
   } catch (error) {
-    console.error(`[CallService] Failed to schedule retry for call ${callId}:`, error);
+    logError(logger, 'Failed to schedule retry', error as Error, { callId, userId });
+    captureException(error, {
+      tags: { operation: 'schedule_retry', callId, userId, severity: 'high' }
+    });
     return false;
   }
 }

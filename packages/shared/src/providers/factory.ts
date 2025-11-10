@@ -1,6 +1,10 @@
 import { CallProvider } from './call-provider';
 import { CallKaroProvider } from './implementations/callkaro-provider';
 import { VapiProvider } from './implementations/vapi-provider';
+import { createChildLogger } from '../logger';
+import { captureException } from '../sentry';
+
+const logger = createChildLogger({ service: 'CallProviderFactory' });
 
 /**
  * Get the configured call provider instance
@@ -12,6 +16,8 @@ import { VapiProvider } from './implementations/vapi-provider';
 export function getCallProvider(): CallProvider {
   const provider = (process.env.CALL_PROVIDER || 'callkaro').toLowerCase();
 
+  logger.debug({ provider }, 'Getting call provider instance');
+
   switch (provider) {
     case 'callkaro':
       return new CallKaroProvider();
@@ -20,9 +26,11 @@ export function getCallProvider(): CallProvider {
       return new VapiProvider();
 
     default:
-      console.warn(
-        `[CallProviderFactory] Unknown call provider "${provider}", falling back to CallKaro`
-      );
+      // LOGGING FIX: Use error instead of warn for invalid provider
+      logger.error({ provider, fallback: 'callkaro' }, `Unknown call provider "${provider}", falling back to CallKaro`);
+      captureException(new Error(`Unknown call provider: ${provider}`), {
+        tags: { component: 'provider_factory', provider }
+      });
       return new CallKaroProvider();
   }
 }

@@ -1,16 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/auth/server'
-import { getEmbeddingProvider } from '@relevel-me/shared'
+import { getEmbeddingProvider, createRequestLogger, logError } from '@relevel-me/shared'
 
 export async function POST(request: NextRequest) {
+  const logger = createRequestLogger()
+
   try {
     // Authenticate user
     const supabase = createServerClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
 
     if (authError || !user) {
+      logger.warn({ error: authError?.message }, 'Unauthorized memory creation attempt')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    logger.info({ userId: user.id }, 'Creating memory')
 
     // Parse request body
     const body = await request.json()
@@ -62,8 +67,35 @@ export async function POST(request: NextRequest) {
       throw new Error(messageError.message)
     }
 
-    // Get embedding provider
-    const embeddingProvider = await getEmbeddingProvider()
+    // Get embedding provider with error handling
+    let embeddingProvider
+    try {
+      embeddingProvider = await getEmbeddingProvider()
+      logger.info({ provider: embeddingProvider.name }, 'Embedding provider initialized')
+    } catch (embeddingError) {
+      // ONNX Runtime or model loading error - continue without embeddings
+      logError(logger, 'Failed to initialize embedding provider', embeddingError as Error, {
+        userId: user.id,
+        messageId: message.id
+      })
+      logger.warn('Continuing without embeddings - memory will be stored but not searchable')
+
+      // Return success but without embeddings
+      return NextResponse.json({
+        success: true,
+        message: {
+          id: message.id,
+          kind: message.kind,
+          textContent: message.text_content,
+          fileUrl: message.file_url,
+          transcript: message.transcript,
+          tags: message.tags,
+          createdAt: message.created_at,
+        },
+        embeddingsCount: 0,
+        warning: 'Embeddings disabled - memory stored without vector search capability'
+      })
+    }
 
     // Database vector dimension (must match message_embeddings.embedding column)
     // NOTE: If changing this, update the database migration and HNSW index
@@ -176,7 +208,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error: any) {
-    console.error('Memory creation error:', error)
+    logError(logger, 'Memory creation error', error, { userId: user?.id })
     return NextResponse.json(
       { error: error.message || 'Failed to create memory' },
       { status: 500 }

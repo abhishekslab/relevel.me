@@ -12,11 +12,18 @@ import type { EmbeddingProvider } from './embedding-provider';
  * Get the configured embedding provider instance
  *
  * The provider is determined by the EMBEDDING_PROVIDER environment variable.
- * Supported values: 'openai', 'huggingface', 'local'
+ * Supported values: 'openai', 'huggingface', 'local', 'disabled'
  * Default: 'local' (no API costs, works offline)
+ *
+ * Set EMBEDDING_PROVIDER=disabled to skip embeddings (useful for development)
  */
 export async function getEmbeddingProvider(): Promise<EmbeddingProvider> {
   const provider = (process.env.EMBEDDING_PROVIDER || 'local').toLowerCase();
+
+  // Allow disabling embeddings entirely for development
+  if (provider === 'disabled' || provider === 'none') {
+    throw new Error('Embedding provider is disabled via EMBEDDING_PROVIDER=disabled');
+  }
 
   switch (provider) {
     case 'openai':
@@ -56,14 +63,23 @@ export async function getEmbeddingProvider(): Promise<EmbeddingProvider> {
       });
 
     case 'local':
-      const { LocalEmbeddingProvider: LocalProvider } = await import('./local-embedding');
-      return new LocalProvider({
-        model: process.env.LOCAL_EMBEDDING_MODEL || 'Xenova/all-MiniLM-L6-v2',
-        dimensions: process.env.LOCAL_EMBEDDING_DIMS
-          ? parseInt(process.env.LOCAL_EMBEDDING_DIMS, 10)
-          : undefined,
-        cacheDir: process.env.LOCAL_EMBEDDING_CACHE_DIR,
-      });
+      try {
+        const { LocalEmbeddingProvider: LocalProvider } = await import('./local-embedding');
+        return new LocalProvider({
+          model: process.env.LOCAL_EMBEDDING_MODEL || 'Xenova/all-MiniLM-L6-v2',
+          dimensions: process.env.LOCAL_EMBEDDING_DIMS
+            ? parseInt(process.env.LOCAL_EMBEDDING_DIMS, 10)
+            : undefined,
+          cacheDir: process.env.LOCAL_EMBEDDING_CACHE_DIR,
+        });
+      } catch (error) {
+        console.error('[EmbeddingProviderFactory] Failed to load local embedding provider:', error);
+        throw new Error(
+          'Local embedding provider failed to initialize. ' +
+          'This is often due to ONNX Runtime issues. ' +
+          'Set EMBEDDING_PROVIDER=openai or EMBEDDING_PROVIDER=disabled to skip local embeddings.'
+        );
+      }
 
     default:
       console.warn(

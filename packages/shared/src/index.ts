@@ -6,6 +6,12 @@
 // Configuration
 export * from './config';
 
+// Logging
+export * from './logger';
+
+// Error tracking
+export * from './sentry';
+
 // Call providers
 export * from './providers/call-provider';
 export * from './providers/factory';
