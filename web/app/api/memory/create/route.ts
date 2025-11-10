@@ -4,11 +4,13 @@ import { getEmbeddingProvider, createRequestLogger, logError } from '@relevel-me
 
 export async function POST(request: NextRequest) {
   const logger = createRequestLogger()
+  let userId: string | undefined
 
   try {
     // Authenticate user
     const supabase = createServerClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
+    userId = user?.id
 
     if (authError || !user) {
       logger.warn({ error: authError?.message }, 'Unauthorized memory creation attempt')
@@ -208,7 +210,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error: any) {
-    logError(logger, 'Memory creation error', error, { userId: user?.id })
+    logError(logger, 'Memory creation error', error, { userId })
     return NextResponse.json(
       { error: error.message || 'Failed to create memory' },
       { status: 500 }

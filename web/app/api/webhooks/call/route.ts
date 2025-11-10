@@ -46,7 +46,10 @@ export async function POST(req: NextRequest) {
     const callProvider = getCallProvider();
 
     logger.info({ provider: callProvider.name }, 'Webhook received');
-    addBreadcrumb('Webhook received', { provider: callProvider.name });
+    addBreadcrumb({
+      message: 'Webhook received',
+      data: { provider: callProvider.name },
+    });
 
     // Verify webhook signature for security
     if (callProvider.verifyWebhookSignature) {
@@ -79,7 +82,10 @@ export async function POST(req: NextRequest) {
         hasTranscript: !!payload.transcript,
         hasRecording: !!payload.recordingUrl,
       }, `Webhook parsed: ${payload.status}`);
-      addBreadcrumb('Webhook parsed', { status: payload.status, vendorCallId: payload.vendorCallId });
+      addBreadcrumb({
+        message: 'Webhook parsed',
+        data: { status: payload.status, vendorCallId: payload.vendorCallId },
+      });
     } catch (parseError) {
       logError(logger, 'Failed to parse webhook payload', parseError as Error, { provider: callProvider.name });
       captureException(parseError, {
@@ -174,7 +180,10 @@ export async function POST(req: NextRequest) {
     }
 
     logSuccess(logger, `Call updated to ${payload.status}`, { callId: call.id, userId: call.user_id });
-    addBreadcrumb('Call status updated', { callId: call.id, status: payload.status });
+    addBreadcrumb({
+      message: 'Call status updated',
+      data: { callId: call.id, status: payload.status },
+    });
 
     // Schedule retry if call failed/was unanswered
     // Count how many calls were made today to determine retry count
@@ -215,7 +224,10 @@ export async function POST(req: NextRequest) {
 
     if (retryScheduled) {
       logger.info({ callId: call.id, userId: call.user_id }, 'Retry scheduled for failed/unanswered call');
-      addBreadcrumb('Retry scheduled', { callId: call.id });
+      addBreadcrumb({
+        message: 'Retry scheduled',
+        data: { callId: call.id },
+      });
     }
 
     // TODO: Process transcript and create checkpoints/insights
