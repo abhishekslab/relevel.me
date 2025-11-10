@@ -65,15 +65,31 @@ export async function POST(request: NextRequest) {
     // Get embedding provider
     const embeddingProvider = await getEmbeddingProvider()
 
-    // Standard vector dimension for pgvector (supports OpenAI text-embedding-3-small)
-    const VECTOR_DIMS = 1536
+    // Database vector dimension (must match message_embeddings.embedding column)
+    // NOTE: If changing this, update the database migration and HNSW index
+    const DB_VECTOR_DIMS = 1536
 
-    // Helper function to pad or truncate vectors to standard dimension
+    // Helper function to pad or truncate vectors to match database dimension
+    // WARNING: Padding with zeros can degrade search quality. Consider using a
+    // provider with matching dimensions (OpenAI: 1536, Local: 384, HuggingFace: varies)
     const normalizeVector = (vector: number[], targetDims: number): number[] => {
       if (vector.length === targetDims) return vector
-      if (vector.length > targetDims) return vector.slice(0, targetDims)
+
+      if (vector.length > targetDims) {
+        console.warn(
+          `[Memory Create] Truncating ${vector.length}D vector to ${targetDims}D. ` +
+          `Consider adjusting DB_VECTOR_DIMS or using a different embedding model.`
+        )
+        return vector.slice(0, targetDims)
+      }
+
       // Pad with zeros if smaller
-      return [...vector, ...new Array(targetDims - vector.length).fill(0)]
+      const paddingSize = targetDims - vector.length
+      console.warn(
+        `[Memory Create] Padding ${vector.length}D vector to ${targetDims}D with ${paddingSize} zeros. ` +
+        `This may reduce search quality. Consider using EMBEDDING_PROVIDER=openai for 1536D vectors.`
+      )
+      return [...vector, ...new Array(paddingSize).fill(0)]
     }
 
     // Generate embeddings based on content type
@@ -98,7 +114,7 @@ export async function POST(request: NextRequest) {
         modality: 'text',
         model: result.model,
         dims: result.dims,
-        embedding: normalizeVector(result.embedding, VECTOR_DIMS),
+        embedding: normalizeVector(result.embedding, DB_VECTOR_DIMS),
         meta: { user_id: user.id },
       })
     }
@@ -127,7 +143,7 @@ export async function POST(request: NextRequest) {
         modality: 'text',
         model: result.model,
         dims: result.dims,
-        embedding: normalizeVector(result.embedding, VECTOR_DIMS),
+        embedding: normalizeVector(result.embedding, DB_VECTOR_DIMS),
         meta: { user_id: user.id, hint: 'transcript' },
       })
     }

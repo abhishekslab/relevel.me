@@ -20,9 +20,6 @@
     "paths": {
       "@/*": [
         "./*"
-      ],
-      "@relevel-me/shared": [
-        "../packages/shared/src"
       ]
     },
     "incremental": true,

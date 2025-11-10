@@ -8,6 +8,7 @@ This package contains code shared between the `web` and `worker` packages, inclu
 
 - **Configuration**: Environment variable management
 - **Call Providers**: Voice call provider abstractions (CallKaro, Vapi, etc.)
+- **Embedding Providers**: Text embedding provider abstractions (Local, OpenAI, HuggingFace)
 - **Queue Client**: Bull queue client for background jobs
 - **Queue Types**: Shared TypeScript types for Bull queue jobs
 - **Services**: Shared business logic (call service with retry support, Supabase integration)
@@ -139,6 +140,75 @@ if (response.success) {
 
 See [docs/PROVIDERS.md](../../docs/PROVIDERS.md) for adding new providers.
 
+### Embedding Providers
+
+#### Interface
+
+```typescript
+import type { EmbeddingProvider, EmbedRequest, EmbedResult } from '@relevel-me/shared'
+
+interface EmbeddingProvider {
+  readonly name: string
+  readonly modelName: string
+  readonly dimensions: number
+  readonly supportsBatching: boolean
+
+  embed(request: EmbedRequest): Promise<EmbedResult>
+  embedBatch?(requests: EmbedRequest[]): Promise<EmbedResult[]>
+}
+```
+
+#### Factory
+
+```typescript
+import { getEmbeddingProvider } from '@relevel-me/shared'
+
+// Get configured provider (based on EMBEDDING_PROVIDER env var)
+const provider = await getEmbeddingProvider()
+
+console.log('Provider:', provider.name)
+console.log('Model:', provider.modelName)
+console.log('Dimensions:', provider.dimensions)
+
+// Generate embedding
+const result = await provider.embed({
+  text: 'This is a test memory',
+  metadata: { user_id: 'uuid', message_id: 'uuid' }
+})
+
+console.log('Embedding:', result.embedding)  // Float array
+console.log('Dimensions:', result.dims)       // e.g., 384 or 1536
+```
+
+#### Supported Providers
+
+- **Local** (`local`) - Free, offline-capable, uses @xenova/transformers (default)
+- **OpenAI** (`openai`) - High quality, API-based, 1536 dimensions
+- **HuggingFace** (`huggingface`) - Various models via Inference API
+
+**Environment Variables:**
+
+```bash
+# Local provider (default, no API key needed)
+EMBEDDING_PROVIDER=local
+LOCAL_EMBEDDING_MODEL=Xenova/all-MiniLM-L6-v2  # Optional
+LOCAL_EMBEDDING_DIMS=384  # Optional
+LOCAL_EMBEDDING_CACHE_DIR=/path/to/cache  # Optional
+
+# OpenAI provider
+EMBEDDING_PROVIDER=openai
+OPENAI_API_KEY=sk-...  # Required
+OPENAI_EMBEDDING_MODEL=text-embedding-3-small  # Optional
+OPENAI_EMBEDDING_DIMS=1536  # Optional
+
+# HuggingFace provider
+EMBEDDING_PROVIDER=huggingface
+HUGGINGFACE_API_KEY=hf_...  # Required
+HUGGINGFACE_EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2  # Optional
+```
+
+See [docs/EMBEDDINGS.md](../../docs/EMBEDDINGS.md) for comprehensive embedding provider documentation.
+
 ### Queue Client
 
 ```typescript
@@ -265,11 +335,27 @@ This package reads environment variables from:
 - `VAPI_BASE_URL`
 - `VAPI_ASSISTANT_ID`
 
+**Embedding Provider (Local):**
+- `EMBEDDING_PROVIDER` (default: `local`)
+- `LOCAL_EMBEDDING_MODEL` (optional)
+- `LOCAL_EMBEDDING_DIMS` (optional)
+- `LOCAL_EMBEDDING_CACHE_DIR` (optional)
+
+**Embedding Provider (OpenAI):**
+- `OPENAI_API_KEY` (required for openai provider)
+- `OPENAI_EMBEDDING_MODEL` (optional)
+- `OPENAI_EMBEDDING_DIMS` (optional)
+
+**Embedding Provider (HuggingFace):**
+- `HUGGINGFACE_API_KEY` (required for huggingface provider)
+- `HUGGINGFACE_EMBEDDING_MODEL` (optional)
+
 **Queue:**
 - `REDIS_URL`
 
 **Provider Selection:**
 - `CALL_PROVIDER` (default: `callkaro`)
+- `EMBEDDING_PROVIDER` (default: `local`)
 
 ## Best Practices
 
