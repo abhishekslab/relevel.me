@@ -1,18 +1,33 @@
 # Optional: Run Ollama as a Docker service
-# Usage: docker compose -f docker-compose.dev.yml -f docker-compose.ollama.yml up
+# Usage:
+#   Development: docker compose -f docker-compose.dev.yml -f docker-compose.ollama.yml up
+#   Production:  docker compose -f docker-compose.yml -f docker-compose.ollama.yml up --build
 
 services:
+  # Extend redis to be on the same network
+  redis:
+    networks:
+      - relevel-network
+
   # Extend web service to wait for Ollama
   web:
     depends_on:
       ollama:
         condition: service_healthy
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+    networks:
+      - relevel-network
 
   # Extend worker service to wait for Ollama
   worker:
     depends_on:
       ollama:
         condition: service_healthy
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+    networks:
+      - relevel-network
 
   ollama:
     build:
@@ -24,7 +39,7 @@ services:
     ports:
       - "11434:11434"
     networks:
-      - relevel-network-dev
+      - relevel-network
     healthcheck:
       test: ["CMD", "ollama", "list"]
       interval: 10s
@@ -41,5 +56,5 @@ services:
     #           capabilities: [gpu]
 
 networks:
-  relevel-network-dev:
+  relevel-network:
     driver: bridge

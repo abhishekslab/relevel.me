@@ -12,7 +12,7 @@ services:
       timeout: 3s
       retries: 5
     networks:
-      - relevel-network-dev
+      - relevel-network
 
   web:
     build:
@@ -46,7 +46,7 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - relevel-network-dev
+      - relevel-network
     command: npm run dev
 
   worker:
@@ -77,7 +77,7 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - relevel-network-dev
+      - relevel-network
     command: npm run worker:dev
 
 volumes:
@@ -87,5 +87,5 @@ volumes:
   huggingface_cache:
 
 networks:
-  relevel-network-dev:
+  relevel-network:
     driver: bridge

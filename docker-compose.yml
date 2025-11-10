@@ -1,7 +1,7 @@
 services:
   redis:
     image: redis:7-alpine
-    container_name: relevel-redis
+    container_name: relevel-redis-prod
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -14,7 +14,7 @@ services:
       retries: 3
     command: redis-server --appendonly yes
 
-  relevel-me:
+  web:
     build:
       context: .
       dockerfile: Dockerfile
@@ -23,8 +23,8 @@ services:
         NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
         NEXT_PUBLIC_SELF_HOSTED: "true"
-    image: relevel-me:latest
-    container_name: relevel-me
+    image: relevel-web:latest
+    container_name: relevel-web-prod
     restart: unless-stopped
     ports:
       - "3001:3000"  # Map container port 3000 to host port 3001
@@ -45,12 +45,12 @@ services:
       retries: 3
       start_period: 40s
 
-  relevel-worker:
+  worker:
     build:
       context: .
       dockerfile: worker/Dockerfile
     image: relevel-worker:latest
-    container_name: relevel-worker
+    container_name: relevel-worker-prod
     restart: unless-stopped
     env_file:
       - .env
