@@ -1,7 +1,18 @@
-FROM node:20-alpine
+FROM node:20-slim
 
-# Install dependencies for better compatibility
-RUN apk add --no-cache libc6-compat
+# Install system dependencies required for:
+# - Native Node.js modules compilation (python3, make, g++, build-essential)
+# - ONNX Runtime native bindings (libgomp1)
+# - General compatibility (ca-certificates, git)
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    build-essential \
+    libgomp1 \
+    ca-certificates \
+    git \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
@@ -13,7 +24,8 @@ COPY worker/package*.json ./worker/
 COPY packages/shared/package*.json ./packages/shared/
 
 # Install all workspace dependencies
-RUN npm ci
+# The --verbose flag helps debug any native binding issues
+RUN npm ci --verbose
 
 # Copy tsconfig files
 COPY tsconfig.json ./
