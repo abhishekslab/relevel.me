@@ -25,6 +25,8 @@ CREATE TABLE IF NOT EXISTS public.messages (
 );
 
 -- Message embeddings table: Vector storage for semantic search
+-- Note: Using vector(1536) to support OpenAI embeddings by default
+-- Smaller models (384, 768 dims) can still be stored (pgvector allows this)
 CREATE TABLE IF NOT EXISTS public.message_embeddings (
   id BIGSERIAL PRIMARY KEY,
   message_id UUID NOT NULL REFERENCES public.messages(id) ON DELETE CASCADE,
@@ -34,8 +36,8 @@ CREATE TABLE IF NOT EXISTS public.message_embeddings (
   model TEXT NOT NULL,         -- e.g., 'text-embedding-3-small', 'all-MiniLM-L6-v2'
   dims INTEGER NOT NULL,       -- Dimension of the embedding vector
 
-  -- Vector data
-  embedding vector,            -- The actual embedding vector
+  -- Vector data (1536 dimensions to support OpenAI text-embedding-3-small)
+  embedding vector(1536),      -- The actual embedding vector
 
   -- Metadata for filtering
   meta JSONB DEFAULT '{}'::JSONB,

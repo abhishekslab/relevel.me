@@ -65,6 +65,17 @@ export async function POST(request: NextRequest) {
     // Get embedding provider
     const embeddingProvider = await getEmbeddingProvider()
 
+    // Standard vector dimension for pgvector (supports OpenAI text-embedding-3-small)
+    const VECTOR_DIMS = 1536
+
+    // Helper function to pad or truncate vectors to standard dimension
+    const normalizeVector = (vector: number[], targetDims: number): number[] => {
+      if (vector.length === targetDims) return vector
+      if (vector.length > targetDims) return vector.slice(0, targetDims)
+      // Pad with zeros if smaller
+      return [...vector, ...new Array(targetDims - vector.length).fill(0)]
+    }
+
     // Generate embeddings based on content type
     const embeddings: Array<{
       message_id: string
@@ -87,7 +98,7 @@ export async function POST(request: NextRequest) {
         modality: 'text',
         model: result.model,
         dims: result.dims,
-        embedding: result.embedding,
+        embedding: normalizeVector(result.embedding, VECTOR_DIMS),
         meta: { user_id: user.id },
       })
     }
@@ -116,7 +127,7 @@ export async function POST(request: NextRequest) {
         modality: 'text',
         model: result.model,
         dims: result.dims,
-        embedding: result.embedding,
+        embedding: normalizeVector(result.embedding, VECTOR_DIMS),
         meta: { user_id: user.id, hint: 'transcript' },
       })
     }

@@ -23,17 +23,31 @@ export async function POST(request: NextRequest) {
     // Get embedding provider
     const embeddingProvider = await getEmbeddingProvider()
 
+    // Standard vector dimension for pgvector
+    const VECTOR_DIMS = 1536
+
+    // Helper function to pad or truncate vectors to standard dimension
+    const normalizeVector = (vector: number[], targetDims: number): number[] => {
+      if (vector.length === targetDims) return vector
+      if (vector.length > targetDims) return vector.slice(0, targetDims)
+      // Pad with zeros if smaller
+      return [...vector, ...new Array(targetDims - vector.length).fill(0)]
+    }
+
     // Generate query embedding
     const queryEmbedding = await embeddingProvider.embed({
       text: query,
       metadata: { user_id: user.id, purpose: 'search' },
     })
 
+    // Normalize to standard dimension
+    const normalizedQueryEmbedding = normalizeVector(queryEmbedding.embedding, VECTOR_DIMS)
+
     // Perform vector similarity search
     const vectorResults = searchMode === 'text' ? [] : await performVectorSearch(
       supabase,
       user.id,
-      queryEmbedding.embedding,
+      normalizedQueryEmbedding,
       limit * 2 // Get more results for hybrid reranking
     )
 
