@@ -18,7 +18,7 @@ import { Avatar as VisageAvatar } from '@readyplayerme/visage'
 import { FileUpload } from '@/components/FileUpload'
 import ChatInterface from './ChatInterface'
 import * as THREE from 'three'
-import { playClickSound, toggleMusicMute, getMusicMutedState, getMusicVolume, setMusicVolume, playBackgroundMusic, isMusicActuallyPlaying } from '@/lib/sound'
+import { playClickSound, toggleMusicMute, getMusicMutedState, getMusicVolume, setMusicVolume, playBackgroundMusic, isMusicActuallyPlaying, getBackgroundMusicElement } from '@/lib/sound'
 import { signOut as serverSignOut } from '../actions'
 import { createClient } from '@/lib/auth/client'
 import { getSpeechService, TEST_PHRASES, type SpeechState } from '@/lib/speech'
@@ -426,6 +426,20 @@ function HUD({ isDockOpen, setIsDockOpen, armatureType, setArmatureType, current
 
     return () => clearInterval(interval)
   }, [])
+
+  // Duck background music volume when avatar speaks
+  useEffect(() => {
+    const musicElement = getBackgroundMusicElement()
+    if (!musicElement) return
+
+    if (isSpeaking) {
+      // Reduce volume to 0 when speaking
+      musicElement.volume = 0
+    } else {
+      // Restore volume when not speaking (unless muted)
+      musicElement.volume = musicVolume / 100
+    }
+  }, [isSpeaking, musicVolume])
 
   const handleToggle = () => {
     // Ensure music is playing (in case autoplay was blocked on refresh)
