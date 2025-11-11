@@ -34,7 +34,7 @@ ENV NEXT_PUBLIC_SELF_HOSTED=$NEXT_PUBLIC_SELF_HOSTED
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build the application
+# Build the application (includes shared package)
 RUN npm run build
 
 # Production image, copy all the files and run next
