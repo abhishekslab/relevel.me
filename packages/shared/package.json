@@ -17,7 +17,7 @@
   "dependencies": {
     "@huggingface/inference": "^4.13.2",
     "@sentry/node": "^8.40.0",
-    "@supabase/supabase-js": "^2.75.1",
+    "@supabase/supabase-js": "^2.81.0",
     "@xenova/transformers": "^2.17.2",
     "bull": "^4.16.5",
     "dotenv": "^17.2.3",

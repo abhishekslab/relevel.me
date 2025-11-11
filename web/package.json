@@ -20,7 +20,7 @@
     "@relevel-me/shared": "*",
     "@sentry/nextjs": "^8.40.0",
     "@supabase/ssr": "^0.7.0",
-    "@supabase/supabase-js": "^2.75.1",
+    "@supabase/supabase-js": "^2.81.0",
     "autoprefixer": "10.4.20",
     "bull": "^4.16.5",
     "dodopayments": "^2.2.1",
