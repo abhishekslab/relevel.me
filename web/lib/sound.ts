@@ -125,6 +125,7 @@ export function playEnterWorldSound() {
 
 const MUSIC_MUTED_KEY = 'relevel_music_muted'
 const MUSIC_PLAYING_KEY = 'relevel_music_playing'
+const MUSIC_VOLUME_KEY = 'relevel_music_volume'
 
 /**
  * Initialize and play background music
@@ -134,7 +135,7 @@ export function playBackgroundMusic() {
     if (!backgroundMusic) {
       backgroundMusic = new Audio('/audio/background-music.mp3')
       backgroundMusic.loop = true
-      backgroundMusic.volume = 0.3 // 30% volume for background music
+      backgroundMusic.volume = getMusicVolume() / 100 // Convert 0-100 to 0-1
     }
 
     const isMuted = getMusicMutedState()
@@ -254,4 +255,29 @@ export function isMusicActuallyPlaying(): boolean {
  */
 export function getBackgroundMusicElement(): HTMLAudioElement | null {
   return backgroundMusic
+}
+
+/**
+ * Get current music volume from localStorage (0-100)
+ */
+export function getMusicVolume(): number {
+  if (typeof window === 'undefined') return 1 // Default 1%
+  const stored = localStorage.getItem(MUSIC_VOLUME_KEY)
+  return stored ? parseInt(stored, 10) : 1
+}
+
+/**
+ * Set music volume (0-100) and apply it to playing music
+ */
+export function setMusicVolume(volume: number) {
+  if (typeof window === 'undefined') return
+
+  // Clamp volume between 0 and 100
+  const clampedVolume = Math.max(0, Math.min(100, volume))
+  localStorage.setItem(MUSIC_VOLUME_KEY, clampedVolume.toString())
+
+  // Apply to current music if playing
+  if (backgroundMusic) {
+    backgroundMusic.volume = clampedVolume / 100
+  }
 }

@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence } from 'framer-motion'
-import { Flame, Sparkles, Target, Clock, X, Volume2, VolumeX, Settings, LogOut, ChevronLeft, ChevronRight, User, AlertCircle, MessageSquare, Square, Bell, Bug } from 'lucide-react'
+import { Flame, Sparkles, Target, Clock, X, Volume2, VolumeX, Settings, LogOut, ChevronLeft, ChevronRight, User, AlertCircle, MessageSquare, Square, Bell, Bug, Music } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -18,7 +18,7 @@ import { Avatar as VisageAvatar } from '@readyplayerme/visage'
 import { FileUpload } from '@/components/FileUpload'
 import ChatInterface from './ChatInterface'
 import * as THREE from 'three'
-import { playClickSound, toggleMusicMute, getMusicMutedState, playBackgroundMusic, isMusicActuallyPlaying } from '@/lib/sound'
+import { playClickSound, toggleMusicMute, getMusicMutedState, getMusicVolume, setMusicVolume, playBackgroundMusic, isMusicActuallyPlaying } from '@/lib/sound'
 import { signOut as serverSignOut } from '../actions'
 import { createClient } from '@/lib/auth/client'
 import { getSpeechService, TEST_PHRASES, type SpeechState } from '@/lib/speech'
@@ -332,7 +332,9 @@ function HUD({ isDockOpen, setIsDockOpen, armatureType, setArmatureType, current
   const [streak, setStreak] = useState(0)
   const [isMusicMuted, setIsMusicMuted] = useState(false)
   const [isMusicPlaying, setIsMusicPlaying] = useState(false)
+  const [musicVolume, setMusicVolumeState] = useState(1)
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
+  const [showAudioMenu, setShowAudioMenu] = useState(false)
   const [showProfileModal, setShowProfileModal] = useState(false)
   const [selectedPhraseIndex, setSelectedPhraseIndex] = useState(0)
   const [showSpeechMenu, setShowSpeechMenu] = useState(false)
@@ -404,9 +406,10 @@ function HUD({ isDockOpen, setIsDockOpen, armatureType, setArmatureType, current
     loadStreak()
   }, [])
 
-  // Initialize mute state from localStorage
+  // Initialize audio state from localStorage
   useEffect(() => {
     setIsMusicMuted(getMusicMutedState())
+    setMusicVolumeState(getMusicVolume())
   }, [])
 
   // Check music playback state periodically
@@ -435,14 +438,16 @@ function HUD({ isDockOpen, setIsDockOpen, armatureType, setArmatureType, current
   }
 
   const handleMusicToggle = () => {
-    // Ensure music is playing first (in case autoplay was blocked)
     playBackgroundMusic()
     const newMutedState = toggleMusicMute()
     setIsMusicMuted(newMutedState)
     playClickSound()
-
-    // Update playing state immediately after interaction
     setTimeout(() => setIsMusicPlaying(isMusicActuallyPlaying()), 100)
+  }
+
+  const handleVolumeChange = (newVolume: number) => {
+    setMusicVolume(newVolume)
+    setMusicVolumeState(newVolume)
   }
 
   const handleSignOut = async () => {
@@ -465,17 +470,6 @@ function HUD({ isDockOpen, setIsDockOpen, armatureType, setArmatureType, current
             <Flame className="size-5"/>
             <span className="text-sm font-semibold">{streak}d</span>
           </div>
-          <button
-            onClick={handleMusicToggle}
-            className="rounded-xl bg-cyan-500/20 border border-cyan-400/40 p-2 hover:bg-cyan-500/30 transition active:scale-95"
-            title={!isMusicPlaying ? 'Music paused - click to start' : isMusicMuted ? 'Unmute music' : 'Mute music'}
-          >
-            {!isMusicPlaying || isMusicMuted ? (
-              <VolumeX className="size-5 text-cyan-300"/>
-            ) : (
-              <Volume2 className="size-5 text-cyan-300"/>
-            )}
-          </button>
 
           <button
             onClick={handleToggle}
@@ -503,6 +497,54 @@ function HUD({ isDockOpen, setIsDockOpen, armatureType, setArmatureType, current
                   <User className="size-4" />
                   Profile
                 </button>
+
+                {/* Audio Section */}
+                <button
+                  onClick={() => { playClickSound(); setShowAudioMenu(!showAudioMenu) }}
+                  className="w-full p-3 flex items-center gap-2 hover:bg-white/10 transition text-left text-sm border-b border-white/10 text-white"
+                >
+                  <Music className="size-4" />
+                  Audio
+                </button>
+
+                {showAudioMenu && (
+                  <div className="border-b border-white/10 bg-black/20 p-3 space-y-3">
+                    {/* Mute Toggle */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-cyan-300">Background Music</span>
+                      <button
+                        onClick={handleMusicToggle}
+                        className="rounded-lg bg-cyan-500/20 border border-cyan-400/40 p-1.5 hover:bg-cyan-500/30 transition active:scale-95"
+                        title={isMusicMuted ? 'Unmute music' : 'Mute music'}
+                      >
+                        {isMusicMuted ? (
+                          <VolumeX className="size-4 text-cyan-300"/>
+                        ) : (
+                          <Volume2 className="size-4 text-cyan-300"/>
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Volume Slider */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-cyan-300">Volume</span>
+                        <span className="text-cyan-400 font-mono">{musicVolume}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={musicVolume}
+                        onChange={(e) => handleVolumeChange(parseInt(e.target.value))}
+                        className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer slider-thumb"
+                        style={{
+                          background: `linear-gradient(to right, rgba(34, 211, 238, 0.6) 0%, rgba(34, 211, 238, 0.6) ${musicVolume}%, rgba(255, 255, 255, 0.1) ${musicVolume}%, rgba(255, 255, 255, 0.1) 100%)`
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {/* Debug Section */}
                 <button

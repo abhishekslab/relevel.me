@@ -6,3 +6,24 @@
 html, body { height: 100%; }
 body { @apply bg-[#0b0f17] text-slate-100; }
 * { box-sizing: border-box; }
+
+/* Range slider styling */
+input[type="range"].slider-thumb::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: rgb(34, 211, 238);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(34, 211, 238, 0.6);
+}
+
+input[type="range"].slider-thumb::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: rgb(34, 211, 238);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 8px rgba(34, 211, 238, 0.6);
+}
