@@ -11,46 +11,25 @@ A **source-available** voice-first second brain — an AI memory companion you c
 
 ### Features
 
-- 🧠 **Voice-First Second Brain** - Call and speak your thoughts, your AI companion remembers everything
-- 🎤 **AI Voice Calls** - Daily reflection conversations with your AI memory companion
-- 🔗 **Memory Graph** - Your ideas become connected nodes, linked by meaning
+- 🔒 **100% Local-First** - llama3.2 + local embeddings (Xenova), zero external API calls by default
+- 🧠 **Voice-First Second Brain** - Call and speak your thoughts, AI companion remembers everything
+- 🔗 **Semantic Memory Graph** - pgvector search retrieves by meaning, not keywords
+- 🏠 **Self-Hosted First** - Full data sovereignty, no subscription required
+- 🔌 **Pluggable Architecture** - Swap LLM/embedding/call providers via config
+- 🐳 **Docker Ready** - One-command deployment with Ollama baked in
 - 🪞 **Reflective Intelligence** - AI surfaces forgotten goals and patterns
-- 🔐 **Supabase Auth** - Magic link authentication, no passwords
-- 🐳 **Docker Ready** - One-command self-hosted deployment
-- 🔌 **Pluggable Providers** - Swap call providers (CallKaro, Vapi) via config
-- 🎮 **Optional Gamification** - Visualize your memory as skill trees and experience points
 
 ## Quick Start
 
 ### For Development
 
-#### Option 1: Local Development (npm)
+#### Prerequisites
 
-```bash
-# Clone repository
-git clone https://github.com/abhishekslab/relevel.me.git
-cd relevel.me
+Before you begin, ensure you have Docker and Docker Compose installed on your system:
+- **Docker**: [Install Docker](https://docs.docker.com/get-docker/)
+- **Docker Compose**: [Install Docker Compose](https://docs.docker.com/compose/install/)
 
-# Install all dependencies (uses npm workspaces)
-npm install
-
-# Set up environment variables for web app
-cp .env.example .env
-# Edit .env with your Supabase and CallKaro credentials
-
-# Run database migrations (see docs/SELF_HOSTING.md for Supabase setup)
-
-# Start web development server
-npm run dev
-# Open http://localhost:3000
-
-# (Optional) In another terminal, start the worker
-npm run worker:dev
-```
-
-**Note:** The `npm run dev` command automatically runs from the `web/` directory. All workspace dependencies (web, worker, shared) are installed from the root.
-
-#### Option 2: Docker Development Environment (with hot reloading)
+#### Docker Development Environment
 
 ```bash
 # Clone repository
@@ -61,190 +40,71 @@ cd relevel.me
 cp .env.example .env
 # Edit .env with your Supabase and CallKaro credentials
 
-# Start all services (web, worker, redis) with hot reloading
-docker compose -f docker-compose.dev.yml up
+# Start all services (web, worker, redis, ollama) with hot reloading
+docker compose -f docker-compose.dev.yml -f docker-compose.ollama.yml up --build
 
 # Access at http://localhost:3000
-# Changes to code automatically reload!
-```
-
-**Benefits:**
-- ✅ No Node.js installation required
-- ✅ Automatic hot reloading for web and worker
-- ✅ Redis included and configured
-- ✅ Consistent environment across team
-- ✅ Isolated from local machine setup
-
-**Common commands:**
-```bash
-# Rebuild after dependency changes
-docker compose -f docker-compose.dev.yml up --build
-
-# View logs
-docker compose -f docker-compose.dev.yml logs -f web
-
-# Stop services
-docker compose -f docker-compose.dev.yml down
 ```
 
 ### For Self-Hosting (Production)
 
-**Want to run relevel.me on your own infrastructure?** Check out our comprehensive [Self-Hosting Guide](docs/SELF_HOSTING.md).
-
-Quick Docker production setup:
-```bash
-# 1. Configure environment
-cp .env.example .env
-# Edit .env with your credentials
-
-# 2. Start with Docker Compose (production build)
-docker compose up -d
-
-# 3. Access at http://localhost:3001
-```
-
-**Note:** For production deployment, use `docker-compose.yml` (optimized build). For development with hot reloading, use `docker-compose.dev.yml` (see Option 2 above).
-
-See [docs/SELF_HOSTING.md](docs/SELF_HOSTING.md) for complete setup instructions, including:
+**Want to run relevel.me on your own infrastructure?** Check out our comprehensive [Self-Hosting Guide](docs/SELF_HOSTING.md) for complete setup instructions, including:
+- Docker production deployment
 - Supabase project setup and database migrations
 - CallKaro voice call configuration
 - Custom domain and SSL setup
 - Troubleshooting and maintenance
 
-## Tech Stack
-
-- **Frontend**: Next.js 14 (App Router), React 18, TypeScript
-- **Styling**: TailwindCSS, Framer Motion
-- **3D Graphics**: Three.js, @react-three/fiber, @react-three/drei
-- **Authentication**: Supabase Auth (Magic Links)
-- **Database**: Supabase (PostgreSQL with RLS)
-- **Voice Calls**: CallKaro API
-- **Payments** (hosted only): DodoPayments
-- **Icons**: Lucide React
-
-## Project Structure
-
-This project follows a monorepo structure using npm workspaces:
-
-```
-relevel.me/                     # Monorepo root
-├── web/                        # Next.js web application
-│   ├── app/                   # App Router pages
-│   │   ├── dashboard/         # Main dashboard
-│   │   │   ├── page.tsx       # Server component (subscription check)
-│   │   │   ├── _components/   # Dashboard client components
-│   │   │   └── actions.ts     # Server actions
-│   │   ├── onboarding/        # Profile completion flow
-│   │   ├── pricing/           # Subscription plans
-│   │   ├── auth/callback/     # Auth callback handler
-│   │   └── api/               # API routes
-│   │       ├── calls/         # Call webhooks
-│   │       ├── queue/         # Queue management
-│   │       └── admin/         # Admin endpoints
-│   ├── components/            # React components
-│   │   └── ui/               # UI primitives (shadcn-style)
-│   ├── lib/                   # Utilities and services
-│   │   ├── auth/             # Authentication helpers
-│   │   ├── providers/        # Call/payment providers
-│   │   ├── queue/            # Bull queue client
-│   │   └── services/         # Business logic
-│   ├── public/               # Static assets
-│   ├── middleware.ts         # Auth middleware
-│   ├── next.config.js        # Next.js configuration
-│   └── package.json          # Web app dependencies
-│
-├── worker/                    # Background job processor
-│   ├── src/
-│   │   ├── queue/            # Bull queue setup
-│   │   ├── jobs/             # Job processors
-│   │   └── services/         # Worker services
-│   ├── Dockerfile            # Worker container
-│   └── package.json          # Worker dependencies
-│
-├── packages/
-│   └── shared/               # Shared utilities
-│       ├── src/              # Shared code
-│       └── package.json      # Shared dependencies
-│
-├── supabase/
-│   └── migrations/           # Database schema and RLS policies
-│
-├── docs/                      # Documentation
-│   ├── SELF_HOSTING.md       # Self-hosting guide
-│   ├── SETUP.md              # Setup instructions
-│   ├── QUEUE_SYSTEM.md       # Queue architecture
-│   └── ...                   # Additional docs
-│
-└── package.json              # Root workspace configuration
-```
-
 ## Key Features
 
-### Voice-First Memory Capture
+### 100% Local-First Architecture
+- **Local LLM**: llama3.2 runs on your infrastructure via Ollama (baked into Docker image)
+- **Local Embeddings**: Xenova/all-MiniLM-L6-v2 runs in-process - zero external API calls
+- **Privacy by Default**: All memory processing happens locally unless you opt into cloud providers
+- **Offline Capable**: Works completely offline after initial model downloads
+
+### Voice-First Second Brain
 - Call anytime to speak your thoughts freely
-- Automatic transcription and intelligent tagging
-- Phone number validation and profile management
-- Call history and memory timeline
+- AI-powered voice conversations with automatic transcription
+- Daily reflection calls scheduled by background worker
+- Pluggable call providers (CallKaro, Vapi) - swap via config
 
-### Memory Graph & Recall
-- Each idea becomes a node connected by topic, tone, and intent
-- Context-aware retrieval through natural conversation
+### Memory Graph & Semantic Recall
+- Your ideas become connected nodes in a knowledge graph
+- pgvector semantic search retrieves memories by meaning, not keywords
 - AI surfaces forgotten goals, patterns, and contradictions
-- Zero friction capture, high recall architecture
+- Context-aware recall through natural conversation
 
-### Optional Gamification Layer
-- Visualize your evolving mind as skill trees
-- WRS (Weighted Reflection Score)
-- Daily streak counter and experience points
-- Quest log for memory milestones
-- Artifact power-ups
-
-### Authentication & Profiles
-- Magic link sign-up (passwordless)
-- Onboarding flow for profile completion
-- Avatar customization (Ready Player Me)
-- Self-hosted mode bypass for subscription checks
+### Self-Hosted First
+- Full data sovereignty - your thoughts stay on your infrastructure
+- No subscription required for self-hosted deployment
+- Pluggable architecture: swap LLM providers (local/OpenRouter), embedding models, call services
 
 ## Self-Hosting vs Hosted
 
-| Feature | Self-Hosted | Hosted (Pro) |
-|---------|-------------|--------------|
-| Cost | $5-30/month | $29/month |
-| Setup Time | 30-60 minutes | < 5 minutes |
-| Maintenance | You manage | Fully managed |
-| Data Control | 100% yours | Hosted securely |
-| Customization | Full code access | UI settings only |
-| Subscription Required | No | Yes |
+**Hosted Version: Coming Soon**
+
+Currently, relevel.me is available as a self-hosted solution. A fully managed hosted version is in the works.
+
+**Self-Hosted (Available Now)**
+- Full control over your data and infrastructure
+- No subscription required
+- Estimated cost: $5-30/month (for cloud hosting)
+- Setup time: 30-60 minutes
+- Full code access for customization
 
 For detailed self-hosting instructions, see **[docs/SELF_HOSTING.md](docs/SELF_HOSTING.md)**
 
 ## Documentation
 
+- **[Architecture Guide](docs/ARCHITECTURE.md)** - Tech stack, monorepo structure, and system architecture
 - **[Self-Hosting Guide](docs/SELF_HOSTING.md)** - Complete guide to running relevel.me on your own infrastructure
 - **[Onboarding Flow](docs/ONBOARDING_FLOW.md)** - User journey audit and flow analysis
 - **[Gaps and Fixes](docs/GAPS_AND_FIXES.md)** - Implementation notes and fixes applied
 
 ## Environment Variables
 
-Copy `.env.example` to `.env.local` and configure:
-
-```bash
-# Self-hosting mode (bypasses subscription checks)
-NEXT_PUBLIC_SELF_HOSTED=true
-
-# Supabase (required)
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-
-# CallKaro (required for voice calls)
-CALLKARO_API_KEY=your-api-key
-CALLKARO_BASE_URL=https://api.callkaro.ai
-CALLKARO_AGENT_ID=your-agent-id
-
-# DodoPayments (hosted mode only - not needed for self-hosting)
-DODOPAYMENTS_SECRET_KEY=your-secret-key
-DODOPAYMENTS_PRO_PRODUCT_ID=your-product-id
-```
+Copy `.env.example` to `.env` and configure:
 
 ## Contributing
 

@@ -84,15 +84,25 @@ packages/shared/
 
 ### Backend Services
 
-- **Database**: Supabase (PostgreSQL)
+- **Database**: Supabase (PostgreSQL with pgvector extension)
 - **Auth**: Supabase Auth
 - **Storage**: Supabase Storage
 - **Queue**: Bull + Redis
 - **Worker**: Node.js background processor
 
+### AI/ML Stack (Local-First)
+
+- **LLM (Local)**: Ollama with llama3.2 (baked into Docker image)
+- **LLM (Cloud)**: OpenRouter API (Claude, GPT-4, Gemini, etc.)
+- **Embeddings (Local)**: Xenova/all-MiniLM-L6-v2 via Transformers.js (384D, in-process)
+- **Embeddings (Cloud)**: OpenAI text-embedding-3-small/large, HuggingFace API
+- **Vector Search**: pgvector for semantic memory retrieval
+- **Provider Pattern**: Pluggable architecture for swapping LLM/embedding providers
+
 ### Infrastructure
 
 - **Container**: Docker + Docker Compose
+- **Local LLM**: Ollama (docker-compose.ollama.yml)
 - **CI/CD**: GitHub Actions
 - **Deployment**: Docker containers (self-hosted)
 
@@ -244,6 +254,44 @@ interface CallProvider {
 
 See [PROVIDERS.md](./PROVIDERS.md) for details.
 
+### AI/ML Providers (packages/shared/src/providers/)
+
+Abstraction layer for LLM and embedding services with local-first defaults:
+
+**LLM Provider Interface:**
+```typescript
+interface LLMProvider {
+  generateCompletion(prompt: string, options?): Promise<string>
+  generateStream?(prompt: string, options?): AsyncGenerator<string>
+}
+```
+
+**Implementations:**
+- `OllamaProvider` - Local inference with llama3.2 (default, privacy-first)
+- `OpenRouterProvider` - Cloud inference (Claude, GPT-4, Gemini, etc.)
+- **Auto Mode**: Attempts Ollama first, falls back to OpenRouter if unavailable
+
+**Embedding Provider Interface:**
+```typescript
+interface EmbeddingProvider {
+  generateEmbedding(text: string): Promise<number[]>
+  generateBatch(texts: string[]): Promise<number[][]>
+}
+```
+
+**Implementations:**
+- `LocalEmbeddingProvider` - Xenova/Transformers.js with all-MiniLM-L6-v2 (default, 100% local)
+- `OpenAIEmbeddingProvider` - text-embedding-3-small/large
+- `HuggingFaceEmbeddingProvider` - HF Inference API
+
+**Privacy & Performance:**
+- Local embeddings run in-process, zero external API calls
+- Models cached locally after first download (~23MB)
+- Fully offline capable after initial setup
+- Cloud providers available as opt-in alternatives
+
+See [EMBEDDINGS.md](./EMBEDDINGS.md) for detailed configuration.
+
 ### Queue System (worker/)
 
 Bull-based job queue for background tasks:
@@ -277,6 +325,7 @@ See [VISAGE_INTEGRATION.md](./VISAGE_INTEGRATION.md) and [LIPSYNC_ROADMAP.md](./
 
 ### Docker Compose
 
+**Production Setup** (`docker-compose.yml`):
 ```yaml
 services:
   relevel-me:
@@ -307,6 +356,18 @@ services:
     ports:
       - "6379:6379"
 ```
+
+**Development Setup with Ollama** (`docker-compose.dev.yml` + `docker-compose.ollama.yml`):
+```bash
+# Start all services including local LLM
+docker compose -f docker-compose.dev.yml -f docker-compose.ollama.yml up --build
+```
+
+The Ollama service provides:
+- llama3.2 model pre-loaded in Docker image
+- Local inference endpoint at `http://ollama:11434`
+- Automatic health checks and GPU support (if available)
+- Zero external API calls for LLM inference
 
 ### CI/CD Pipeline
 
@@ -427,6 +488,16 @@ See [.github/workflows/ci.yml](../.github/workflows/ci.yml).
 
 ### Local Setup
 
+**Option 1: Docker (Recommended)**
+```bash
+# Start all services with local LLM (Ollama + llama3.2)
+docker compose -f docker-compose.dev.yml -f docker-compose.ollama.yml up --build
+
+# Access web app at http://localhost:3000
+# Ollama API available at http://localhost:11434
+```
+
+**Option 2: npm (requires manual service setup)**
 ```bash
 # Install dependencies (all workspaces)
 npm install
@@ -450,7 +521,7 @@ npm run typecheck
 # Build all packages
 npm run build
 
-# Test with Docker Compose
+# Test with Docker Compose (production mode)
 docker compose up --build
 ```
 
@@ -497,5 +568,5 @@ See [QUEUE_SYSTEM.md](./QUEUE_SYSTEM.md) for job creation guide.
 
 ---
 
-**Last Updated:** 2025-11-04
-**Version:** 1.0 (Monorepo)
+**Last Updated:** 2025-11-12
+**Version:** 1.1 (Monorepo + Local-First AI/ML)
