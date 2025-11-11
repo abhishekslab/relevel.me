@@ -477,6 +477,13 @@ function HUD({ isDockOpen, setIsDockOpen, armatureType, setArmatureType, current
             )}
           </button>
 
+          <button
+            onClick={handleToggle}
+            className="rounded-xl bg-violet-500/20 border border-violet-400/40 p-2 hover:bg-violet-500/30 transition active:scale-95"
+          >
+            <Sparkles className="size-5 text-fuchsia-300"/>
+          </button>
+
           <div className="relative">
             <button
               onClick={() => { playClickSound(); setShowSettingsMenu(!showSettingsMenu) }}
@@ -618,12 +625,6 @@ function HUD({ isDockOpen, setIsDockOpen, armatureType, setArmatureType, current
               </div>
             )}
           </div>
-          <button
-            onClick={handleToggle}
-            className="rounded-xl bg-violet-500/20 border border-violet-400/40 p-2 hover:bg-violet-500/30 transition active:scale-95"
-          >
-            <Sparkles className="size-5 text-fuchsia-300"/>
-          </button>
         </div>
       </div>
 
@@ -1005,6 +1006,19 @@ interface AvatarProps {
 }
 
 function Avatar({ armatureType, danceIndex, isAnimating, avatarUrl = DEFAULT_AVATAR_URL, visemeWeights }: AvatarProps){
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768) // Tailwind's md breakpoint
+    }
+
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
   // Use dance animation if dancing, otherwise use idle animation
   const animationSrc = isAnimating
     ? DANCE_ANIMATIONS[armatureType][danceIndex]
@@ -1016,11 +1030,14 @@ function Avatar({ armatureType, danceIndex, isAnimating, avatarUrl = DEFAULT_AVA
   // Convert viseme weights to emotion format (Ready Player Me uses emotion prop for morph targets)
   const emotion = visemeWeights && Object.keys(visemeWeights).length > 0 ? visemeWeights : undefined
 
+  // Camera distance: 21% zoom for mobile (closer = smaller number)
+  const cameraDistance = isMobile ? 3.5 * 0.65 : 3.5 // 2.765 for mobile, 3.5 for desktop
+
   return (
     <VisageAvatar
       modelSrc={localModelSrc}
       animationSrc={animationSrc}
-      cameraInitialDistance={3.5}
+      cameraInitialDistance={cameraDistance}
       cameraTarget={0}
       fov={50}
       style={{
