@@ -7,6 +7,7 @@ import {
   logDatabaseError,
   logSuccess,
   logError,
+  createNoteFromCallTranscript,
 } from '@relevel-me/shared';
 import { captureException, addBreadcrumb } from '@sentry/nextjs';
 
@@ -184,6 +185,34 @@ export async function POST(req: NextRequest) {
       message: 'Call status updated',
       data: { callId: call.id, status: payload.status },
     });
+
+    // Auto-create note from transcript if call completed successfully
+    if (payload.status === 'completed' && payload.transcript && payload.transcript.length > 50) {
+      logger.info({ callId: call.id, transcriptLength: payload.transcript.length }, 'Creating note from call transcript');
+
+      try {
+        const createdNote = await createNoteFromCallTranscript(
+          payload.transcript,
+          call.id,
+          supabase,
+          call.user_id
+        );
+
+        if (createdNote) {
+          logger.info({ noteId: createdNote.noteId, noteTitle: createdNote.title }, 'Note created from call transcript');
+          addBreadcrumb({
+            message: 'Note created from call',
+            data: { noteId: createdNote.noteId, callId: call.id },
+          });
+        }
+      } catch (noteError) {
+        // Log but don't fail the webhook if note creation fails
+        logError(logger, 'Failed to create note from call transcript', noteError as Error, { callId: call.id });
+        captureException(noteError, {
+          tags: { operation: 'auto_note_creation', callId: call.id }
+        });
+      }
+    }
 
     // Schedule retry if call failed/was unanswered
     // Count how many calls were made today to determine retry count

@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence } from 'framer-motion'
-import { Flame, Sparkles, Target, Clock, X, Volume2, VolumeX, Settings, LogOut, ChevronLeft, ChevronRight, User, AlertCircle, MessageSquare, Square, Bell, Bug, Music } from 'lucide-react'
+import { Flame, Sparkles, Target, Clock, X, Volume2, VolumeX, Settings, LogOut, ChevronLeft, ChevronRight, User, AlertCircle, MessageSquare, Square, Bell, Bug, Music, FileText } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -1152,6 +1152,7 @@ function Dock({ onClose }: { onClose: () => void }){
           </CardContent>
         </Card>
         <CallCard />
+        <NotesCard />
         <ArtifactsCard />
       </div>
     </div>
@@ -1211,6 +1212,67 @@ function CallCard(){
             {message}
           </div>
         )}
+      </CardContent>
+    </Card>
+  )
+}
+function NotesCard(){
+  const [recentNotes, setRecentNotes] = useState<Array<{ id: string; title: string; updated_at: string }>>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter()
+
+  useEffect(() => {
+    fetchRecentNotes()
+  }, [])
+
+  const fetchRecentNotes = async () => {
+    try {
+      const res = await fetch('/api/notes/search?q=')
+      if (res.ok) {
+        const data = await res.json()
+        setRecentNotes((data.results || []).slice(0, 5))
+      }
+    } catch (error) {
+      console.error('Failed to fetch recent notes:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <Card className="bg-white/5 border-white/10">
+      <CardHeader className="pb-2 px-3 pt-3">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <FileText className="size-4"/> Notes
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="px-3 pb-3">
+        {isLoading ? (
+          <div className="text-xs md:text-sm text-slate-300">Loading notes...</div>
+        ) : recentNotes.length === 0 ? (
+          <div className="text-xs md:text-sm text-slate-300 mb-2">No notes yet. Start capturing your thoughts!</div>
+        ) : (
+          <div className="space-y-1.5 mb-2">
+            {recentNotes.map(note => (
+              <div
+                key={note.id}
+                className="text-xs md:text-sm text-violet-300 hover:text-violet-200 cursor-pointer truncate"
+                onClick={() => router.push('/notes')}
+              >
+                → {note.title}
+              </div>
+            ))}
+          </div>
+        )}
+        <Link href="/notes">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full mt-2 bg-violet-500/10 border-violet-400/30 text-violet-200 hover:bg-violet-500/20 text-xs md:text-sm"
+          >
+            View Knowledge Graph
+          </Button>
+        </Link>
       </CardContent>
     </Card>
   )

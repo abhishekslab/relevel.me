@@ -23,6 +23,7 @@ relevel.me/                          # Monorepo root
 │   ├── app/                        # Next.js App Router
 │   │   ├── api/                   # API routes
 │   │   ├── dashboard/             # Main dashboard
+│   │   ├── notes/                 # Notes system (NEW)
 │   │   ├── auth/                  # Authentication flows
 │   │   └── ...
 │   ├── components/                 # React components

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/auth/server'
-import { sendChatMessage, createRequestLogger, logError } from '@relevel-me/shared'
+import { sendChatMessage, createRequestLogger, logError, detectNoteCreationIntent, createNoteFromChat } from '@relevel-me/shared'
 
 export async function POST(request: NextRequest) {
   const logger = createRequestLogger()
@@ -31,6 +31,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check if user wants to create a note
+    const noteIntent = detectNoteCreationIntent(message)
+
     // Process chat message through LLM
     const result = await sendChatMessage({
       supabase, // Pass authenticated client to respect RLS
@@ -48,11 +51,30 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Create note if intent detected
+    let createdNote = null
+    if (noteIntent.shouldCreateNote && result.conversationId) {
+      createdNote = await createNoteFromChat(
+        noteIntent,
+        result.conversationId,
+        supabase,
+        user.id
+      )
+
+      if (createdNote) {
+        logger.info(
+          { noteId: createdNote.noteId, title: createdNote.title },
+          'Note created from chat'
+        )
+      }
+    }
+
     logger.info(
       {
         userId: user.id,
         conversationId: result.conversationId,
         responseLength: result.assistantMessage?.length,
+        noteCreated: !!createdNote,
       },
       'Chat message processed successfully'
     )
@@ -61,6 +83,10 @@ export async function POST(request: NextRequest) {
       success: true,
       conversationId: result.conversationId,
       message: result.assistantMessage,
+      noteCreated: createdNote ? {
+        id: createdNote.noteId,
+        title: createdNote.title,
+      } : undefined,
     })
 
   } catch (error: any) {

@@ -13,6 +13,7 @@ A **source-available** voice-first second brain — an AI memory companion you c
 
 - 🔒 **100% Local-First** - llama3.2 + local embeddings (Xenova), zero external API calls by default
 - 🧠 **Voice-First Second Brain** - Call and speak your thoughts, AI companion remembers everything
+- 📝 **Obsidian-Style Notes** - Wiki links `[[like this]]`, knowledge graphs, and markdown editing
 - 🔗 **Semantic Memory Graph** - pgvector search retrieves by meaning, not keywords
 - 🏠 **Self-Hosted First** - Full data sovereignty, no subscription required
 - 🔌 **Pluggable Architecture** - Swap LLM/embedding/call providers via config
@@ -98,6 +99,7 @@ For detailed self-hosting instructions, see **[docs/SELF_HOSTING.md](docs/SELF_H
 ## Documentation
 
 - **[Architecture Guide](docs/ARCHITECTURE.md)** - Tech stack, monorepo structure, and system architecture
+- **[Notes System](docs/NOTES.md)** - Obsidian-style notes with wiki links, knowledge graphs, and voice integration
 - **[Self-Hosting Guide](docs/SELF_HOSTING.md)** - Complete guide to running relevel.me on your own infrastructure
 - **[Onboarding Flow](docs/ONBOARDING_FLOW.md)** - User journey audit and flow analysis
 - **[Gaps and Fixes](docs/GAPS_AND_FIXES.md)** - Implementation notes and fixes applied
