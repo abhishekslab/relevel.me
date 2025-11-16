@@ -29,6 +29,7 @@ export * from './providers/llm-factory';
 export * from './services/call-service';
 export * from './services/chat-service';
 export * from './services/note-creation';
+export * from './services/webhook-processor';
 
 // Queue types and client
 export * from './queue/types';

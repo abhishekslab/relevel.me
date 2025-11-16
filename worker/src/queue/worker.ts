@@ -1,17 +1,18 @@
 /**
  * Bull queue worker process
- * Consumes jobs from the daily-calls queue and processes them
+ * Consumes jobs from queues and processes them
  */
 
-import { dailyCallsQueue } from './client';
+import { dailyCallsQueue, webhookEventsQueue } from './client';
 import { processScheduleCalls, processUserCall } from './jobs/daily-calls';
+import { processWebhookEventJob } from './jobs/process-webhook';
 import { JOB_NAMES, CRON_PATTERNS, ScheduleCallsJobData } from '@relevel-me/shared';
 
 const CONCURRENCY = parseInt(process.env.QUEUE_CONCURRENCY || '5', 10);
 
 console.log('[Worker] Starting queue worker...');
 console.log(`[Worker] Concurrency: ${CONCURRENCY}`);
-console.log(`[Worker] Queue: ${dailyCallsQueue.name}`);
+console.log(`[Worker] Queues: ${dailyCallsQueue.name}, ${webhookEventsQueue.name}`);
 
 // Register named processors for each job type
 // schedule-calls: Only 1 concurrent job needed (runs every 5 min via cron)
@@ -26,6 +27,13 @@ dailyCallsQueue.process(JOB_NAMES.PROCESS_USER_CALL, CONCURRENCY, async (job) =>
 
 console.log(`[Worker] Registered processor: ${JOB_NAMES.SCHEDULE_CALLS} (concurrency: 1)`);
 console.log(`[Worker] Registered processor: ${JOB_NAMES.PROCESS_USER_CALL} (concurrency: ${CONCURRENCY})`);
+
+// Webhook event processing
+webhookEventsQueue.process(JOB_NAMES.PROCESS_WEBHOOK_EVENT, CONCURRENCY, async (job) => {
+  return processWebhookEventJob(job);
+});
+
+console.log(`[Worker] Registered processor: ${JOB_NAMES.PROCESS_WEBHOOK_EVENT} (concurrency: ${CONCURRENCY})`);
 
 // Setup recurring cron job to check for users who need calls
 async function setupCronJobs() {
@@ -70,8 +78,11 @@ async function shutdown() {
   try {
     // Wait for active jobs to complete
     // false = wait for active jobs to complete before closing
-    await dailyCallsQueue.close(false);
-    console.log('[Worker] Queue closed gracefully');
+    await Promise.all([
+      dailyCallsQueue.close(false),
+      webhookEventsQueue.close(false),
+    ]);
+    console.log('[Worker] Queues closed gracefully');
     process.exit(0);
   } catch (error) {
     console.error('[Worker] Error during shutdown:', error);

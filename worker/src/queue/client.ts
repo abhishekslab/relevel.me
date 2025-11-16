@@ -51,6 +51,20 @@ export const dailyCallsQueue = new Queue(QUEUE_NAMES.DAILY_CALLS, {
   },
 });
 
+// Webhook events queue
+export const webhookEventsQueue = new Queue(QUEUE_NAMES.WEBHOOK_EVENTS, {
+  redis: redisConfig,
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: {
+      type: 'exponential',
+      delay: 2000,
+    },
+    removeOnComplete: 100,
+    removeOnFail: 500,
+  },
+});
+
 // Queue event handlers for monitoring
 dailyCallsQueue.on('error', (error) => {
   console.error('[Queue] Error:', error);
@@ -74,6 +88,27 @@ dailyCallsQueue.on('failed', (job, err) => {
 
 dailyCallsQueue.on('stalled', (job) => {
   console.warn(`[Queue] Job ${job.id} (${job.name}) stalled`);
+});
+
+// Webhook events queue event handlers
+webhookEventsQueue.on('error', (error) => {
+  console.error('[Webhook Queue] Error:', error);
+});
+
+webhookEventsQueue.on('active', (job) => {
+  console.log(`[Webhook Queue] Job ${job.id} (${job.name}) started`);
+});
+
+webhookEventsQueue.on('completed', (job, result) => {
+  console.log(`[Webhook Queue] Job ${job.id} (${job.name}) completed:`, result);
+});
+
+webhookEventsQueue.on('failed', (job, err) => {
+  console.error(`[Webhook Queue] Job ${job?.id} (${job?.name}) failed:`, err.message);
+});
+
+webhookEventsQueue.on('stalled', (job) => {
+  console.warn(`[Webhook Queue] Job ${job.id} (${job.name}) stalled`);
 });
 
 // Helper function to check queue health
@@ -109,9 +144,12 @@ export async function checkQueueHealth(): Promise<{
 
 // Graceful shutdown
 export async function closeQueue() {
-  console.log('[Queue] Closing queue...');
-  await dailyCallsQueue.close();
-  console.log('[Queue] Queue closed');
+  console.log('[Queue] Closing queues...');
+  await Promise.all([
+    dailyCallsQueue.close(),
+    webhookEventsQueue.close(),
+  ]);
+  console.log('[Queue] Queues closed');
 }
 
 // Handle process signals

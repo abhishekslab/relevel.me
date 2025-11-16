@@ -5,11 +5,13 @@
 // Job names
 export const QUEUE_NAMES = {
   DAILY_CALLS: 'daily-calls',
+  WEBHOOK_EVENTS: 'webhook-events',
 } as const;
 
 export const JOB_NAMES = {
   SCHEDULE_CALLS: 'schedule-calls',
   PROCESS_USER_CALL: 'process-user-call',
+  PROCESS_WEBHOOK_EVENT: 'process-webhook-event',
 } as const;
 
 // Job data interfaces

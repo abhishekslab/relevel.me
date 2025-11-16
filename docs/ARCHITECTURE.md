@@ -216,6 +216,25 @@ packages/shared/
 8. User returns to /dashboard?checkout=success
 ```
 
+### Webhook Ingestion Flow (NEW)
+
+```
+1. External source (YouTube, email, n8n) sends POST to /api/webhooks/ingest
+2. API validates payload and stores in webhook_events table (status: pending)
+3. Job queued in Redis with event ID
+4. API returns 200 OK immediately (async processing)
+5. Worker picks up job and updates status to processing
+6. Worker sends event payload to LLM for analysis
+7. LLM returns structured JSON with actions (create_memory, chat_response, etc.)
+8. Worker executes each action:
+   - create_memory → Insert into messages table with tags
+   - chat_response → Store summary in result
+   - schedule_call → Queue call job
+   - ignore → Skip
+9. Worker stores processing_result in webhook_events
+10. Status updated to completed (or failed if errors)
+```
+
 ---
 
 ## Key Components
@@ -308,7 +327,40 @@ worker.process('daily-calls', async (job) => {
 })
 ```
 
-See [QUEUE_SYSTEM.md](./QUEUE_SYSTEM.md) for details.
+**Queues:**
+- `daily-calls` - Automated voice call scheduling
+- `webhook-events` - Async webhook processing with LLM
+
+See [QUEUE_SYSTEM.md](./QUEUE_SYSTEM.md) and [WEBHOOKS.md](./WEBHOOKS.md) for details.
+
+### Webhook System (NEW)
+
+Flexible webhook ingestion system for external integrations:
+
+```typescript
+// POST /api/webhooks/ingest
+{
+  "user_id": "uuid",
+  "source": "youtube|email|n8n|rss",
+  "event_type": "video_published",
+  ... any fields (stored in JSONB)
+}
+```
+
+**Flow:**
+1. Webhook received → stored in `webhook_events` table
+2. Job queued in Redis for async processing
+3. Worker analyzes with LLM
+4. LLM decides actions (create memory, summarize, ignore)
+5. Actions executed and results stored
+
+**Use Cases:**
+- YouTube video notifications → Auto-save interesting videos
+- Email summaries → Extract key information as memories
+- n8n workflow outputs → Capture automation results
+- RSS feed articles → Filter and save relevant content
+
+See [WEBHOOKS.md](./WEBHOOKS.md) for integration guide.
 
 ### 3D Avatar System (web/lib/)
 

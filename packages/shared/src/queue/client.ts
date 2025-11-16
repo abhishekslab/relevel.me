@@ -37,8 +37,11 @@ const redisConfig = getRedisConfig();
 
 console.log(`[Queue] Connecting to Redis at ${redisConfig.host}:${redisConfig.port}`);
 
+// Queue instances cache
+const queues = new Map<string, Queue.Queue>();
+
 // Daily calls queue
-export const dailyCallsQueue = new Queue(QUEUE_NAMES.DAILY_CALLS, {
+const dailyCallsQueue = new Queue(QUEUE_NAMES.DAILY_CALLS, {
   redis: redisConfig,
   defaultJobOptions: {
     attempts: 3,
@@ -50,6 +53,25 @@ export const dailyCallsQueue = new Queue(QUEUE_NAMES.DAILY_CALLS, {
     removeOnFail: 500,
   },
 });
+queues.set(QUEUE_NAMES.DAILY_CALLS, dailyCallsQueue);
+
+// Webhook events queue
+const webhookEventsQueue = new Queue(QUEUE_NAMES.WEBHOOK_EVENTS, {
+  redis: redisConfig,
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: {
+      type: 'exponential',
+      delay: 2000,
+    },
+    removeOnComplete: 100,
+    removeOnFail: 500,
+  },
+});
+queues.set(QUEUE_NAMES.WEBHOOK_EVENTS, webhookEventsQueue);
+
+// Export legacy queue for backward compatibility
+export { dailyCallsQueue };
 
 // Queue event handlers for monitoring
 dailyCallsQueue.on('error', (error) => {
@@ -75,6 +97,18 @@ dailyCallsQueue.on('failed', (job, err) => {
 dailyCallsQueue.on('stalled', (job) => {
   console.warn(`[Queue] Job ${job.id} (${job.name}) stalled`);
 });
+
+/**
+ * Get a queue instance by name
+ * This is the recommended way to access queues from API routes
+ */
+export function getQueue(queueName: string): Queue.Queue {
+  const queue = queues.get(queueName);
+  if (!queue) {
+    throw new Error(`Queue not found: ${queueName}`);
+  }
+  return queue;
+}
 
 // Helper function to check queue health
 export async function checkQueueHealth(): Promise<{
