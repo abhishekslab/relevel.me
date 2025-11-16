@@ -12,7 +12,7 @@ import type {
   WebhookIngestRequest,
   WebhookIngestResponse,
   ProcessWebhookJobData,
-} from '@relevel-me/shared/types/webhook';
+} from '@relevel-me/shared';
 import { captureException, addBreadcrumb } from '@sentry/nextjs';
 
 /**
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (insertError) {
-      logDatabaseError(logger, 'Failed to insert webhook event', insertError);
+      logDatabaseError(logger, 'insert', 'webhook_events', insertError);
       captureException(insertError, {
         tags: { component: 'webhook-ingest' },
         extra: { source, event_type },

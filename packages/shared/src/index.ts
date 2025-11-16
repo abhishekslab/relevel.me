@@ -34,3 +34,6 @@ export * from './services/webhook-processor';
 // Queue types and client
 export * from './queue/types';
 export * from './queue/client';
+
+// Webhook types
+export * from './types/webhook';

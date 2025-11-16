@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence } from 'framer-motion'
-import { Flame, Sparkles, Target, Clock, X, Volume2, VolumeX, Settings, LogOut, ChevronLeft, ChevronRight, User, AlertCircle, MessageSquare, Square, Bell, Bug, Music, FileText } from 'lucide-react'
+import { Flame, Sparkles, Target, Clock, X, Volume2, VolumeX, Settings, LogOut, ChevronLeft, ChevronRight, User, AlertCircle, MessageSquare, Square, Bell, Bug, Music, FileText, PictureInPicture2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -23,6 +23,8 @@ import { signOut as serverSignOut } from '../actions'
 import { createClient } from '@/lib/auth/client'
 import { getSpeechService, TEST_PHRASES, type SpeechState } from '@/lib/speech'
 import type { VisemeName } from '@/lib/lipsync'
+import { AvatarPiPManager, type AvatarPiPState } from '@/lib/avatar-pip'
+import AvatarPiPContent from './AvatarPiPContent'
 
 type UUID = string
 
@@ -124,6 +126,14 @@ export default function DashboardPage() {
   const [visemeWeights, setVisemeWeights] = useState<Record<VisemeName, number>>({} as Record<VisemeName, number>)
   const [isSpeaking, setIsSpeaking] = useState(false)
 
+  // Picture-in-Picture state
+  const pipManagerRef = useRef<AvatarPiPManager | null>(null)
+  const [isPiPActive, setIsPiPActive] = useState(false)
+  const [pipEnabled, setPipEnabled] = useState(true) // User preference
+  const [showPipPrompt, setShowPipPrompt] = useState(false)
+  const [autoPiPEnabled, setAutoPiPEnabled] = useState(false)
+  const [isEnablingAutoPiP, setIsEnablingAutoPiP] = useState(false)
+
   // Initialize speech service
   useEffect(() => {
     const speechService = getSpeechService()
@@ -204,9 +214,177 @@ export default function DashboardPage() {
     loadUserProfile()
   }, [])
 
+  // Initialize PiP Manager
+  useEffect(() => {
+    pipManagerRef.current = new AvatarPiPManager()
+
+    // Handle main tab focus request from PiP window
+    pipManagerRef.current.onRequestMainTabFocus(() => {
+      // Close PiP when clicking avatar
+      if (pipManagerRef.current) {
+        pipManagerRef.current.close()
+        setIsPiPActive(false)
+      }
+    })
+
+    return () => {
+      if (pipManagerRef.current) {
+        pipManagerRef.current.destroy()
+      }
+    }
+  }, [])
+
+  // Tab visibility detection and PiP prompt
+  useEffect(() => {
+    if (!pipEnabled) return
+
+    const handleVisibilityChange = async () => {
+      if (document.hidden && !isPiPActive) {
+        // Tab switched away
+        const hasSeenPrompt = localStorage.getItem('pip-prompt-seen')
+
+        if (!hasSeenPrompt && pipManagerRef.current) {
+          // Show prompt on first tab switch
+          localStorage.setItem('pip-prompt-seen', 'true')
+          // Wait until tab is visible again to show prompt
+          const showPromptWhenVisible = () => {
+            if (!document.hidden) {
+              setShowPipPrompt(true)
+              document.removeEventListener('visibilitychange', showPromptWhenVisible)
+            }
+          }
+          document.addEventListener('visibilitychange', showPromptWhenVisible)
+        }
+      } else if (!document.hidden && isPiPActive && pipManagerRef.current) {
+        // Tab became visible - close PiP
+        pipManagerRef.current.close()
+        setIsPiPActive(false)
+        console.log('[PiP] Closed (returned to main tab)')
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [pipEnabled, isPiPActive])
+
+  // Sync viseme weights to PiP window
+  useEffect(() => {
+    if (isPiPActive && pipManagerRef.current) {
+      pipManagerRef.current.syncVisemeWeights(
+        Object.keys(visemeWeights).length > 0 ? visemeWeights : undefined
+      )
+    }
+  }, [visemeWeights, isPiPActive])
+
+  // Update pending state for auto-PiP whenever avatar state changes
+  useEffect(() => {
+    if (autoPiPEnabled && pipManagerRef.current) {
+      const pipState: AvatarPiPState = {
+        avatarUrl,
+        armatureType,
+        visemeWeights: Object.keys(visemeWeights).length > 0 ? visemeWeights : undefined,
+        isAnimating,
+        danceIndex: currentDanceIndex
+      }
+
+      pipManagerRef.current.setPendingState(pipState, () => <AvatarPiPContent />)
+    }
+  }, [autoPiPEnabled, avatarUrl, armatureType, visemeWeights, isAnimating, currentDanceIndex])
+
+  // Load auto-PiP preference on mount
+  useEffect(() => {
+    const savedPreference = localStorage.getItem('auto-pip-enabled')
+    if (savedPreference === 'true' && pipManagerRef.current) {
+      // Re-enable auto-PiP (will ask for permission again if needed)
+      pipManagerRef.current.enableAutoPiP().then(success => {
+        if (success) {
+          setAutoPiPEnabled(true)
+          console.log('[PiP] Auto-PiP re-enabled from saved preference')
+        }
+      })
+    }
+  }, [])
+
   // Calculate if profile is incomplete
   const isProfileIncomplete = !profileStatus.isLoading && (!profileStatus.hasPhone || !profileStatus.hasFirstName)
   const canMakeCalls = profileStatus.hasPhone
+
+  // Helper function to enable/disable auto-PiP
+  const toggleAutoPiP = async () => {
+    if (!pipManagerRef.current) return
+
+    if (autoPiPEnabled) {
+      // Disable auto-PiP
+      pipManagerRef.current.disableAutoPiP()
+      setAutoPiPEnabled(false)
+      localStorage.setItem('auto-pip-enabled', 'false')
+      console.log('[PiP] Auto-PiP disabled by user')
+    } else {
+      // Enable auto-PiP
+      setIsEnablingAutoPiP(true)
+
+      try {
+        const success = await pipManagerRef.current.enableAutoPiP()
+
+        if (success) {
+          setAutoPiPEnabled(true)
+          localStorage.setItem('auto-pip-enabled', 'true')
+          console.log('[PiP] Auto-PiP enabled by user')
+
+          // Show success message
+          alert('✅ Automatic PiP enabled! Your avatar will now follow you when you switch tabs.')
+        } else {
+          alert('❌ Could not enable automatic PiP. Please allow microphone access when prompted.')
+        }
+      } catch (error) {
+        console.error('[PiP] Error enabling auto-PiP:', error)
+        alert('❌ Error enabling automatic PiP. This feature requires Chrome 120+ and microphone permission.')
+      } finally {
+        setIsEnablingAutoPiP(false)
+      }
+    }
+  }
+
+  // Helper function to open PiP manually
+  const openPiP = async () => {
+    if (!pipManagerRef.current || isPiPActive) return
+
+    console.log('[PiP] Attempting to open PiP window...')
+
+    try {
+      const pipState: AvatarPiPState = {
+        avatarUrl,
+        armatureType,
+        visemeWeights: Object.keys(visemeWeights).length > 0 ? visemeWeights : undefined,
+        isAnimating,
+        danceIndex: currentDanceIndex
+      }
+
+      // Try to get canvas element for video PiP fallback
+      const canvases = document.querySelectorAll('canvas')
+      const avatarCanvas = Array.from(canvases).find(
+        canvas => canvas.parentElement?.parentElement?.className.includes('absolute inset-0 pointer-events-none')
+      )
+
+      console.log('[PiP] Opening with mode:', pipManagerRef.current.getMode())
+
+      await pipManagerRef.current.open(
+        pipState,
+        () => <AvatarPiPContent />,
+        avatarCanvas || undefined
+      )
+
+      setIsPiPActive(true)
+      console.log('[PiP] Successfully opened')
+    } catch (error) {
+      console.error('[PiP] Failed to open:', error)
+      // Show user-friendly message
+      alert('Could not open Picture-in-Picture. This feature requires Chrome/Edge 116+ or a browser with PiP support.')
+    }
+  }
 
   // Speech handler for avatar
   const handleSpeak = async (text: string) => {
@@ -289,6 +467,12 @@ export default function DashboardPage() {
         canMakeCalls={canMakeCalls}
         visemeWeights={visemeWeights}
         isSpeaking={isSpeaking}
+        isPiPActive={isPiPActive}
+        onTogglePiP={openPiP}
+        pipMode={pipManagerRef.current?.getMode() || 'unsupported'}
+        autoPiPEnabled={autoPiPEnabled}
+        onToggleAutoPiP={toggleAutoPiP}
+        isEnablingAutoPiP={isEnablingAutoPiP}
       />
 
       {/* Dock */}
@@ -326,15 +510,22 @@ interface HUDProps {
   canMakeCalls: boolean
   visemeWeights: Record<VisemeName, number>
   isSpeaking: boolean
+  isPiPActive: boolean
+  onTogglePiP: () => void
+  pipMode: 'document' | 'video' | 'unsupported'
+  autoPiPEnabled: boolean
+  onToggleAutoPiP: () => void
+  isEnablingAutoPiP: boolean
 }
 
-function HUD({ isDockOpen, setIsDockOpen, armatureType, setArmatureType, currentDanceIndex, setCurrentDanceIndex, isAnimating, setIsAnimating, avatarUrl, setAvatarUrl, canMakeCalls, visemeWeights, isSpeaking }: HUDProps){
+function HUD({ isDockOpen, setIsDockOpen, armatureType, setArmatureType, currentDanceIndex, setCurrentDanceIndex, isAnimating, setIsAnimating, avatarUrl, setAvatarUrl, canMakeCalls, visemeWeights, isSpeaking, isPiPActive, onTogglePiP, pipMode, autoPiPEnabled, onToggleAutoPiP, isEnablingAutoPiP }: HUDProps){
   const [streak, setStreak] = useState(0)
   const [isMusicMuted, setIsMusicMuted] = useState(false)
   const [isMusicPlaying, setIsMusicPlaying] = useState(false)
   const [musicVolume, setMusicVolumeState] = useState(1)
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
   const [showAudioMenu, setShowAudioMenu] = useState(false)
+  const [showPiPMenu, setShowPiPMenu] = useState(false)
   const [showProfileModal, setShowProfileModal] = useState(false)
   const [selectedPhraseIndex, setSelectedPhraseIndex] = useState(0)
   const [showSpeechMenu, setShowSpeechMenu] = useState(false)
@@ -492,6 +683,17 @@ function HUD({ isDockOpen, setIsDockOpen, armatureType, setArmatureType, current
             <Sparkles className="size-5 text-fuchsia-300"/>
           </button>
 
+          {/* Picture-in-Picture button */}
+          {pipMode !== 'unsupported' && (
+            <button
+              onClick={() => { playClickSound(); onTogglePiP() }}
+              className={`rounded-xl ${isPiPActive ? 'bg-cyan-500/30 border-cyan-400/50' : 'bg-cyan-500/20 border-cyan-400/40'} border p-2 hover:bg-cyan-500/30 transition active:scale-95`}
+              title={isPiPActive ? "Avatar is floating" : "Make avatar follow you across tabs"}
+            >
+              <PictureInPicture2 className={`size-5 ${isPiPActive ? 'text-cyan-200' : 'text-cyan-300'}`}/>
+            </button>
+          )}
+
           <div className="relative">
             <button
               onClick={() => { playClickSound(); setShowSettingsMenu(!showSettingsMenu) }}
@@ -558,6 +760,64 @@ function HUD({ isDockOpen, setIsDockOpen, armatureType, setArmatureType, current
                       />
                     </div>
                   </div>
+                )}
+
+                {/* Auto Picture-in-Picture Section */}
+                {pipMode !== 'unsupported' && (
+                  <>
+                    <button
+                      onClick={() => { playClickSound(); setShowPiPMenu(!showPiPMenu) }}
+                      className="w-full p-3 flex items-center gap-2 hover:bg-white/10 transition text-left text-sm border-b border-white/10 text-white"
+                    >
+                      <PictureInPicture2 className="size-4" />
+                      Picture-in-Picture
+                    </button>
+
+                    {showPiPMenu && (
+                      <div className="border-b border-white/10 bg-black/20 p-3 space-y-3">
+                        {/* Auto-PiP Toggle */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-xs text-cyan-300">Automatic Mode</span>
+                              <span className="text-[10px] text-white/50">Follows you across tabs (Chrome 120+ only)</span>
+                            </div>
+                            <button
+                              onClick={onToggleAutoPiP}
+                              disabled={isEnablingAutoPiP}
+                              className={`rounded-lg ${autoPiPEnabled ? 'bg-cyan-500/30 border-cyan-400/50' : 'bg-cyan-500/20 border-cyan-400/40'} border p-1.5 hover:bg-cyan-500/30 transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed`}
+                              title={autoPiPEnabled ? 'Disable auto-PiP' : 'Enable auto-PiP (requires microphone permission)'}
+                            >
+                              {isEnablingAutoPiP ? (
+                                <div className="size-4 border-2 border-cyan-300 border-t-transparent rounded-full animate-spin" />
+                              ) : autoPiPEnabled ? (
+                                <Bell className="size-4 text-cyan-200"/>
+                              ) : (
+                                <Bell className="size-4 text-cyan-300 opacity-50"/>
+                              )}
+                            </button>
+                          </div>
+                          {autoPiPEnabled && (
+                            <div className="text-[10px] text-emerald-300 bg-emerald-500/10 border border-emerald-400/30 rounded px-2 py-1">
+                              ✓ Avatar will automatically float when you switch tabs
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Manual PiP Button */}
+                        <div className="space-y-1">
+                          <span className="text-xs text-cyan-300">Manual Control</span>
+                          <button
+                            onClick={onTogglePiP}
+                            disabled={isPiPActive}
+                            className={`w-full rounded-lg ${isPiPActive ? 'bg-cyan-500/30 border-cyan-400/50' : 'bg-cyan-500/20 border-cyan-400/40'} border p-2 hover:bg-cyan-500/30 transition active:scale-95 disabled:opacity-50 text-xs text-cyan-200`}
+                          >
+                            {isPiPActive ? '✓ Avatar is Floating' : 'Open PiP Window'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
 
                 {/* Debug Section */}
