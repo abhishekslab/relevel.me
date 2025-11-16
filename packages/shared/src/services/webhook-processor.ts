@@ -215,6 +215,11 @@ Analyze this webhook and respond with a JSON object describing what actions to t
     });
 
     // Parse JSON response
+    if (!response.content) {
+      logger.error('LLM response has no content');
+      return null;
+    }
+
     const jsonMatch = response.content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       logger.error({ response: response.content }, 'LLM response is not valid JSON');
