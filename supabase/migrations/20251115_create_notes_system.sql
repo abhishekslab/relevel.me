@@ -82,7 +82,7 @@ CREATE TABLE note_embeddings (
   -- Embedding metadata
   model TEXT NOT NULL, -- e.g., 'text-embedding-ada-002'
   dims INTEGER NOT NULL, -- Vector dimensions (1536 for OpenAI)
-  embedding VECTOR, -- Vector type from pgvector extension
+  embedding VECTOR(1536), -- Vector type from pgvector extension (1536 is max, supports smaller via padding)
 
   -- Additional metadata
   embedded_field TEXT NOT NULL DEFAULT 'body', -- 'title', 'body', or 'combined'
