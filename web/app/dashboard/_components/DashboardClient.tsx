@@ -5,10 +5,9 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence } from 'framer-motion'
-import { Flame, Sparkles, Target, Clock, X, Volume2, VolumeX, Settings, LogOut, ChevronLeft, ChevronRight, User, AlertCircle, MessageSquare, Square, Bell, Bug, Music, FileText, PictureInPicture2 } from 'lucide-react'
+import { Flame, Sparkles, Clock, X, Volume2, VolumeX, Settings, LogOut, ChevronLeft, ChevronRight, User, AlertCircle, MessageSquare, Square, Bell, Bug, Music, FileText, PictureInPicture2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
@@ -27,26 +26,6 @@ import { AvatarPiPManager, type AvatarPiPState } from '@/lib/avatar-pip'
 import AvatarPiPContent from './AvatarPiPContent'
 
 type UUID = string
-
-interface Skill { id: UUID; name: string }
-interface Checkpoint { id: UUID; user_id: UUID; skill_id: UUID; due_at: string; status: 'pending'|'completed'|'missed'; items_count?: number }
-interface Artifact { id: UUID; name: string; effect: Record<string, any>; expires_at?: string }
-
-// Mock data for Quest Log and Artifacts
-const SKILLS: Skill[] = [
-  { id: 's1', name: 'Knowledge Retention' },
-  { id: 's2', name: 'Discipline' },
-  { id: 's3', name: 'JavaScript' },
-]
-const CHECKPOINTS: Checkpoint[] = [
-  { id: 'c1', user_id: 'u1', skill_id: 's3', due_at: addMinsISO(45), status: 'pending', items_count: 3 },
-  { id: 'c2', user_id: 'u1', skill_id: 's1', due_at: addMinsISO(80), status: 'pending', items_count: 2 },
-]
-const ARTIFACTS: Artifact[] = [
-  { id: 'a1', name: 'Notebook of Clarity', effect: { retention_multiplier: 1.05 }, expires_at: addMinsISO(60*24*6) },
-  { id: 'a2', name: 'Sigil of Streaks', effect: { streak_boost: 1 }, expires_at: addMinsISO(60*24*2) },
-]
-function addMinsISO(m:number){ const d = new Date(Date.now()+m*60000); return d.toISOString() }
 
 // Animation configuration
 type ArmatureType = 'feminine' | 'masculine'
@@ -1370,8 +1349,6 @@ function Avatar({ armatureType, danceIndex, isAnimating, avatarUrl = DEFAULT_AVA
 }
 
 function Dock({ onClose }: { onClose: () => void }){
-  const due = CHECKPOINTS.filter(c => c.status === 'pending')
-  const skillById = new Map(SKILLS.map(s => [s.id, s]))
   return (
     <div className="relative h-full bg-black/90 md:bg-transparent backdrop-blur-xl md:backdrop-blur-none rounded-t-2xl md:rounded-none overflow-hidden">
       {/* Mobile handle bar */}
@@ -1387,33 +1364,8 @@ function Dock({ onClose }: { onClose: () => void }){
 
       {/* Scrollable content area */}
       <div className="h-full overflow-y-auto px-4 md:px-0 pb-6 md:pb-0 space-y-2.5">
-        <Card className="bg-white/5 border-white/10">
-          <CardHeader className="pb-2 px-3 pt-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Target className="size-4"/> Quest Log
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-3">
-            {due.length === 0 ? (
-              <div className="text-xs md:text-sm text-slate-300">No checkpoints due. Explore the map or prepare for tonight's call.</div>
-            ) : (
-              <div className="space-y-2">
-                {due.map(q => (
-                  <div key={q.id} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-2.5 py-2">
-                    <div className="flex-1 min-w-0 mr-2">
-                      <div className="text-sm font-medium truncate">{skillById.get(q.skill_id)?.name}</div>
-                      <div className="text-xs text-slate-300">{new Date(q.due_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · {q.items_count ?? 3} items</div>
-                    </div>
-                    <Button size="sm" className="bg-violet-600 hover:bg-violet-500 shrink-0">Start</Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
         <CallCard />
         <NotesCard />
-        <ArtifactsCard />
       </div>
     </div>
   )
@@ -1533,22 +1485,6 @@ function NotesCard(){
             View Knowledge Graph
           </Button>
         </Link>
-      </CardContent>
-    </Card>
-  )
-}
-function ArtifactsCard(){
-  return (
-    <Card className="bg-white/5 border-white/10">
-      <CardHeader className="pb-2 px-3 pt-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Sparkles className="size-4"/> Artifacts
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="px-3 pb-3 flex flex-wrap gap-1.5">
-        {ARTIFACTS.map(a => (
-          <Badge key={a.id} className="bg-fuchsia-600/20 border-fuchsia-400/30 text-fuchsia-200 text-xs">{a.name}</Badge>
-        ))}
       </CardContent>
     </Card>
   )

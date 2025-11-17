@@ -54,9 +54,9 @@ This project follows a monorepo structure with npm workspaces:
 
 The dashboard page contains the main interactive components in `web/app/dashboard/_components/DashboardClient.tsx`:
 
-- **HUD** — Top bar with WRS, streak, points badges
+- **HUD** — Top bar with streak badge and settings
 - **3D Avatar** — Ready Player Me avatar with lip-sync animation
-- **Dock** — Toggleable sidebar with Quest Log, Evening Call, Artifacts, Allocate Points cards
+- **Dock** — Toggleable sidebar with Evening Call and Notes cards
 - **Three.js Scene** — Starfield background with fog effects
 
 UI primitives in `web/components/ui/` (badge, button, card, progress, slider, tabs) are minimal shadcn-style components with Tailwind styling.
@@ -66,12 +66,10 @@ UI primitives in `web/components/ui/` (badge, button, card, progress, slider, ta
 Dashboard data is fetched from Supabase via server actions in `web/app/dashboard/actions.ts`:
 
 - **User Profile** - Avatar URL, preferences, subscription status
-- **Skills** - Memory nodes and knowledge areas (optional gamification)
-- **Checkpoints** - Scheduled reflections and memory reviews
-- **Artifacts** - Active power-ups with effects (optional gamification)
 - **Calls** - Voice call history and transcripts (core memory capture)
+- **Notes** - Searchable memory graph and knowledge base
 
-The dashboard client visualizes memory as an optional gamified interface with quest logs and skill progression.
+The dashboard provides a clean, focused interface for voice-first memory capture and reflection.
 
 ### Visual Effects
 
@@ -88,7 +86,7 @@ TypeScript configured with `@/*` mapping to web directory root (see `web/tsconfi
 
 ## Positioning
 
-**relevel.me** is a voice-first second brain — an AI memory companion you can call. The project features a mystical, clarity-focused aesthetic that frames memory and cognition as connected knowledge networks. Optional gamification visualizes your evolving mind as memory orbs and skill trees.
+**relevel.me** is a voice-first second brain — an AI memory companion you can call. The project features a mystical, clarity-focused aesthetic that frames memory and cognition as connected knowledge networks.
 
 ## Styling Approach
 
