@@ -22,7 +22,7 @@
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.75.1",
     "@types/d3": "^7.4.3",
-    "autoprefixer": "10.4.20",
+    "autoprefixer": "10.4.23",
     "bull": "^4.16.5",
     "d3": "^7.9.0",
     "dodopayments": "^2.2.1",
